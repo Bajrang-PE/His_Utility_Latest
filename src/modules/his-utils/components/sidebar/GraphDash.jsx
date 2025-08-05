@@ -9,6 +9,7 @@ import { highchartGraphOptions } from "../../localData/DropDownData";
 import { getAuthUserData } from "../../../../utils/CommonFunction";
 import { generateGraphCSV, generateGraphPDF } from "../commons/advancedPdf";
 import { useSearchParams } from "react-router-dom";
+import { getEncryptedParamValue } from "../../../../utils/Security";
 
 const Parameters = lazy(() => import('./Parameters'));
 
@@ -19,7 +20,10 @@ const GraphDash = ({ widgetData, pkColumn, setPkColumn }) => {
   const [chartType, setChartType] = useState('BAR_GRAPH');
   const [graphData, setGraphData] = useState([]);
   const [queryParams] = useSearchParams();
-  const isPrev = queryParams.get('isPreview');
+  // const isPrev = queryParams.get('isPreview');
+
+  const encIFUrl = queryParams.get("dbfhttf");
+  const isPrev = encIFUrl ? getEncryptedParamValue(encIFUrl, "isPreview") : '';
 
   const is3D = widgetData.is3d === "true" || widgetData.is3d === "Yes";
   const xAxisLabel = widgetData.xAxisLabel || "X Axis";
@@ -152,6 +156,7 @@ const GraphDash = ({ widgetData, pkColumn, setPkColumn }) => {
               const key = keys[idx];
               if (key) filteredRow[key] = row[key];
             });
+            setIsSearchQuery(false)
             return filteredRow;
           });
         }
@@ -167,6 +172,7 @@ const GraphDash = ({ widgetData, pkColumn, setPkColumn }) => {
       // If no data, do nothing
       if (!limitedData.length) {
         setGraphData({ categories: [], seriesData: [] });
+        setIsSearchQuery(false)
         return;
       }
 
@@ -175,6 +181,7 @@ const GraphDash = ({ widgetData, pkColumn, setPkColumn }) => {
 
       if (columnNames.length < 1) {
         console.warn("Insufficient columns to generate graph");
+        setIsSearchQuery(false)
         return;
       }
 
@@ -197,6 +204,7 @@ const GraphDash = ({ widgetData, pkColumn, setPkColumn }) => {
 
     } catch (error) {
       console.error("Error loading query data:", error);
+      setIsSearchQuery(false)
     }
   };
 
@@ -290,6 +298,7 @@ const GraphDash = ({ widgetData, pkColumn, setPkColumn }) => {
         setSearchScope({ scope: "", id: "" })
       } catch (error) {
         console.error("Error loading query data:", error);
+        setIsSearchQuery(false)
       }
     }
   }

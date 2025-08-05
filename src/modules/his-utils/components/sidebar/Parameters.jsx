@@ -8,6 +8,7 @@ import { faEyeSlash, faReply, faSearch } from "@fortawesome/free-solid-svg-icons
 import { useSearchParams } from "react-router-dom";
 import { fetchPostData } from "../../../../utils/HisApiHooks";
 import { decryptData } from "../../../../utils/SecurityConfig";
+import { getEncryptedParamValue } from "../../../../utils/Security";
 
 const Parameters = ({ params, scope, widgetId = null }) => {
     const { theme, setParamsValues, paramsValuesPro, setParamsValuesPro, setIsSearchQuery, activeTab, isSearchQuery, searchScope, setSearchScope, dt } = useContext(HISContext);
@@ -18,7 +19,11 @@ const Parameters = ({ params, scope, widgetId = null }) => {
     const [defaultValueIfEmpty, setDefaultValueIfEmpty] = useState('');
     const [queryParams] = useSearchParams();
 
-    const dashFor =  decryptData(queryParams.get('dashboardFor'));
+    // const dashFor = atob(queryParams.get('dashboardFor'));
+    const encIFUrl = queryParams.get("dbfhttf");
+    const groupId = encIFUrl ? atob(getEncryptedParamValue(encIFUrl, "groupId")) : '';
+    const dashFor = encIFUrl ? atob(getEncryptedParamValue(encIFUrl, "dashboardFor")) : '';
+
     const [errors, setErrors] = useState({
     })
 
@@ -299,7 +304,6 @@ const Parameters = ({ params, scope, widgetId = null }) => {
 
         initializeParams();
     }, [presentParams, widgetId]);
-console.log(selectedValues,'bnb')
 
     const renderInputField = (param) => {
         const {

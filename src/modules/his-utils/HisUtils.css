@@ -665,7 +665,7 @@ label {
 }
 
 .rdt_TableHead {
-  z-index: 0 !important;
+  z-index: 2 !important;
 }
 
 .help-docs {

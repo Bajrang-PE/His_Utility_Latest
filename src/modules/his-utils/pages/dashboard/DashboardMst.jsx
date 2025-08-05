@@ -3,7 +3,8 @@ import { HISContext } from "../../contextApi/HISContext";
 import { useSearchParams } from "react-router-dom";
 import { fetchData, fetchPostData } from "../../../../utils/HisApiHooks";
 import Parameters from "../../components/sidebar/Parameters";
-import { decryptData } from "../../../../utils/SecurityConfig";
+import { decryptData, encryptData } from "../../../../utils/SecurityConfig";
+import { getEncryptedParamValue } from "../../../../utils/Security";
 
 const DashSidebar = lazy(() => import("../../components/sidebar/Sidebar"));
 const TopBar = lazy(() => import("../../components/sidebar/TopBar"));
@@ -13,9 +14,17 @@ const DashboardMst = () => {
     const { activeTab, setActiveTab, theme, setTheme, mainDashData, setMainDashData, setLoading, loading, singleConfigData, getDashConfigData, setParamsValues, setPrevKpiTab, dt, setPresentTabsDash } = useContext(HISContext);
 
     const [searchParams] = useSearchParams();
-    const groupId = decryptData(searchParams.get("groupId"));
-    const dashboardFor = decryptData(searchParams.get("dashboardFor"));
+
+    // const groupId = atob(searchParams.get("groupId"));
+    // const dashboardFor = atob(searchParams.get("dashboardFor"));
     const [presentTabs, setPresentTabs] = useState([]);
+
+    const encIFUrl = searchParams.get("dbfhttf");
+    const groupId = encIFUrl ? atob(getEncryptedParamValue(encIFUrl, "groupId")) : '';
+    const dashboardFor = encIFUrl ? atob(getEncryptedParamValue(encIFUrl, "dashboardFor")) : '';
+    
+    console.log(dashboardFor,dashboardFor, 'decdata')
+
 
 
     useEffect(() => {
@@ -39,7 +48,6 @@ const DashboardMst = () => {
                 masterName: "DashboardMst"
             };
             const data = await fetchPostData("/hisutils/gettabsMultipleData", val);
-             console.log(data,'bgbgbg')
             if (data?.status === 1) {
                 setPresentTabs(data?.data);
                 setPresentTabsDash(data?.data);

@@ -7,7 +7,7 @@ import { dirname, resolve } from 'path';
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
-  base: '/',
+  base: '/db',
   server: {
     // https: {
     //   key: fs.readFileSync(path.resolve(__dirname, 'certs/uat.dcservices.in.key')),

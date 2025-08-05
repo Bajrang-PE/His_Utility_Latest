@@ -10,8 +10,8 @@ import { getAuthUserData } from "../../../../utils/CommonFunction";
 import { useSearchParams } from "react-router-dom";
 import PopUpWidget from "./PopUpWidget";
 import { fetchPostData } from "../../../../utils/HisApiHooks";
-import { jsPDF } from 'jspdf';
-import axios from "axios";
+import { getEncryptedParamValue } from "../../../../utils/Security";
+
 
 const Parameters = lazy(() => import('./Parameters'));
 
@@ -32,10 +32,14 @@ const TabularDash = (props) => {
   const [showPopUpWidget, setShowPopUpWidget] = useState(false);
 
   const [queryParams] = useSearchParams();
-  const isPrev = queryParams.get('isPreview');
+  // const isPrev = queryParams.get('isPreview');
+
+    const encIFUrl = queryParams.get("dbfhttf");
+    const isPrev = encIFUrl ? getEncryptedParamValue(encIFUrl, "isPreview") : '';
 
   const isChildPresent = widgetData?.children && widgetData?.children?.length > 0;
   const childId = widgetData?.children?.length > 0 ? widgetData?.children[0] : '';
+  const isFirstRowHeading = widgetData?.isFirstRowColumnName || 'No';
 
   useEffect(() => {
     setTableData([])
@@ -72,6 +76,63 @@ const TabularDash = (props) => {
     });
   };
 
+
+  // FOR SUBHEADING
+  // const formatData = (rawData = [], isFirstRowHeading) => {
+  //   if (!rawData || rawData.length === 0) {
+  //     return { columns: [], data: [] };
+  //   }
+
+  //   if (isFirstRowHeading) {
+  //     const headerRow = rawData[0];
+  //     const dataRows = rawData.slice(1);
+
+  //     const headers = [];
+  //     Object.entries(headerRow).forEach(([key, value]) => {
+  //       if (key === 'sno' || !value.includes('#h2#')) {
+  //         headers.push({ name: key, subHeaders: [value] });
+  //       } else if (typeof value === 'string' && value.includes('#h2#')) {
+  //         const [mainHeader, subHeadersString] = value.split('#h2#');
+  //         const subHeaders = subHeadersString.split(',');
+  //         headers.push({ name: mainHeader, subHeaders: subHeaders.map(s => s.trim()) });
+  //       }
+  //     });
+
+  //     const formattedData = dataRows.map((item) => {
+  //       const formattedItem = {};
+  //       let headerIndex = 0;
+
+  //       Object.entries(item).forEach(([key, value]) => {
+  //         if (key === 'sno' || !value.includes('#d#')) {
+  //           formattedItem[headers[headerIndex].subHeaders[0]] = value;
+  //           headerIndex++;
+  //         } else if (typeof value === 'string' && value.includes('#d#')) {
+  //           const values = value.split('#d#');
+  //           headers[headerIndex].subHeaders.forEach((subHeader, subIndex) => {
+  //             const fullColumnKey = `${headers[headerIndex].name}_${subHeader}`;
+  //             formattedItem[fullColumnKey] = values[subIndex];
+  //           });
+  //           headerIndex++;
+  //         }
+  //       });
+  //       return formattedItem;
+  //     });
+
+  //     return { headers, datafor: formattedData };
+  //   } else {
+  //     // This logic handles the case where there is no multi-level header
+  //     const formattedData = rawData.map((item) => {
+  //       const formattedItem = {};
+  //       Object.entries(item).forEach(([key, value]) => {
+  //         const formattedKey = key.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+  //         formattedItem[formattedKey] = value;
+  //       });
+  //       return formattedItem;
+  //     });
+
+  //     return { headers: null, data: formattedData, isMultiLevel: false };
+  //   }
+  // };
 
   const getPopupConfig = (widgetIndicator) => {
     try {
@@ -151,14 +212,14 @@ const TabularDash = (props) => {
 
     fetchPostData("/hisutils/ftp/view", val, { responseType: 'blob' }).then(async (data) => {
       if (data) {
-        console.log(data, 'adtata')
+
         // const contentType = data.headers['content-type'] || data.data.type;
 
         // if (contentType.includes('application/pdf')) {
 
-          const pdfBlob = new Blob([data?.data], { type: 'application/pdf' });
-          const pdfUrl = URL.createObjectURL(pdfBlob);
-          window.open(pdfUrl, '_blank');
+        const pdfBlob = new Blob([data?.data], { type: 'application/pdf' });
+        const pdfUrl = URL.createObjectURL(pdfBlob);
+        window.open(pdfUrl, '_blank');
 
         // } else if (contentType.includes('text/plain')) {
 
@@ -189,82 +250,225 @@ const TabularDash = (props) => {
     return typeof val === 'string' && val.includes('##') ? val.split('##')[0] : val;
   };
 
-  const generateColumns = (data, ifDrill = isChildPresent) => {
+  const generateColumns = (data, ifDrill = isChildPresent, isFirstRowHeading, headers) => {
     if (!data || data.length === 0) return [];
 
-    const keys = Object.keys(data[0]).filter(key => key !== 'pkcolumn');
+    // if (isFirstRowHeading === 'Yes') {
+    //   const columns = [];
+    //   const mainHeaders = [];
 
-    let reorderedKeys = [];
+    //   headers.forEach(header => {
+    //     if (header.subHeaders.length === 1) {
+    //       // Single column like 'sno' or 'STATE/UT'
+    //       mainHeaders.push({ name: header.name, subHeaders: 1 });
+    //       columns.push({
+    //         name: header.subHeaders[0],
+    //         selector: row => row[header.subHeaders[0]],
+    //         sortable: true,
+    //         wrap: true,
+    //       });
+    //     } else {
+    //       // Multi-level columns
+    //       mainHeaders.push({ name: header.name, subHeaders: header.subHeaders.length });
+    //       header.subHeaders.forEach(subHeader => {
+    //         const fullColumnKey = `${header.name}_${subHeader}`;
+    //         columns.push({
+    //           name: subHeader,
+    //           selector: row => row[fullColumnKey],
+    //           sortable: true,
+    //           wrap: true,
+    //         });
+    //       });
+    //     }
+    //   });
+    //   return { columns, mainHeaders };
 
-    const snoKey = keys.find(k => /^sno$/i.test(k));
-    const stateKey = keys.find(k => /state/i.test(k));
+    // } else {
 
-    if (snoKey) reorderedKeys.push(snoKey);
-    if (stateKey) reorderedKeys.push(stateKey);
+      const keys = Object.keys(data[0]).filter(key => key !== 'pkcolumn');
 
-    const restKeys = keys.filter(
-      k => k !== snoKey && k !== stateKey
-    );
+      let reorderedKeys = [];
 
-    reorderedKeys = [...reorderedKeys, ...restKeys];
+      const snoKey = keys.find(k => /^sno$/i.test(k));
+      const stateKey = keys.find(k => /state/i.test(k));
 
-    const dynamicColumns = reorderedKeys.map((key) => ({
-      name: key,
-      selector: row => getFirstValue(row[key]),
-      sortable: true,
-      wrap: true,
-      width: /^sno$/i.test(key) ? '8%' : undefined,
-      cell: (row) => {
-        const value = row[key];
-        if (value && typeof value === 'object' && !Array.isArray(value)) {
-          return null;
-        }
-        const displayValue = getFirstValue(value);
+      if (snoKey) reorderedKeys.push(snoKey);
+      if (stateKey) reorderedKeys.push(stateKey);
 
-        if (typeof value === 'string' && value.trim().startsWith('<a') && value.includes('data-isSFTP=')) {
-          return (
-            <span className="pointer" dangerouslySetInnerHTML={{ __html: value }} onClick={(e) => FtpClicked(e, value)} />
-          );
-        }
+      const restKeys = keys.filter(
+        k => k !== snoKey && k !== stateKey
+      );
 
-        if (typeof value === 'string' && (value.trim().startsWith('<a') || value.trim().startsWith('<div'))) {
-          return (
-            <span
-              dangerouslySetInnerHTML={{ __html: value }}
-            />
-          );
-        }
+      reorderedKeys = [...reorderedKeys, ...restKeys];
 
-        return typeof value === 'string' && value.includes("##") ? (
-          <span
-            style={{ color: 'blue', cursor: 'pointer' }}
-            onClick={() => openPopUpWidget(value)}
-          >
-            {displayValue}
-          </span>
-        ) : (
-          <span>{displayValue}</span>
-        );
-      }
-    }));
-
-    if (ifDrill) {
-      const drillColumn = {
-        name: "Action",
-        cell: (row) => (
-          <button
-            className="rounded-4 border-1"
-            onClick={() => onDrillDown(row?.pkcolumn)}
-          >
-            <FontAwesomeIcon icon={faSortAmountDesc} />
-          </button>
-        )
+      // Helper function to detect date strings in format "23-Jul-2025"
+      const isDateString = (value) => {
+        if (typeof value !== 'string') return false;
+        return /^\d{1,2}-[A-Za-z]{3}-\d{4}$/.test(value.trim());
       };
-      return [drillColumn, ...dynamicColumns];
-    }
 
-    return dynamicColumns;
+      // Check which columns contain date values
+      const dateColumns = new Set();
+      if (data.length > 0) {
+        // Sample first 5 rows to detect date columns
+        for (let i = 0; i < Math.min(5, data.length); i++) {
+          const row = data[i];
+          reorderedKeys.forEach(key => {
+            const value = getFirstValue(row[key]);
+            if (isDateString(value)) {
+              dateColumns.add(key);
+            }
+          });
+        }
+      }
+
+      const dynamicColumns = reorderedKeys.map((key) => {
+        const isDateColumn = dateColumns.has(key);
+
+        return {
+          name: key,
+          selector: row => getFirstValue(row[key]),
+          sortable: true,
+          wrap: true,
+          width: /^sno$/i.test(key) ? '8%' : undefined,
+          // Add custom sort function for date columns
+          sortFunction: isDateColumn ? (rowA, rowB) => {
+            const dateA = new Date(getFirstValue(rowA[key]));
+            const dateB = new Date(getFirstValue(rowB[key]));
+            return dateA - dateB;
+          } : undefined,
+          cell: (row) => {
+            const value = row[key];
+            if (value && typeof value === 'object' && !Array.isArray(value)) {
+              return null;
+            }
+            const displayValue = getFirstValue(value);
+
+            if (typeof value === 'string' && value.trim().startsWith('<a') && value.includes('data-isSFTP=')) {
+              return (
+                <span className="pointer" dangerouslySetInnerHTML={{ __html: value }} onClick={(e) => FtpClicked(e, value)} />
+              );
+            }
+
+            if (typeof value === 'string' && (value.trim().startsWith('<a') || value.trim().startsWith('<div'))) {
+              return (
+                <span
+                  dangerouslySetInnerHTML={{ __html: value }}
+                />
+              );
+            }
+
+            return typeof value === 'string' && value.includes("##") ? (
+              <span
+                style={{ color: 'blue', cursor: 'pointer' }}
+                onClick={() => openPopUpWidget(value)}
+              >
+                {displayValue}
+              </span>
+            ) : (
+              <span>{displayValue}</span>
+            );
+          }
+        };
+      });
+
+      if (ifDrill) {
+        const drillColumn = {
+          name: "Action",
+          cell: (row) => (
+            <button
+              className="rounded-4 border-1"
+              onClick={() => onDrillDown(row?.pkcolumn)}
+            >
+              <FontAwesomeIcon icon={faSortAmountDesc} />
+            </button>
+          )
+        };
+        return [drillColumn, ...dynamicColumns];
+      }
+
+      return dynamicColumns;
+    // }
   };
+
+  // const generateColumns = (data, ifDrill = isChildPresent) => {
+  //   if (!data || data.length === 0) return [];
+
+  //   const keys = Object.keys(data[0]).filter(key => key !== 'pkcolumn');
+
+  //   let reorderedKeys = [];
+
+  //   const snoKey = keys.find(k => /^sno$/i.test(k));
+  //   const stateKey = keys.find(k => /state/i.test(k));
+
+  //   if (snoKey) reorderedKeys.push(snoKey);
+  //   if (stateKey) reorderedKeys.push(stateKey);
+
+  //   const restKeys = keys.filter(
+  //     k => k !== snoKey && k !== stateKey
+  //   );
+
+  //   reorderedKeys = [...reorderedKeys, ...restKeys];
+
+  //   const dynamicColumns = reorderedKeys.map((key) => ({
+  //     name: key,
+  //     selector: row => getFirstValue(row[key]),
+  //     sortable: true,
+  //     wrap: true,
+  //     width: /^sno$/i.test(key) ? '8%' : undefined,
+  //     cell: (row) => {
+  //       const value = row[key];
+  //       if (value && typeof value === 'object' && !Array.isArray(value)) {
+  //         return null;
+  //       }
+  //       const displayValue = getFirstValue(value);
+
+  //       if (typeof value === 'string' && value.trim().startsWith('<a') && value.includes('data-isSFTP=')) {
+  //         return (
+  //           <span className="pointer" dangerouslySetInnerHTML={{ __html: value }} onClick={(e) => FtpClicked(e, value)} />
+  //         );
+  //       }
+
+  //       if (typeof value === 'string' && (value.trim().startsWith('<a') || value.trim().startsWith('<div'))) {
+  //         return (
+  //           <span
+  //             dangerouslySetInnerHTML={{ __html: value }}
+  //           />
+  //         );
+  //       }
+
+  //       return typeof value === 'string' && value.includes("##") ? (
+  //         <span
+  //           style={{ color: 'blue', cursor: 'pointer' }}
+  //           onClick={() => openPopUpWidget(value)}
+  //         >
+  //           {displayValue}
+  //         </span>
+  //       ) : (
+  //         <span>{displayValue}</span>
+  //       );
+  //     }
+  //   }));
+
+  //   if (ifDrill) {
+  //     const drillColumn = {
+  //       name: "Action",
+  //       cell: (row) => (
+  //         <button
+  //           className="rounded-4 border-1"
+  //           onClick={() => onDrillDown(row?.pkcolumn)}
+  //         >
+  //           <FontAwesomeIcon icon={faSortAmountDesc} />
+  //         </button>
+  //       )
+  //     };
+  //     return [drillColumn, ...dynamicColumns];
+  //   }
+
+  //   return dynamicColumns;
+  // };
+
+  const [MainHeaders, setMainHeaders] = useState([])
 
   const fetchData = async (widget) => {
     if (widget?.modeOfQuery === "Procedure") {
@@ -306,7 +510,7 @@ const TabularDash = (props) => {
       const params = getOrderedParamValues(widget?.queryVO[0]?.mainQuery, paramsValues, widget?.rptId);
       try {
         setFetching(true)
-        console.log(params,'params')
+        console.log(params, 'params')
         const data = await fetchQueryData(widget?.queryVO?.length > 0 ? widget?.queryVO : [], widget?.JNDIid, params, pkColumn);
         if (data?.length > 0) {
           let filteredData = data;
@@ -323,9 +527,23 @@ const TabularDash = (props) => {
               return filteredRow;
             });
           }
-          const formattedData = formatData(filteredData);
-          const generatedColumns = generateColumns(formattedData, isChildPresent);
+
+          const formattedData = formatData(filteredData, isFirstRowHeading);
+          // const { headers, datafor } = formatData(filteredData, isFirstRowHeading);
+
+          // if (isFirstRowHeading === "Yes") {
+          // const { columns, mainHeaders } = generateColumns(datafor, isChildPresent, isFirstRowHeading, headers);
+          // setColumns(columns);
+          // setMainHeaders(mainHeaders);
+
+          // console.log(headers, 'headers')
+          // console.log(mainHeaders, 'mainHeaders')
+          // // } else {
+          const generatedColumns = generateColumns(formattedData, isChildPresent, isFirstRowHeading);
           setColumns(generatedColumns);
+          // }
+
+          console.log(formattedData, 'formattedData')
           setTableData(formattedData);
           setLoading(false)
           setIsSearchQuery(false)
@@ -359,10 +577,10 @@ const TabularDash = (props) => {
     }
   }, [isSearchQuery]);
 
-  const headingAlign = widgetData?.headingAlign === '1' ? 'center' : 'left';
+  const headingAlign = widgetData?.widgetHeadingAlignment?.toLowerCase() || 'left';
   const headingAlignTable = widgetData?.tableHeadingAlignment === '1' ? 'center' : 'left';
-  const borderReq = widgetData?.isTableBorderRequired || '';
-  const headingReq = widgetData?.tableHeadingRequired === 'yes' || widgetData?.tableHeadingRequired === 'Yes';
+  const borderReq = widgetData?.isWidgetBorderRequired || 'Yes';
+  const headingReq = widgetData?.isWidgetNameVisible || "Yes";
   const headingBgClr = widgetData?.headingBackgroundColour || '#000000';
   const headingFontClr = widgetData?.headingFontColour || '#000000';
   const widgetHeadingColor = widgetData?.widgetHeadingColor || '#000000';
@@ -373,12 +591,13 @@ const TabularDash = (props) => {
   const recordPerPage = widgetData?.recordPerPage || 5;
   const scrollHeight = widgetData?.scrollYValue || "500";
   const isDirectDownloadRequired = widgetData?.isDirectDownloadRequired || 'No';
-  const isActionButtonReq = widgetData?.isActionButtonReq || 'No';
+  const isActionButtonReq = widgetData?.isActionButtonReq;
   const paramsData = widgetData.selFilterIds || "";
   const footerText = widgetData.footerText || "";
   const widgetTopMargin = widgetData.widgetTopMargin || "";
   const initialRecord = widgetData?.initialRecordNo;
   const finalRecord = widgetData?.finalRecordNo;
+  const isRecordsLimitedLineRequired = widgetData?.isRecordsLimitedLineRequired || "No";
 
   const widgetLimit = widgetData?.limitHTMLFromDb || ''
   const defLimit = singleConfigData?.databaseConfigVO?.setDefaultLimit || ''
@@ -444,16 +663,19 @@ const TabularDash = (props) => {
   return (
     <>
       {/* {currentLevel == 0 && */}
-      <div className={`tabular-box ${theme === 'Dark' ? 'dark-theme' : ''} tabular-box-border ${borderReq === 'No' ? '' : 'tabular-box-border'}`} style={{ border: `1px solid ${theme === 'Dark' ? 'white' : 'black'}` }}>
+      <div className={`tabular-box ${theme === 'Dark' ? 'dark-theme' : ''} tabular-box-border ${borderReq === 'No' ? 'border-0' : ''}`} style={{
+        border: `1px solid ${theme === 'Dark' ? 'white' : 'black'}`,
+        marginTop: `${widgetTopMargin}px`
+      }}>
 
 
-        <div className="row px-2 py-2 border-bottom" style={{ textAlign: headingAlign, color: widgetHeadingColor }} >
-          {headingReq &&
-            <div className={` ${isActionButtonReq === 'Yes' || currentLevel !== 0 ? 'col-md-7' : 'col-md-12'} fw-medium fs-6`} >{dt(widgetData?.rptName)}</div>
+        <div className={`row px-1 py-1 border-bottom ${headingReq !== "Yes" ? "align-content-end" : ""}`}>
+          {headingReq === "Yes" &&
+            <div className={` ${isActionButtonReq !== 'No' || isActionButtonReq !== 'None' || currentLevel !== 0 ? 'col-md-9' : 'col-md-12'} fw-medium fs-6`} style={{ textAlign: headingAlign, color: widgetHeadingColor }} >{dt(widgetData?.rptName)}</div>
           }
 
-          <div className="col-md-5">
-            {isActionButtonReq === 'Yes' && (<>
+          <div className={`${headingReq === "Yes" ? "col-md-3" : "col-md-12"}`}>
+            {(isActionButtonReq !== 'No' && isActionButtonReq !== 'None') && (<>
               <button
                 type="button"
                 className="small-box-btn-dwn"
@@ -463,20 +685,27 @@ const TabularDash = (props) => {
                 <FontAwesomeIcon icon={faCog} className="dropdown-gear-icon" />
               </button>
               <ul className="dropdown-menu p-2">
-                <li className="p-1 dropdown-item text-primary" style={{ cursor: "pointer" }} onClick={() => fetchData(widgetData)}>
-                  <FontAwesomeIcon icon={faRefresh} className="dropdown-gear-icon me-2" />{dt('Refresh Data')}
-                </li>
-                <li className="p-1 dropdown-item text-primary" style={{ cursor: "pointer" }} onClick={() => generatePDF(widgetData, widgetLimit ? filterData.slice(0, parseInt(widgetLimit)) : safeLimit ? filterData.slice(0, safeLimit) : filterData, singleConfigData?.databaseConfigVO)} title="pdf">
-                  <FontAwesomeIcon icon={faFilePdf} className="dropdown-gear-icon me-2" />{dt('Download PDF')}
-                </li>
-                <li className="p-1 dropdown-item text-primary" style={{ cursor: "pointer" }} onClick={() => generateCSV(widgetData, widgetLimit ? filterData.slice(0, parseInt(widgetLimit)) : safeLimit ? filterData.slice(0, safeLimit) : filterData, singleConfigData?.databaseConfigVO)}>
-                  <FontAwesomeIcon icon={faFileExcel} className="dropdown-gear-icon me-2" />{dt('Download CSV')}
-                </li>
+                {(isActionButtonReq === 'Yes' || isActionButtonReq === 'advanced') &&
+                  <li className="p-1 dropdown-item text-primary" style={{ cursor: "pointer" }} onClick={() => fetchData(widgetData)}>
+                    <FontAwesomeIcon icon={faRefresh} className="dropdown-gear-icon me-2" />{dt('Refresh Data')}
+                  </li>
+                }
+                {(isActionButtonReq === 'Yes' || isActionButtonReq === 'pdf' || isActionButtonReq === 'pdfAndcsv') &&
+                  <li className="p-1 dropdown-item text-primary" style={{ cursor: "pointer" }} onClick={() => generatePDF(widgetData, widgetLimit ? filterData.slice(0, parseInt(widgetLimit)) : safeLimit ? filterData.slice(0, safeLimit) : filterData, singleConfigData?.databaseConfigVO)} title="pdf">
+                    <FontAwesomeIcon icon={faFilePdf} className="dropdown-gear-icon me-2" />{dt('Download PDF')}
+                  </li>
+                }
+                {(isActionButtonReq === 'Yes' || isActionButtonReq === 'csv' || isActionButtonReq === 'pdfAndcsv') &&
+                  <li className="p-1 dropdown-item text-primary" style={{ cursor: "pointer" }} onClick={() => generateCSV(widgetData, widgetLimit ? filterData.slice(0, parseInt(widgetLimit)) : safeLimit ? filterData.slice(0, safeLimit) : filterData, singleConfigData?.databaseConfigVO)}>
+                    <FontAwesomeIcon icon={faFileExcel} className="dropdown-gear-icon me-2" />{dt('Download CSV')}
+                  </li>
+                }
                 {/* <li className="p-1 dropdown-item text-primary" style={{ cursor: "pointer" }}>
-                <FontAwesomeIcon icon={faBarChart} className="dropdown-gear-icon me-2" />Outliers
+                <FontAwesomeIcon icon={faBarChart} className="dropdown-gear-icon me-2" />Advanced
               </li> */}
               </ul>
-
+            </>)}
+            {isDirectDownloadRequired === "Yes" && (<>
               <button className="small-box-btn-dwn" onClick={() => generatePDF(widgetData, filterData, singleConfigData?.databaseConfigVO)} title="PDF">
                 <FontAwesomeIcon icon={faFilePdf} />
               </button>
@@ -522,7 +751,7 @@ const TabularDash = (props) => {
             <Parameters params={paramsData} scope={'widgetParams'} widgetId={widgetData?.rptId} />
           </div>
         )}
-        <div className="px-2 py-2" style={{ marginTop: `${widgetTopMargin}px` }}>
+        <div className="px-2 py-2" >
           <h4 style={{ fontWeight: "500", fontSize: "20px" }}>{dt('Query')} : {widgetData?.rptId}</h4>
           {(widgetData?.modeOfQuery === 'Query' && isPrev == 1) &&
             <span>{mainQuery}</span>
@@ -569,6 +798,7 @@ const TabularDash = (props) => {
             isTableHeadingRequired={!headingReq}
             theme={theme}
             noDataComponent={<div className="text-danger fw-bold fs-13">{dt(customMessage || "There are no records to display")}</div>}
+            mainHeaders={MainHeaders}
           />
 
         }

@@ -7,6 +7,7 @@ import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
 import { useSearchParams } from 'react-router-dom';
 import { fetchPostData } from '../../../../utils/HisApiHooks';
 import { decryptData } from '../../../../utils/SecurityConfig';
+import { getEncryptedParamValue } from '../../../../utils/Security';
 
 const PdfDownload = lazy(() => import('../commons/PdfDownload'));
 const Parameters = lazy(() => import('./Parameters'));
@@ -19,23 +20,27 @@ const TabDash = React.memo(() => {
     const [tabLoading, setTabloading] = useState(false);
 
     const [searchParams] = useSearchParams();
-    const groupId = decryptData(searchParams.get("groupId"));
-    const dashboardFor = decryptData(searchParams.get("dashboardFor"));
+
+    //    const groupId = atob(searchParams.get("groupId"));
+    // const dashboardFor = atob(searchParams.get("dashboardFor"));
+    const encIFUrl = searchParams.get("dbfhttf");
+    const groupId = encIFUrl ? atob(getEncryptedParamValue(encIFUrl, "groupId")) : '';
+    const dashboardFor = encIFUrl ? atob(getEncryptedParamValue(encIFUrl, "dashboardFor")) : '';
 
     const footerText = activeTab?.jsonData?.footerText || "";
 
     const getAllAvailableWidgets = useCallback(async (idArr, dashFor) => {
-        
+
         try {
             const val = {
                 ids: idArr || [],
                 dashboardFor: dashFor || 'CENTRAL DASHBOARD',
                 masterName: "DashboardWidgetMst"
             };
-       
+
             const data = await fetchPostData("/hisutils/getWdgtMultipleData", val);
 
-           
+
             if (data?.status === 1) {
                 setAllWidgetData(data?.data);
                 return data?.data;
@@ -117,7 +122,6 @@ const TabDash = React.memo(() => {
                         ?.filter(Boolean)
                 );
 
-
                 const standaloneAndParentsOnly = uniqueWidgets?.filter(
                     widget => !childWidgetIds.has(widget.rptId)
                         && !allLinkedRptIds.has(widget.rptId)
@@ -151,7 +155,6 @@ const TabDash = React.memo(() => {
         setPrevKpiTab([])
     }
 
-    // console.log(activeTab,'activeTab')
 
     return (
         <>
