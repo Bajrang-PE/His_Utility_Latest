@@ -154,7 +154,6 @@ const KpiDash = ({ widgetData, presentTabs }) => {
 
     const widheight = presentTabs?.length > 0 && presentTabs?.filter(dt => dt?.rptId == widgetData?.rptId)[0]?.widgetHeight;
 
-    console.log(widgetData, 'widgetData')
 
 
     return (

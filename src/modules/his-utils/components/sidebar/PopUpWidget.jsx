@@ -4,14 +4,13 @@ import { fetchData } from '../../../../utils/HisApiHooks';
 import { ToastAlert } from '../../utils/commonFunction';
 import WidgetDash from './WidgetDash';
 import { useSearchParams } from 'react-router-dom';
-import { decryptData } from '../../../../utils/SecurityConfig';
 
 const PopUpWidget = (props) => {
     const { showPopUpWidget, closePopup, popupConfig, presentWidgets } = props;
 
     const [widgetData, setWidgetData] = useState([]);
     const [searchParams] = useSearchParams();
-    const dashboardFor = decryptData(searchParams.get("dashboardFor"));
+    const dashboardFor = atob(searchParams.get("dashboardFor"));
 
     const getWidgetData = (widid) => {
         fetchData(`/hisutils/getWdgtSnglData?id=${widid}&dashboardFor=${dashboardFor}&masterName=DashboardWidgetMst`).then(data => {

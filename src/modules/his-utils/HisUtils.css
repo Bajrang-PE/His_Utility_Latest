@@ -877,9 +877,9 @@ label {
   width: 100%;
   background-color: #FFFFFF;
   /* min-height: 52px; */
-  border-bottom-width: 1px;
-  border-bottom-color: rgba(0, 0, 0, .12);
-  border-bottom-style: solid;
+  /* border-bottom-width: 1px; */
+  /* border-bottom-color: rgba(0, 0, 0, .12); */
+  /* border-bottom-style: solid; */
   min-height: 32px;
 }
 
@@ -900,6 +900,6 @@ label {
   font-weight: bold;
   padding: 10px;
   border-right: 1px solid #474646;
-  border-bottom: 1px solid #474646;
+  /* border-bottom: 1px solid #474646; */
   text-align: center;
 }

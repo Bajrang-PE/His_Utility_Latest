@@ -3,7 +3,6 @@ import { HISContext } from "../../contextApi/HISContext";
 import { useSearchParams } from "react-router-dom";
 import { fetchData, fetchPostData } from "../../../../utils/HisApiHooks";
 import Parameters from "../../components/sidebar/Parameters";
-import { decryptData } from "../../../../utils/SecurityConfig";
 
 const DashSidebar = lazy(() => import("../../components/sidebar/Sidebar"));
 const TopBar = lazy(() => import("../../components/sidebar/TopBar"));
@@ -40,7 +39,6 @@ const DashboardMst = () => {
                 masterName: "DashboardMst"
             };
             const data = await fetchPostData("/hisutils/gettabsMultipleData", val);
-             console.log(data,'bgbgbg')
             if (data?.status === 1) {
                 setPresentTabs(data?.data);
                 setPresentTabsDash(data?.data);

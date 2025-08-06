@@ -71,8 +71,6 @@ const Tabular = ({
         },
     };
 
-    console.log(columns, 'columns')
-
     return (
         <div style={{
             position: 'relative',
@@ -88,23 +86,12 @@ const Tabular = ({
                 }}
             >
                 <div
-                    // style={{
-                    //     position: 'sticky',
-                    //     top: 0,
-                    //     zIndex: 3,
-                    //     width: tableWidth,
-                    // }}
                     className='first-head'
 
 
                 >
                     <div
                         ref={headerRef}
-                        // style={{
-                        //     overflow: 'hidden',
-                        //     width: '100%',
-                        //     backgroundColor: headingBgColor
-                        // }}
                         className='second-head'
 
                     >
@@ -152,41 +139,22 @@ const CustomTableHeading = ({ mainHeaders, headingBgColor, headingFontColor, tab
     if (!mainHeaders || mainHeaders.length === 0) return null;
 
     return (
-        // <div className='' style={{
-        //     display: 'flex',
-        //     width: tableWidth,
-        //     backgroundColor: headingBgColor
-        // }}>
         <>
             {mainHeaders.map((header, index) => (
-                // <div
-                //     style={{
-                //         width: `${(100 / columns.length) * header.subHeaders}%`
-                //     }}
-                // >
                 <div
                     key={index}
                     className='third-head'
                     style={{
-                        // flex: `${header.subHeaders} 0 auto`,
                         minWidth: `${150 * header.subHeaders}px`,
-                        width: `${(100 / columns.length) * header.subHeaders}%`
-                        // fontWeight: 'bold',
-                        // textAlign: 'center',
-                        // borderRight: '1px solid #474646',
-                        // padding: '10px',
-                        // color: headingFontColor,
-                        // borderBottom: header.isSingle ? 'none' : '1px solid #474646',
-                        // boxSizing: 'border-box',
+                        width: `${(100 / columns.length) * header.subHeaders}%`,
+                        borderBottom: header.isSingle ? 'none' : '1px solid #474646',
                     }}
                 >
 
-                    {header.name}
+                    <div title={header?.name}>{header.name}</div>
                 </div >
-                // </div>
             ))}
         </>
-        // </div>
     );
 };
 

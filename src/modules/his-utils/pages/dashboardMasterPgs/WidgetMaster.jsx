@@ -559,7 +559,6 @@ const WidgetMaster = () => {
     }
   }, [singleData]);
 
-console.log(singleData,'single')
   //parameter search
   useEffect(() => {
     if (!searchInput) {
