@@ -22,9 +22,9 @@ const MapDash = ({ widgetData, setWidgetData, pkColumn, setPkColumn, levelData, 
     const [currentLevel, setCurrentLevel] = useState(0);
 
     const [queryParams] = useSearchParams();
-    // const isPrev = queryParams.get('isPreview');
-      const encIFUrl = queryParams.get("dbfhttf");
-      const isPrev = encIFUrl ? getEncryptedParamValue(encIFUrl, "isPreview") : '';
+    const isPrev = queryParams.get('isPreview');
+    //   const encIFUrl = queryParams.get("dbfhttf");
+    //   const isPrev = encIFUrl ? getEncryptedParamValue(encIFUrl, "isPreview") : '';
 
     const isChildPresent = widgetData?.children && widgetData?.children?.length > 0;
     const childId = widgetData?.children?.length > 0 ? widgetData?.children[0] : '';

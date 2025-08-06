@@ -20,9 +20,23 @@ const Parameters = ({ params, scope, widgetId = null }) => {
     const [queryParams] = useSearchParams();
 
     // const dashFor = atob(queryParams.get('dashboardFor'));
-    const encIFUrl = queryParams.get("dbfhttf");
-    const groupId = encIFUrl ? atob(getEncryptedParamValue(encIFUrl, "groupId")) : '';
-    const dashFor = encIFUrl ? atob(getEncryptedParamValue(encIFUrl, "dashboardFor")) : '';
+    // const encIFUrl = queryParams.get("dbfhttf");
+    // const groupId = encIFUrl ? atob(getEncryptedParamValue(encIFUrl, "groupId")) : '';
+    // const dashFor = encIFUrl ? atob(getEncryptedParamValue(encIFUrl, "dashboardFor")) : '';
+
+    let groupId = ''
+    let dashFor = ''
+
+    useEffect(() => {
+        if (queryParams.get("groupId") && queryParams.get("dashboardFor")) {
+            groupId = atob(queryParams.get("groupId"));
+            dashFor = atob(queryParams.get("dashboardFor"));
+        } else if (queryParams.get("dbfhttf")) {
+            const encIFUrl = queryParams.get("dbfhttf");
+            groupId = encIFUrl ? atob(getEncryptedParamValue(encIFUrl, "groupId")) : '';
+            dashFor = encIFUrl ? atob(getEncryptedParamValue(encIFUrl, "dashboardFor")) : '';
+        }
+    }, [])
 
     const [errors, setErrors] = useState({
     })

@@ -74,8 +74,10 @@ export const getEncryptedParamValue = (encString, key) => {
     const decData = decryptAesOrRsa(newDt);
     const decDtArr = JSON.parse(decData);
 
+    
     if (decDtArr?.length > 0) {
         const found = decDtArr.find(param => param.name === key);
+        console.log(found,'decDtArr')
         return found ? decodeURIComponent(found.value) : null;
     } else {
         return null;

@@ -32,10 +32,10 @@ const TabularDash = (props) => {
   const [showPopUpWidget, setShowPopUpWidget] = useState(false);
 
   const [queryParams] = useSearchParams();
-  // const isPrev = queryParams.get('isPreview');
+  const isPrev = queryParams.get('isPreview');
 
-    const encIFUrl = queryParams.get("dbfhttf");
-    const isPrev = encIFUrl ? getEncryptedParamValue(encIFUrl, "isPreview") : '';
+    // const encIFUrl = queryParams.get("dbfhttf");
+    // const isPrev = encIFUrl ? getEncryptedParamValue(encIFUrl, "isPreview") : '';
 
   const isChildPresent = widgetData?.children && widgetData?.children?.length > 0;
   const childId = widgetData?.children?.length > 0 ? widgetData?.children[0] : '';
@@ -63,76 +63,81 @@ const TabularDash = (props) => {
   }, [searchInput, tableData]);
 
 
-  const formatData = (rawData = []) => {
-    return rawData.map((item) => {
-      const formattedItem = {};
-      Object.entries(item).forEach(([key, value]) => {
+  // const formatData = (rawData = []) => {
+  //   return rawData.map((item) => {
+  //     const formattedItem = {};
+  //     Object.entries(item).forEach(([key, value]) => {
 
-        const formattedKey = key.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+  //       const formattedKey = key.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
 
-        formattedItem[formattedKey] = formattedKey.includes("State") ? value : value;
-      });
-      return formattedItem;
-    });
-  };
+  //       formattedItem[formattedKey] = formattedKey.includes("State") ? value : value;
+  //     });
+  //     return formattedItem;
+  //   });
+  // };
 
 
   // FOR SUBHEADING
-  // const formatData = (rawData = [], isFirstRowHeading) => {
-  //   if (!rawData || rawData.length === 0) {
-  //     return { columns: [], data: [] };
-  //   }
+  const formatData = (rawData = [], isFirstRowHeading) => {
+    if (!rawData || rawData.length === 0) {
+      return { columns: [], data: [] };
+    }
 
-  //   if (isFirstRowHeading) {
-  //     const headerRow = rawData[0];
-  //     const dataRows = rawData.slice(1);
+    if (isFirstRowHeading === 'Yes') {
+      const headerRow = rawData[0];
+      const dataRows = rawData.slice(1);
 
-  //     const headers = [];
-  //     Object.entries(headerRow).forEach(([key, value]) => {
-  //       if (key === 'sno' || !value.includes('#h2#')) {
-  //         headers.push({ name: key, subHeaders: [value] });
-  //       } else if (typeof value === 'string' && value.includes('#h2#')) {
-  //         const [mainHeader, subHeadersString] = value.split('#h2#');
-  //         const subHeaders = subHeadersString.split(',');
-  //         headers.push({ name: mainHeader, subHeaders: subHeaders.map(s => s.trim()) });
-  //       }
-  //     });
+      const headers = [];
+      let isH2 = false;
+      Object.entries(headerRow).forEach(([key, value]) => {
+        if (key === 'sno' || !value.includes('#h2#')) {
+          headers.push({ name: key === 'sno' ? 'sno' : value, subHeaders: [] });
+        } else if (typeof value === 'string' && value.includes('#h2#')) {
+          const [mainHeader, subHeadersString] = value.split('#h2#');
+          const subHeaders = subHeadersString.split(',');
+          headers.push({ name: mainHeader, subHeaders: subHeaders.map(s => s.trim()) });
+          isH2 = true
+        }
+      });
 
-  //     const formattedData = dataRows.map((item) => {
-  //       const formattedItem = {};
-  //       let headerIndex = 0;
+      const formattedData = dataRows.map((item) => {
+        const formattedItem = {};
+        let headerIndex = 0;
 
-  //       Object.entries(item).forEach(([key, value]) => {
-  //         if (key === 'sno' || !value.includes('#d#')) {
-  //           formattedItem[headers[headerIndex].subHeaders[0]] = value;
-  //           headerIndex++;
-  //         } else if (typeof value === 'string' && value.includes('#d#')) {
-  //           const values = value.split('#d#');
-  //           headers[headerIndex].subHeaders.forEach((subHeader, subIndex) => {
-  //             const fullColumnKey = `${headers[headerIndex].name}_${subHeader}`;
-  //             formattedItem[fullColumnKey] = values[subIndex];
-  //           });
-  //           headerIndex++;
-  //         }
-  //       });
-  //       return formattedItem;
-  //     });
+        Object.entries(item).forEach(([key, value]) => {
+          if (key === 'sno' || !value.includes('#d#')) {
+            formattedItem[headers[headerIndex].name] = value;
+            headerIndex++;
+          } else if (typeof value === 'string' && value.includes('#d#')) {
+            const values = value.split('#d#');
+            headers[headerIndex].subHeaders.forEach((subHeader, subIndex) => {
+              const fullColumnKey = `${headers[headerIndex].name}_${subHeader}`;
+              formattedItem[fullColumnKey] = values[subIndex];
+            });
+            headerIndex++;
+          } else {
+            const formattedKey = key.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+            formattedItem[formattedKey] = value;
+          }
+        });
+        return formattedItem;
+      });
 
-  //     return { headers, datafor: formattedData };
-  //   } else {
-  //     // This logic handles the case where there is no multi-level header
-  //     const formattedData = rawData.map((item) => {
-  //       const formattedItem = {};
-  //       Object.entries(item).forEach(([key, value]) => {
-  //         const formattedKey = key.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
-  //         formattedItem[formattedKey] = value;
-  //       });
-  //       return formattedItem;
-  //     });
+      return { headers, datafor: formattedData, isH2 };
+    } else {
+      // This logic handles the case where there is no multi-level header
+      const formattedData = rawData.map((item) => {
+        const formattedItem = {};
+        Object.entries(item).forEach(([key, value]) => {
+          const formattedKey = key.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+          formattedItem[formattedKey] = value;
+        });
+        return formattedItem;
+      });
 
-  //     return { headers: null, data: formattedData, isMultiLevel: false };
-  //   }
-  // };
+      return { headers: null, datafor: formattedData, isMultiLevel: false };
+    }
+  };
 
   const getPopupConfig = (widgetIndicator) => {
     try {
@@ -250,40 +255,239 @@ const TabularDash = (props) => {
     return typeof val === 'string' && val.includes('##') ? val.split('##')[0] : val;
   };
 
-  const generateColumns = (data, ifDrill = isChildPresent, isFirstRowHeading, headers) => {
+  const isHTML = (str) => {
+    const pattern = /<\/?[a-z][\s\S]*>/i;
+    return pattern.test(str);
+  }
+
+  const generateColumns = (data, ifDrill = isChildPresent, isFirstRowHeading, headers, isH2) => {
     if (!data || data.length === 0) return [];
 
-    // if (isFirstRowHeading === 'Yes') {
-    //   const columns = [];
-    //   const mainHeaders = [];
+    const allKeys = data.length ? Object.keys(data[0]).filter(key => key !== 'pkcolumn') : [];
+    const snoKey = allKeys.find(k => /^sno$/i.test(k));
+    const stateKey = allKeys.find(k => /state/i.test(k));
 
-    //   headers.forEach(header => {
-    //     if (header.subHeaders.length === 1) {
-    //       // Single column like 'sno' or 'STATE/UT'
-    //       mainHeaders.push({ name: header.name, subHeaders: 1 });
-    //       columns.push({
-    //         name: header.subHeaders[0],
-    //         selector: row => row[header.subHeaders[0]],
-    //         sortable: true,
-    //         wrap: true,
-    //       });
-    //     } else {
-    //       // Multi-level columns
-    //       mainHeaders.push({ name: header.name, subHeaders: header.subHeaders.length });
-    //       header.subHeaders.forEach(subHeader => {
-    //         const fullColumnKey = `${header.name}_${subHeader}`;
-    //         columns.push({
-    //           name: subHeader,
-    //           selector: row => row[fullColumnKey],
-    //           sortable: true,
-    //           wrap: true,
-    //         });
-    //       });
-    //     }
-    //   });
-    //   return { columns, mainHeaders };
 
-    // } else {
+    const isDateString = (value) => typeof value === 'string' && /^\d{1,2}-[A-Za-z]{3}-\d{4}$/.test(value.trim());
+    const dateColumns = new Set();
+    for (let i = 0; i < Math.min(5, data.length); i++) {
+      const row = data[i];
+      allKeys.forEach(key => {
+        const value = getFirstValue(row[key]);
+        if (isDateString(value)) dateColumns.add(key);
+      });
+    }
+
+    if (isFirstRowHeading === 'Yes') {
+
+      const reorderedHeaders = [];
+
+      if (snoKey) {
+        const snoHeader = headers.find(h => h.name.toLowerCase() === snoKey.toLowerCase());
+        if (snoHeader) reorderedHeaders.push(snoHeader);
+      }
+
+      if (stateKey) {
+        const stateHeader = headers.find(h => h.name.toLowerCase() === stateKey.toLowerCase());
+        if (stateHeader && !reorderedHeaders.includes(stateHeader)) reorderedHeaders.push(stateHeader);
+      }
+
+      headers.forEach(h => {
+        if (!reorderedHeaders.includes(h)) {
+          reorderedHeaders.push(h);
+        }
+      });
+
+      const columns = [];
+      const mainHeaders = [];
+
+      reorderedHeaders.forEach(header => {
+        if (header.subHeaders.length === 1 && header.subHeaders[0] === header.name) {
+          mainHeaders.push({ name: header.name, subHeaders: 1, isSingle: true });
+
+          columns.push({
+            name: ' ',
+            selector: row => row[header.name] || '-',
+            sortable: true,
+            wrap: true,
+            sortFunction: dateColumns.has(header.name)
+              ? (rowA, rowB) => new Date(getFirstValue(rowA[header.name])) - new Date(getFirstValue(rowB[header.name]))
+              : undefined,
+            cell: (row) => {
+              const value = row[header.name];
+              if (value && typeof value === 'object' && !Array.isArray(value)) return null;
+
+              const displayValue = getFirstValue(value);
+
+              if (typeof value === 'string' && value.trim().startsWith('<a') && value.includes('data-isSFTP=')) {
+                return <span className="pointer" dangerouslySetInnerHTML={{ __html: value }} onClick={(e) => FtpClicked(e, value)} />;
+              }
+
+              if (typeof value === 'string' && (value.trim().startsWith('<a') || value.trim().startsWith('<div') || isHTML(value.trim()))) {
+                return <span dangerouslySetInnerHTML={{ __html: value }} />;
+              }
+
+              return typeof value === 'string' && value.includes("##") ? (
+                <span style={{ color: 'blue', cursor: 'pointer' }} onClick={() => openPopUpWidget(value)}>{displayValue}</span>
+              ) : (
+                <span>{displayValue}</span>
+              );
+            }
+          });
+
+        } else if (header.subHeaders.length === 1 && header.subHeaders[0] !== header.name) {
+          mainHeaders.push({ name: header.name, subHeaders: 1, isSingle: header?.name === 'sno' });
+          const key = header.subHeaders[0];
+
+          columns.push({
+            name: <div title={header?.name}>{header?.name !== 'sno' ? key : ''}</div>,
+            selector: row => row[key] || '-',
+            sortable: true,
+            wrap: true,
+            sortFunction: dateColumns.has(key)
+              ? (rowA, rowB) => new Date(getFirstValue(rowA[key])) - new Date(getFirstValue(rowB[key]))
+              : undefined,
+            cell: (row) => {
+              const value = row[key];
+              if (value && typeof value === 'object' && !Array.isArray(value)) return null;
+
+              const displayValue = getFirstValue(value);
+
+              if (typeof value === 'string' && value.trim().startsWith('<a') && value.includes('data-isSFTP=')) {
+                return <span className="pointer" dangerouslySetInnerHTML={{ __html: value }} onClick={(e) => FtpClicked(e, value)} />;
+              }
+
+              if (typeof value === 'string' && (value.trim().startsWith('<a') || value.trim().startsWith('<div') || isHTML(value.trim()))) {
+                return <span dangerouslySetInnerHTML={{ __html: value }} />;
+              }
+
+              return typeof value === 'string' && value.includes("##") ? (
+                <span style={{ color: 'blue', cursor: 'pointer' }} onClick={() => openPopUpWidget(value)}>{displayValue}</span>
+              ) : (
+                <span>{displayValue}</span>
+              );
+            }
+          });
+
+        } else if (header.subHeaders.length === 0) {
+          if (isH2) {
+            mainHeaders.push({ name: header.name, subHeaders: 1, isSingle: true });
+            const key = header.name;
+            columns.push({
+              name: <div title={header?.name}>{' '}</div>,
+              selector: row => row[header.name] || '-',
+              sortable: true,
+              wrap: true,
+              sortFunction: dateColumns.has(key)
+                ? (rowA, rowB) => new Date(getFirstValue(rowA[key])) - new Date(getFirstValue(rowB[key]))
+                : undefined,
+              cell: (row) => {
+                const value = row[key];
+                if (value && typeof value === 'object' && !Array.isArray(value)) return null;
+
+                const displayValue = getFirstValue(value);
+
+                if (typeof value === 'string' && value.trim().startsWith('<a') && value.includes('data-isSFTP=')) {
+                  return <span className="pointer" dangerouslySetInnerHTML={{ __html: value }} onClick={(e) => FtpClicked(e, value)} />;
+                }
+
+                if (typeof value === 'string' && (value.trim().startsWith('<a') || value.trim().startsWith('<div') || isHTML(value.trim()))) {
+                  return <span dangerouslySetInnerHTML={{ __html: value }} />;
+                }
+
+                return typeof value === 'string' && value.includes("##") ? (
+                  <span style={{ color: 'blue', cursor: 'pointer' }} onClick={() => openPopUpWidget(value)}>{displayValue}</span>
+                ) : (
+                  <span>{displayValue}</span>
+                );
+              }
+            });
+          } else {
+            const key = header.name;
+            columns.push({
+              name: <div title={header?.name}>{header?.name}</div>,
+              selector: row => row[header.name] || '-',
+              sortable: true,
+              wrap: true,
+              sortFunction: dateColumns.has(key)
+                ? (rowA, rowB) => new Date(getFirstValue(rowA[key])) - new Date(getFirstValue(rowB[key]))
+                : undefined,
+              cell: (row) => {
+                const value = row[key];
+                if (value && typeof value === 'object' && !Array.isArray(value)) return null;
+
+                const displayValue = getFirstValue(value);
+
+                if (typeof value === 'string' && value.trim().startsWith('<a') && value.includes('data-isSFTP=')) {
+                  return <span className="pointer" dangerouslySetInnerHTML={{ __html: value }} onClick={(e) => FtpClicked(e, value)} />;
+                }
+
+                if (typeof value === 'string' && (value.trim().startsWith('<a') || value.trim().startsWith('<div') || isHTML(value.trim()))) {
+                  return <span dangerouslySetInnerHTML={{ __html: value }} />;
+                }
+
+                return typeof value === 'string' && value.includes("##") ? (
+                  <span style={{ color: 'blue', cursor: 'pointer' }} onClick={() => openPopUpWidget(value)}>{displayValue}</span>
+                ) : (
+                  <span>{displayValue}</span>
+                );
+              }
+            });
+
+          }
+        } else {
+          mainHeaders.push({ name: header.name, subHeaders: header.subHeaders.length });
+          header.subHeaders.forEach(subHeader => {
+            const fullKey = `${header.name}_${subHeader}`;
+            columns.push({
+              name: <div title={subHeader}>{subHeader}</div>,
+              selector: row => row[fullKey] || '-',
+              sortable: true,
+              wrap: true,
+              sortFunction: dateColumns.has(fullKey)
+                ? (rowA, rowB) => new Date(getFirstValue(rowA[fullKey])) - new Date(getFirstValue(rowB[fullKey]))
+                : undefined,
+              cell: (row) => {
+                const value = row[fullKey];
+                if (value && typeof value === 'object' && !Array.isArray(value)) return null;
+
+                const displayValue = getFirstValue(value);
+
+                if (typeof value === 'string' && value.trim().startsWith('<a') && value.includes('data-isSFTP=')) {
+                  return <span className="pointer" dangerouslySetInnerHTML={{ __html: value }} onClick={(e) => FtpClicked(e, value)} />;
+                }
+
+                if (typeof value === 'string' && (value.trim().startsWith('<a') || value.trim().startsWith('<div') || isHTML(value.trim()))) {
+                  return <span dangerouslySetInnerHTML={{ __html: value }} />;
+                }
+
+                return typeof value === 'string' && value.includes("##") ? (
+                  <span style={{ color: 'blue', cursor: 'pointer' }} onClick={() => openPopUpWidget(value)}>{displayValue}</span>
+                ) : (
+                  <span>{displayValue}</span>
+                );
+              }
+            });
+          });
+        }
+      });
+
+      // Add Drill column to start
+      if (ifDrill) {
+        columns.unshift({
+          name: "Action",
+          cell: (row) => (
+            <button className="rounded-4 border-1" onClick={() => onDrillDown(row?.pkcolumn)}>
+              <FontAwesomeIcon icon={faSortAmountDesc} />
+            </button>
+          )
+        });
+      }
+
+      return { columns, mainHeaders };
+    }
+
+    else {
 
       const keys = Object.keys(data[0]).filter(key => key !== 'pkcolumn');
 
@@ -350,7 +554,7 @@ const TabularDash = (props) => {
               );
             }
 
-            if (typeof value === 'string' && (value.trim().startsWith('<a') || value.trim().startsWith('<div'))) {
+            if (typeof value === 'string' && (value.trim().startsWith('<a') || value.trim().startsWith('<div') || isHTML(value.trim()))) {
               return (
                 <span
                   dangerouslySetInnerHTML={{ __html: value }}
@@ -388,7 +592,7 @@ const TabularDash = (props) => {
       }
 
       return dynamicColumns;
-    // }
+    }
   };
 
   // const generateColumns = (data, ifDrill = isChildPresent) => {
@@ -490,14 +694,57 @@ const TabularDash = (props) => {
           formatDateFullYear(new Date()) // to values
         ]
         const response = await fetchProcedureData(widget?.procedureMode, params, widget?.JNDIid);
-        const formattedData = formatData(response.data || []);
-        const generatedColumns = generateColumns(formattedData, isChildPresent);
+        console.log(response?.data, 'helllllllllll')
+        if (response?.data?.length > 0) {
+
+          // const formattedData = formatData(response.data || []);
+          // const generatedColumns = generateColumns(formattedData, isChildPresent);
+          // setColumns(generatedColumns);
+          // setTableData(formattedData);
+
+          let filteredData = response.data;
+
+          if (widget?.isQuerychild && widget?.isQuerychild === "1") {
+            const columnIndexes = widget?.columnIndexesParent || [];
+            const keys = Object.keys(data[0]);
+            filteredData = response?.data?.map(row => {
+              const filteredRow = {};
+              columnIndexes.forEach(idx => {
+                const key = keys[idx];
+                if (key) filteredRow[key] = row[key];
+              });
+              return filteredRow;
+            });
+          }
+
+          if (widget?.isFirstRowColumnName === 'Yes') {
+            const { headers, datafor, isH2 } = formatData(filteredData, widget?.isFirstRowColumnName);
+            const { columns, mainHeaders } = generateColumns(datafor, isChildPresent, widget?.isFirstRowColumnName, headers, isH2);
+            setColumns(columns);
+            setMainHeaders(mainHeaders);
+            setTableData(datafor);
+            console.log(headers, 'headers')
+            console.log(datafor, 'datafor')
+          } else {
+            const { headers, datafor } = formatData(filteredData, widget?.isFirstRowColumnName);
+            const generatedColumns = generateColumns(datafor, isChildPresent, widget?.isFirstRowColumnName);
         setColumns(generatedColumns);
-        setTableData(formattedData);
+            setMainHeaders([]);
+            setTableData(datafor);
+          }
         setLoading(false)
         setIsSearchQuery(false)
         setFetching(false)
         setSearchScope({ scope: "", id: "" })
+
+        } else {
+          setColumns([]);
+          setTableData([]);
+          setLoading(false)
+          setFetching(false)
+          setIsSearchQuery(false)
+        }
+
       } catch (error) {
         console.error("Error loading query data:", error);
         setLoading(false)
@@ -528,20 +775,19 @@ const TabularDash = (props) => {
             });
           }
 
-          const formattedData = formatData(filteredData, isFirstRowHeading);
-          // const { headers, datafor } = formatData(filteredData, isFirstRowHeading);
-
-          // if (isFirstRowHeading === "Yes") {
-          // const { columns, mainHeaders } = generateColumns(datafor, isChildPresent, isFirstRowHeading, headers);
-          // setColumns(columns);
-          // setMainHeaders(mainHeaders);
-
-          // console.log(headers, 'headers')
-          // console.log(mainHeaders, 'mainHeaders')
-          // // } else {
-          const generatedColumns = generateColumns(formattedData, isChildPresent, isFirstRowHeading);
+          if (widget?.isFirstRowColumnName === 'Yes') {
+            const { headers, datafor, isH2 } = formatData(filteredData, widget?.isFirstRowColumnName);
+            const { columns, mainHeaders } = generateColumns(datafor, isChildPresent, widget?.isFirstRowColumnName, headers, isH2);
+            setColumns(columns);
+            setMainHeaders(mainHeaders);
+            setTableData(datafor);
+          } else {
+            const { headers, datafor } = formatData(filteredData, widget?.isFirstRowColumnName);
+            const generatedColumns = generateColumns(datafor, isChildPresent, widget?.isFirstRowColumnName);
           setColumns(generatedColumns);
-          // }
+            setMainHeaders([]);
+            setTableData(datafor);
+          }
 
           console.log(formattedData, 'formattedData')
           setTableData(formattedData);

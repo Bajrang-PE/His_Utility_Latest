@@ -20,10 +20,10 @@ const GraphDash = ({ widgetData, pkColumn, setPkColumn }) => {
   const [chartType, setChartType] = useState('BAR_GRAPH');
   const [graphData, setGraphData] = useState([]);
   const [queryParams] = useSearchParams();
-  // const isPrev = queryParams.get('isPreview');
+  const isPrev = queryParams.get('isPreview');
 
-  const encIFUrl = queryParams.get("dbfhttf");
-  const isPrev = encIFUrl ? getEncryptedParamValue(encIFUrl, "isPreview") : '';
+  // const encIFUrl = queryParams.get("dbfhttf");
+  // const isPrev = encIFUrl ? getEncryptedParamValue(encIFUrl, "isPreview") : '';
 
   const is3D = widgetData.is3d === "true" || widgetData.is3d === "Yes";
   const xAxisLabel = widgetData.xAxisLabel || "X Axis";

@@ -14,18 +14,22 @@ const DashboardMst = () => {
     const { activeTab, setActiveTab, theme, setTheme, mainDashData, setMainDashData, setLoading, loading, singleConfigData, getDashConfigData, setParamsValues, setPrevKpiTab, dt, setPresentTabsDash } = useContext(HISContext);
 
     const [searchParams] = useSearchParams();
-
-    // const groupId = atob(searchParams.get("groupId"));
-    // const dashboardFor = atob(searchParams.get("dashboardFor"));
     const [presentTabs, setPresentTabs] = useState([]);
 
-    const encIFUrl = searchParams.get("dbfhttf");
-    const groupId = encIFUrl ? atob(getEncryptedParamValue(encIFUrl, "groupId")) : '';
-    const dashboardFor = encIFUrl ? atob(getEncryptedParamValue(encIFUrl, "dashboardFor")) : '';
+    let groupId = ''
+    let dashboardFor = ''
+
+    useEffect(() => {
+        if (searchParams.get("groupId") && searchParams.get("dashboardFor")) {
+            groupId = atob(searchParams.get("groupId"));
+            dashboardFor = atob(searchParams.get("dashboardFor"));
+        } else if (searchParams.get("dbfhttf")) {
+            const encIFUrl = searchParams.get("dbfhttf");
+            groupId = encIFUrl ? atob(getEncryptedParamValue(encIFUrl, "groupId")) : '';
+            dashboardFor = encIFUrl ? atob(getEncryptedParamValue(encIFUrl, "dashboardFor")) : '';
+        }
+    }, [searchParams])
     
-    console.log(dashboardFor,dashboardFor, 'decdata')
-
-
 
     useEffect(() => {
         if (!singleConfigData) {
@@ -47,6 +51,7 @@ const DashboardMst = () => {
                 dashboardFor: dashFor || 'CENTRAL DASHBOARD',
                 masterName: "DashboardMst"
             };
+            console.log(val,'valtabmulti')
             const data = await fetchPostData("/hisutils/gettabsMultipleData", val);
             if (data?.status === 1) {
                 setPresentTabs(data?.data);

@@ -23,9 +23,23 @@ const TabDash = React.memo(() => {
 
     //    const groupId = atob(searchParams.get("groupId"));
     // const dashboardFor = atob(searchParams.get("dashboardFor"));
-    const encIFUrl = searchParams.get("dbfhttf");
-    const groupId = encIFUrl ? atob(getEncryptedParamValue(encIFUrl, "groupId")) : '';
-    const dashboardFor = encIFUrl ? atob(getEncryptedParamValue(encIFUrl, "dashboardFor")) : '';
+    // const encIFUrl = searchParams.get("dbfhttf");
+    // const groupId = encIFUrl ? atob(getEncryptedParamValue(encIFUrl, "groupId")) : '';
+    // const dashboardFor = encIFUrl ? atob(getEncryptedParamValue(encIFUrl, "dashboardFor")) : '';
+
+    let groupId = ''
+    let dashboardFor = ''
+
+    useEffect(() => {
+        if (searchParams.get("groupId") && searchParams.get("dashboardFor")) {
+            groupId = atob(searchParams.get("groupId"));
+            dashboardFor = atob(searchParams.get("dashboardFor"));
+        } else if (searchParams.get("dbfhttf")) {
+            const encIFUrl = searchParams.get("dbfhttf");
+            groupId = encIFUrl ? atob(getEncryptedParamValue(encIFUrl, "groupId")) : '';
+            dashboardFor = encIFUrl ? atob(getEncryptedParamValue(encIFUrl, "dashboardFor")) : '';
+        }
+    }, [])
 
     const footerText = activeTab?.jsonData?.footerText || "";
 
