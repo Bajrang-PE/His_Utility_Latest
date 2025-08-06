@@ -50,7 +50,7 @@ const WidgetMaster = () => {
     widgetHeadingAlign: 'left', isRecordLimitReq: 'Yes', isWidgetBorderReq: 'Yes',
 
     isTableHeadingReq: 'Yes',
-    tableHeadingAlign: "0", isFirstRowHeading: 'Yes', isDataTblReq: 'Yes', isIndexNumReq: 'Yes',
+    tableHeadingAlign: "0", isFirstRowHeading: 'No', isDataTblReq: 'Yes', isIndexNumReq: 'Yes',
     isPaginationReq: 'Yes', isSearchReq: 'Yes', isHeadingFixed: 'Yes', isLastRowTotal: 'Yes', isCardViewMobile: 'Yes', isShowPrntHeadChild: 'Yes', isShowPrntParamsChild: 'Yes', printPdfIn: 'landscape', pdfTheme: 'grid', isPdfHeadReqAllPgs: 'Yes', showFilterDtlsInPdf: 'Yes', isReportByJsPdfPlug: 'Yes', isReportPrintDtReq: 'Yes', isGlobalHeaderReq: 'Yes', isTableBorderReq: 'Yes', isPositiveWidget: 'Yes', isDirectDownloadBtn: 'Yes', isPopupBasedReq: 'No', isTreeChildReq: 'No', treeChildDataBy: "Query", dataDisplay: "horizontal", isDataTblReqTree: 'Yes', isPaginationReqTree: 'Yes', isSearchReqTree: 'Yes',
     //graphs fields
     isDisplayGraphPlugin: "Yes", isColorByPoint: "Yes", isShowLegendOnExport: "Yes", isFullLabelReq: "Yes", isGraphScrollBarReq: "Yes", isShowLegend: "Yes", isDataLabels: "Yes", isThree3D: "Yes", isDirectDownloadBtnGraph: 'Yes', isFirstClmGraphHeading: 'Yes', isShowPrntHeadChildGraph: 'Yes', isHideParent: 'Yes', isRowClickable: "No",
@@ -305,7 +305,7 @@ const WidgetMaster = () => {
       widgetHeadingAlign: 'left', isRecordLimitReq: 'Yes', isWidgetBorderReq: 'Yes',
 
       isTableHeadingReq: 'Yes',
-      tableHeadingAlign: "0", isFirstRowHeading: 'Yes', isDataTblReq: 'Yes', isIndexNumReq: 'Yes',
+      tableHeadingAlign: "0", isFirstRowHeading: 'No', isDataTblReq: 'Yes', isIndexNumReq: 'Yes',
       isPaginationReq: 'Yes', isSearchReq: 'Yes', isHeadingFixed: 'Yes', isLastRowTotal: 'Yes', isCardViewMobile: 'Yes', isShowPrntHeadChild: 'Yes', isShowPrntParamsChild: 'Yes', printPdfIn: 'landscape', pdfTheme: 'grid', isPdfHeadReqAllPgs: 'Yes', showFilterDtlsInPdf: 'Yes', isReportByJsPdfPlug: 'Yes', isReportPrintDtReq: 'Yes', isGlobalHeaderReq: 'Yes', isTableBorderReq: 'Yes', isPositiveWidget: 'Yes', isDirectDownloadBtn: 'Yes', isPopupBasedReq: 'No', isTreeChildReq: 'No', treeChildDataBy: "Query", dataDisplay: "horizontal", isDataTblReqTree: 'Yes', isPaginationReqTree: 'Yes', isSearchReqTree: 'Yes',
       //graphs fields
       isDisplayGraphPlugin: "Yes", isColorByPoint: "Yes", isShowLegendOnExport: "Yes", isFullLabelReq: "Yes", isGraphScrollBarReq: "Yes", isShowLegend: "Yes", isDataLabels: "Yes", isThree3D: "Yes", isDirectDownloadBtnGraph: 'Yes', isFirstClmGraphHeading: 'Yes', isShowPrntHeadChildGraph: 'Yes', isHideParent: 'Yes',
@@ -343,8 +343,8 @@ const WidgetMaster = () => {
 
   const handleUpdateData = () => {
     if (selectedOption?.length > 0) {
-      const selectedRow = allWidgetData?.filter(dt => dt?.rptId === selectedOption[0]?.rptId)
       reset();
+      const selectedRow = allWidgetData?.filter(dt => dt?.rptId === selectedOption[0]?.rptId)
       setSingleData(selectedRow);
       setActionMode('edit');
       // setShowParamsTable(false);
@@ -501,7 +501,7 @@ const WidgetMaster = () => {
 
         isTableHeadingReq: singleData[0]?.tableHeadingRequired === 'yes' || singleData[0]?.tableHeadingRequired === 'Yes' ? 'Yes' : 'No',//
         tableHeadingAlign: singleData[0]?.tableHeadingAlignment,//
-        isFirstRowHeading: singleData[0]?.isFirstRowWidgetHeading,//
+        isFirstRowHeading: singleData[0]?.isFirstRowColumnName,//
         isDataTblReq: singleData[0]?.isDataTableRequired,//
         isIndexNumReq: singleData[0]?.isIndexNumberRequired,//
         isPaginationReq: singleData[0]?.isPaginationReq,//
@@ -755,7 +755,7 @@ console.log(singleData,'single')
         //table
         tableHeadingRequired: isTableHeadingReq,
         tableHeadingAlignment: tableHeadingAlign,
-        isFirstRowWidgetHeading: isFirstRowHeading,
+        isFirstRowColumnName: isFirstRowHeading,
         isDataTableRequired: isDataTblReq,
         isIndexNumberRequired: isIndexNumReq,
         isPaginationReq: isPaginationReq,
@@ -985,7 +985,7 @@ console.log(singleData,'single')
         //table
         tableHeadingRequired: isTableHeadingReq,
         tableHeadingAlignment: tableHeadingAlign,
-        isFirstRowWidgetHeading: isFirstRowHeading,
+        isFirstRowColumnName: isFirstRowHeading,
         isDataTableRequired: isDataTblReq,
         isIndexNumberRequired: isIndexNumReq,
         isPaginationReq: isPaginationReq,

@@ -19,8 +19,8 @@ const TabDash = React.memo(() => {
     const [tabLoading, setTabloading] = useState(false);
 
     const [searchParams] = useSearchParams();
-    const groupId = decryptData(searchParams.get("groupId"));
-    const dashboardFor = decryptData(searchParams.get("dashboardFor"));
+    const groupId = atob(searchParams.get("groupId"));
+    const dashboardFor = atob(searchParams.get("dashboardFor"));
 
     const footerText = activeTab?.jsonData?.footerText || "";
 

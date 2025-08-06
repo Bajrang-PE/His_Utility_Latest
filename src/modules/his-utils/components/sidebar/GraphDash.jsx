@@ -152,6 +152,7 @@ const GraphDash = ({ widgetData, pkColumn, setPkColumn }) => {
               const key = keys[idx];
               if (key) filteredRow[key] = row[key];
             });
+            setIsSearchQuery(false)
             return filteredRow;
           });
         }
@@ -167,6 +168,7 @@ const GraphDash = ({ widgetData, pkColumn, setPkColumn }) => {
       // If no data, do nothing
       if (!limitedData.length) {
         setGraphData({ categories: [], seriesData: [] });
+        setIsSearchQuery(false)
         return;
       }
 
@@ -175,6 +177,7 @@ const GraphDash = ({ widgetData, pkColumn, setPkColumn }) => {
 
       if (columnNames.length < 1) {
         console.warn("Insufficient columns to generate graph");
+        setIsSearchQuery(false)
         return;
       }
 
@@ -197,6 +200,7 @@ const GraphDash = ({ widgetData, pkColumn, setPkColumn }) => {
 
     } catch (error) {
       console.error("Error loading query data:", error);
+      setIsSearchQuery(false)
     }
   };
 
@@ -290,6 +294,7 @@ const GraphDash = ({ widgetData, pkColumn, setPkColumn }) => {
         setSearchScope({ scope: "", id: "" })
       } catch (error) {
         console.error("Error loading query data:", error);
+        setIsSearchQuery(false)
       }
     }
   }

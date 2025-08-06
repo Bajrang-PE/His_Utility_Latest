@@ -13,8 +13,9 @@ const DashboardMst = () => {
     const { activeTab, setActiveTab, theme, setTheme, mainDashData, setMainDashData, setLoading, loading, singleConfigData, getDashConfigData, setParamsValues, setPrevKpiTab, dt, setPresentTabsDash } = useContext(HISContext);
 
     const [searchParams] = useSearchParams();
-    const groupId = decryptData(searchParams.get("groupId"));
-    const dashboardFor = decryptData(searchParams.get("dashboardFor"));
+
+    const groupId = atob(searchParams.get("groupId"));
+    const dashboardFor = atob(searchParams.get("dashboardFor"));
     const [presentTabs, setPresentTabs] = useState([]);
 
 

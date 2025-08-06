@@ -665,7 +665,7 @@ label {
 }
 
 .rdt_TableHead {
-  z-index: 0 !important;
+  z-index: 2 !important;
 }
 
 .help-docs {
@@ -857,4 +857,49 @@ label {
 
 .pointer {
   cursor: pointer !important;
+}
+
+
+.first-head {
+  display: flex;
+  width: 100%;
+  color: rgba #000000de (0, 0, 0, 0.87);
+  font-size: 12px;
+  font-weight: 500;
+  z-index: 2;
+  padding: 0;
+  min-height: 0px;
+}
+
+.second-head {
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+  background-color: #FFFFFF;
+  /* min-height: 52px; */
+  border-bottom-width: 1px;
+  border-bottom-color: rgba(0, 0, 0, .12);
+  border-bottom-style: solid;
+  min-height: 32px;
+}
+
+.third-head {
+  /* flex-grow: 1; */
+  /* flex-shrink: 0; */
+  /* flex-basis: 0; */
+  max-width: 100%;
+  /* min-width: 100px; */
+  position: relative;
+  /* display: flex; */
+  align-items: center;
+  box-sizing: border-box;
+  line-height: normal;
+  background-color: #000000;
+  color: #ffffff;
+  text-align: left;
+  font-weight: bold;
+  padding: 10px;
+  border-right: 1px solid #474646;
+  border-bottom: 1px solid #474646;
+  text-align: center;
 }
