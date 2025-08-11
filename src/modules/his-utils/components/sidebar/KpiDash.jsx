@@ -154,12 +154,11 @@ const KpiDash = ({ widgetData, presentTabs }) => {
 
     const widheight = presentTabs?.length > 0 && presentTabs?.filter(dt => dt?.rptId == widgetData?.rptId)[0]?.widgetHeight;
 
-    console.log(widgetData, 'widgetData')
 
 
     return (
         <>
-            <div className={`${widgetData?.kpiType === "isKpiACircle" ? 'small-box-kpi-circle' : 'small-box-kpi'}`} style={{
+            <div className={`kpi_${widgetData?.rptId}_id ${widgetData?.kpiType === "isKpiACircle" ? 'small-box-kpi-circle' : 'small-box-kpi'}`} style={{
                 backgroundColor: widgetData?.widgetBackgroundColour,
                 color: widgetData?.widgetFontColour,
                 // borderWidth: widgetData?.kpiBorderWidth,
@@ -176,7 +175,7 @@ const KpiDash = ({ widgetData, presentTabs }) => {
                 width:"100%"
             }} onMouseEnter={onHover} onMouseLeave={onMouseLeave}>
 
-                {widgetData?.downloadDataFromKPI === 'Yes' && (
+                {/* {widgetData?.downloadDataFromKPI === 'Yes' && (
                     <div>
                         <button
                             aria-expanded="false"
@@ -211,7 +210,7 @@ const KpiDash = ({ widgetData, presentTabs }) => {
                             </li>
                         </ul>
                     </div>
-                )}
+                )} */}
                 <div className={`kpi-details-box ${widgetData?.kpiType === "isKpiACircle" ? 'text-center' : "cirbox"}`}
                     style={{
                         height: "100%",

@@ -1,7 +1,7 @@
 import React, { lazy, useContext, useEffect, useState } from "react";
 import Tabular from "./Tabular";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faArrowCircleLeft, faCog, faFileExcel, faFilePdf, faRefresh, faSortAmountDesc, faTableCells } from "@fortawesome/free-solid-svg-icons";
+import { faArrowCircleLeft, faCog, faFileExcel, faFilePdf, faRefresh, faSliders, faSortAmountDesc, faTableCells } from "@fortawesome/free-solid-svg-icons";
 import { fetchProcedureData, fetchQueryData, formatDateFullYear, formatParams, getOrderedParamValues, ToastAlert } from "../../utils/commonFunction";
 import { HISContext } from "../../contextApi/HISContext";
 import InputField from "../commons/InputField";
@@ -11,6 +11,7 @@ import { useSearchParams } from "react-router-dom";
 import PopUpWidget from "./PopUpWidget";
 import { fetchPostData } from "../../../../utils/HisApiHooks";
 import { getEncryptedParamValue } from "../../../../utils/Security";
+import AdvancedOptionsModal from "./AdvancedOptionsModal";
 
 
 const Parameters = lazy(() => import('./Parameters'));
@@ -34,8 +35,8 @@ const TabularDash = (props) => {
   const [queryParams] = useSearchParams();
   const isPrev = queryParams.get('isPreview');
 
-    // const encIFUrl = queryParams.get("dbfhttf");
-    // const isPrev = encIFUrl ? getEncryptedParamValue(encIFUrl, "isPreview") : '';
+  // const encIFUrl = queryParams.get("dbfhttf");
+  // const isPrev = encIFUrl ? getEncryptedParamValue(encIFUrl, "isPreview") : '';
 
   const isChildPresent = widgetData?.children && widgetData?.children?.length > 0;
   const childId = widgetData?.children?.length > 0 ? widgetData?.children[0] : '';
@@ -340,7 +341,7 @@ const TabularDash = (props) => {
           const key = header.subHeaders[0];
 
           columns.push({
-            name: <div title={header?.name}>{header?.name !== 'sno' ? key : ''}</div>,
+            name: header?.name !== 'sno' ? key : '',
             selector: row => row[key] || '-',
             sortable: true,
             wrap: true,
@@ -374,7 +375,7 @@ const TabularDash = (props) => {
             mainHeaders.push({ name: header.name, subHeaders: 1, isSingle: true });
             const key = header.name;
             columns.push({
-              name: <div title={header?.name}>{' '}</div>,
+              name: ' ',
               selector: row => row[header.name] || '-',
               sortable: true,
               wrap: true,
@@ -405,7 +406,7 @@ const TabularDash = (props) => {
           } else {
             const key = header.name;
             columns.push({
-              name: <div title={header?.name}>{header?.name}</div>,
+              name: header?.name,
               selector: row => row[header.name] || '-',
               sortable: true,
               wrap: true,
@@ -440,7 +441,7 @@ const TabularDash = (props) => {
           header.subHeaders.forEach(subHeader => {
             const fullKey = `${header.name}_${subHeader}`;
             columns.push({
-              name: <div title={subHeader}>{subHeader}</div>,
+              name: subHeader,
               selector: row => row[fullKey] || '-',
               sortable: true,
               wrap: true,
@@ -595,82 +596,6 @@ const TabularDash = (props) => {
     }
   };
 
-  // const generateColumns = (data, ifDrill = isChildPresent) => {
-  //   if (!data || data.length === 0) return [];
-
-  //   const keys = Object.keys(data[0]).filter(key => key !== 'pkcolumn');
-
-  //   let reorderedKeys = [];
-
-  //   const snoKey = keys.find(k => /^sno$/i.test(k));
-  //   const stateKey = keys.find(k => /state/i.test(k));
-
-  //   if (snoKey) reorderedKeys.push(snoKey);
-  //   if (stateKey) reorderedKeys.push(stateKey);
-
-  //   const restKeys = keys.filter(
-  //     k => k !== snoKey && k !== stateKey
-  //   );
-
-  //   reorderedKeys = [...reorderedKeys, ...restKeys];
-
-  //   const dynamicColumns = reorderedKeys.map((key) => ({
-  //     name: key,
-  //     selector: row => getFirstValue(row[key]),
-  //     sortable: true,
-  //     wrap: true,
-  //     width: /^sno$/i.test(key) ? '8%' : undefined,
-  //     cell: (row) => {
-  //       const value = row[key];
-  //       if (value && typeof value === 'object' && !Array.isArray(value)) {
-  //         return null;
-  //       }
-  //       const displayValue = getFirstValue(value);
-
-  //       if (typeof value === 'string' && value.trim().startsWith('<a') && value.includes('data-isSFTP=')) {
-  //         return (
-  //           <span className="pointer" dangerouslySetInnerHTML={{ __html: value }} onClick={(e) => FtpClicked(e, value)} />
-  //         );
-  //       }
-
-  //       if (typeof value === 'string' && (value.trim().startsWith('<a') || value.trim().startsWith('<div'))) {
-  //         return (
-  //           <span
-  //             dangerouslySetInnerHTML={{ __html: value }}
-  //           />
-  //         );
-  //       }
-
-  //       return typeof value === 'string' && value.includes("##") ? (
-  //         <span
-  //           style={{ color: 'blue', cursor: 'pointer' }}
-  //           onClick={() => openPopUpWidget(value)}
-  //         >
-  //           {displayValue}
-  //         </span>
-  //       ) : (
-  //         <span>{displayValue}</span>
-  //       );
-  //     }
-  //   }));
-
-  //   if (ifDrill) {
-  //     const drillColumn = {
-  //       name: "Action",
-  //       cell: (row) => (
-  //         <button
-  //           className="rounded-4 border-1"
-  //           onClick={() => onDrillDown(row?.pkcolumn)}
-  //         >
-  //           <FontAwesomeIcon icon={faSortAmountDesc} />
-  //         </button>
-  //       )
-  //     };
-  //     return [drillColumn, ...dynamicColumns];
-  //   }
-
-  //   return dynamicColumns;
-  // };
 
   const [MainHeaders, setMainHeaders] = useState([])
 
@@ -694,7 +619,7 @@ const TabularDash = (props) => {
           formatDateFullYear(new Date()) // to values
         ]
         const response = await fetchProcedureData(widget?.procedureMode, params, widget?.JNDIid);
-        console.log(response?.data, 'helllllllllll')
+        // console.log(response?.data, 'helllllllllll')
         if (response?.data?.length > 0) {
 
           // const formattedData = formatData(response.data || []);
@@ -728,14 +653,14 @@ const TabularDash = (props) => {
           } else {
             const { headers, datafor } = formatData(filteredData, widget?.isFirstRowColumnName);
             const generatedColumns = generateColumns(datafor, isChildPresent, widget?.isFirstRowColumnName);
-        setColumns(generatedColumns);
+            setColumns(generatedColumns);
             setMainHeaders([]);
             setTableData(datafor);
           }
-        setLoading(false)
-        setIsSearchQuery(false)
-        setFetching(false)
-        setSearchScope({ scope: "", id: "" })
+          setLoading(false)
+          setIsSearchQuery(false)
+          setFetching(false)
+          setSearchScope({ scope: "", id: "" })
 
         } else {
           setColumns([]);
@@ -757,7 +682,7 @@ const TabularDash = (props) => {
       const params = getOrderedParamValues(widget?.queryVO[0]?.mainQuery, paramsValues, widget?.rptId);
       try {
         setFetching(true)
-        console.log(params, 'params')
+
         const data = await fetchQueryData(widget?.queryVO?.length > 0 ? widget?.queryVO : [], widget?.JNDIid, params, pkColumn);
         if (data?.length > 0) {
           let filteredData = data;
@@ -784,13 +709,12 @@ const TabularDash = (props) => {
           } else {
             const { headers, datafor } = formatData(filteredData, widget?.isFirstRowColumnName);
             const generatedColumns = generateColumns(datafor, isChildPresent, widget?.isFirstRowColumnName);
-          setColumns(generatedColumns);
+            setColumns(generatedColumns);
             setMainHeaders([]);
             setTableData(datafor);
           }
 
-          console.log(formattedData, 'formattedData')
-          setTableData(formattedData);
+
           setLoading(false)
           setIsSearchQuery(false)
           setFetching(false)
@@ -906,6 +830,14 @@ const TabularDash = (props) => {
     }
   }
 
+  const [showAdvancedOptions, setShowAdvancedOptions] = React.useState(false);
+  const [sortConfig, setSortConfig] = React.useState([]);
+  const [visibleColumns, setVisibleColumns] = React.useState(columns.map(c => c.selector));
+
+  // Filter columns based on visibility before passing to <Tabular>
+  const displayedColumns = visibleColumns?.length > 0 ? columns?.filter(c => visibleColumns.includes(c.selector)) : columns;
+
+
   return (
     <>
       {/* {currentLevel == 0 && */}
@@ -937,26 +869,27 @@ const TabularDash = (props) => {
                   </li>
                 }
                 {(isActionButtonReq === 'Yes' || isActionButtonReq === 'pdf' || isActionButtonReq === 'pdfAndcsv') &&
-                  <li className="p-1 dropdown-item text-primary" style={{ cursor: "pointer" }} onClick={() => generatePDF(widgetData, widgetLimit ? filterData.slice(0, parseInt(widgetLimit)) : safeLimit ? filterData.slice(0, safeLimit) : filterData, singleConfigData?.databaseConfigVO)} title="pdf">
+                  <li className="p-1 dropdown-item text-primary" style={{ cursor: "pointer" }}
+                    onClick={() => generatePDF(widgetData, widgetLimit ? filterData.slice(0, parseInt(widgetLimit)) : safeLimit ? filterData.slice(0, safeLimit) : filterData, singleConfigData?.databaseConfigVO, displayedColumns)} title="pdf">
                     <FontAwesomeIcon icon={faFilePdf} className="dropdown-gear-icon me-2" />{dt('Download PDF')}
                   </li>
                 }
                 {(isActionButtonReq === 'Yes' || isActionButtonReq === 'csv' || isActionButtonReq === 'pdfAndcsv') &&
-                  <li className="p-1 dropdown-item text-primary" style={{ cursor: "pointer" }} onClick={() => generateCSV(widgetData, widgetLimit ? filterData.slice(0, parseInt(widgetLimit)) : safeLimit ? filterData.slice(0, safeLimit) : filterData, singleConfigData?.databaseConfigVO)}>
+                  <li className="p-1 dropdown-item text-primary" style={{ cursor: "pointer" }} onClick={() => generateCSV(widgetData, widgetLimit ? filterData.slice(0, parseInt(widgetLimit)) : safeLimit ? filterData.slice(0, safeLimit) : filterData, singleConfigData?.databaseConfigVO,displayedColumns)}>
                     <FontAwesomeIcon icon={faFileExcel} className="dropdown-gear-icon me-2" />{dt('Download CSV')}
                   </li>
                 }
-                {/* <li className="p-1 dropdown-item text-primary" style={{ cursor: "pointer" }}>
-                <FontAwesomeIcon icon={faBarChart} className="dropdown-gear-icon me-2" />Advanced
-              </li> */}
+
+                <li className="p-1 dropdown-item text-primary" style={{ cursor: "pointer" }} onClick={() => setShowAdvancedOptions(true)}>
+                  <FontAwesomeIcon icon={faSliders} className="dropdown-gear-icon me-2" />{dt('Advanced')}</li>
               </ul>
             </>)}
             {isDirectDownloadRequired === "Yes" && (<>
-              <button className="small-box-btn-dwn" onClick={() => generatePDF(widgetData, filterData, singleConfigData?.databaseConfigVO)} title="PDF">
+              <button className="small-box-btn-dwn" onClick={() => generatePDF(widgetData, filterData, singleConfigData?.databaseConfigVO,displayedColumns)} title="PDF">
                 <FontAwesomeIcon icon={faFilePdf} />
               </button>
 
-              <button className="small-box-btn-dwn" onClick={() => generateCSV(widgetData, filterData, singleConfigData?.databaseConfigVO)}>
+              <button className="small-box-btn-dwn" onClick={() => generateCSV(widgetData, filterData, singleConfigData?.databaseConfigVO,displayedColumns)}>
                 <FontAwesomeIcon icon={faFileExcel} />
               </button>
             </>)}
@@ -1031,7 +964,7 @@ const TabularDash = (props) => {
 
           :
           <Tabular
-            columns={columns}
+            columns={displayedColumns}
             data={widgetLimit ? filterData?.slice(0, parseInt(widgetLimit)) : safeLimit ? filterData?.slice(0, safeLimit) : filterData}
             pagination={isPaginationReq}
             recordsPerPage={recordPerPage}
@@ -1045,6 +978,8 @@ const TabularDash = (props) => {
             theme={theme}
             noDataComponent={<div className="text-danger fw-bold fs-13">{dt(customMessage || "There are no records to display")}</div>}
             mainHeaders={MainHeaders}
+            sortConfig={sortConfig}
+            onSortConfigChange={setSortConfig}
           />
 
         }
@@ -1063,6 +998,16 @@ const TabularDash = (props) => {
       {(popupConfig && showPopUpWidget) && (
         <PopUpWidget {...{ showPopUpWidget, popupConfig, closePopup }} />
       )}
+      <AdvancedOptionsModal
+        show={showAdvancedOptions}
+        onClose={() => setShowAdvancedOptions(false)}
+        columns={columns}
+        sortConfig={sortConfig}
+        onSortConfigChange={setSortConfig}
+        visibleColumns={visibleColumns}
+        onVisibleColumnsChange={setVisibleColumns}
+      />
+
     </>
   );
 };

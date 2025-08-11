@@ -15,12 +15,102 @@ const Tabular = ({
     isTableHeadingRequired,
     theme,
     noDataComponent,
-    mainHeaders = []
+    mainHeaders = [],
+    sortConfig = [],
+    onSortConfigChange
 }) => {
     const tableRef = useRef();
     const headerRef = useRef();
     const scrollContainerRef = useRef();
     const [tableWidth, setTableWidth] = useState('100%');
+
+    const [sortedData, setSortedData] = useState([]);
+
+    // Helper: Detect date strings like "23-Jul-2025"
+    const isDateString = (value) => {
+        if (typeof value !== 'string') return false;
+        // Match formats like: 23-Jul-2025, 2023-07-23, 07/23/2023, etc.
+        return /^\d{1,2}-[A-Za-z]{3}-\d{4}$/.test(value.trim()) ||
+            /^\d{4}-\d{1,2}-\d{1,2}$/.test(value.trim()) ||
+            /^\d{1,2}\/\d{1,2}\/\d{4}$/.test(value.trim());
+    };
+
+    // Parse date string to Date object
+    const parseDate = (dateStr) => {
+        if (dateStr.includes('-') && dateStr.length === 11) { // 23-Jul-2025 format
+            const [day, month, year] = dateStr.split('-');
+            const monthIndex = new Date(`${month} 1, 2000`).getMonth();
+            return new Date(year, monthIndex, day);
+        }
+        return new Date(dateStr);
+    };
+
+       // Handle sort clicks
+    const handleSort = (column, sortDirection) => {
+        if (typeof column.selector !== 'function') return;
+        
+        onSortConfigChange(prev => {
+            // Check if this column is already being sorted
+            const existingIndex = prev.findIndex(s => s.selector === column.selector);
+            
+            if (existingIndex > -1) {
+                // If same column clicked again, toggle direction
+                if (prev.length === 1) {
+                    return [{
+                        selector: column.selector,
+                        direction: sortDirection
+                    }];
+                }
+                // Remove from sort if already sorted and not the only sort
+                return prev.filter(s => s.selector !== column.selector);
+            }
+            
+            // Add new sort (single sort - replace existing)
+            return [{
+                selector: column.selector,
+                direction: sortDirection
+            }];
+        });
+    };
+
+
+    useEffect(() => {
+        if (!sortConfig || sortConfig.length === 0) {
+            setSortedData([...data]);
+            return;
+        }
+
+        const sorted = [...data].sort((a, b) => {
+            for (const config of sortConfig) {
+                const { selector, direction } = config;
+                const col = columns.find(c => c.selector === selector);
+                if (!col) continue;
+
+                let valA = col.selector(a);
+                let valB = col.selector(b);
+
+                // Handle date sorting
+                if (isDateString(valA)) {
+                    valA = parseDate(valA);
+                    valB = isDateString(valB) ? parseDate(valB) : valB;
+                }
+
+                // Handle numeric sorting
+                if (typeof valA === 'string' && !isNaN(valA)) {
+                    valA = parseFloat(valA);
+                    valB = parseFloat(valB);
+                }
+
+                if (valA < valB) return direction === 'asc' ? -1 : 1;
+                if (valA > valB) return direction === 'asc' ? 1 : -1;
+            }
+            return 0;
+        });
+
+        setSortedData(sorted);
+    }, [data, sortConfig, columns]);
+
+
 
     useEffect(() => {
         if (mainHeaders && mainHeaders.length > 0) {
@@ -110,7 +200,10 @@ const Tabular = ({
                     persistTableHead={true}
                     dense
                     columns={columns}
-                    data={data}
+                    // data={data}
+                    data={sortedData}
+                    sortServer
+                    onSort={handleSort}
                     pagination={pagination}
                     fixedHeader={fixedHeader}
                     fixedHeaderScrollHeight={scrollHeight + 'px'}

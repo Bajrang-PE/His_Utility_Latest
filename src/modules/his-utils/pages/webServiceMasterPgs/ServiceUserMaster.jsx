@@ -184,12 +184,19 @@ const ServiceUserMaster = () => {
 
   const handleSaveUpdate = () => {
     let isValid = true;
+    const passwordRegex = /^(?=.*[A-Z])(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,}$/;
     if (!values?.username?.trim()) {
       setErrors(prev => ({ ...prev, 'usernameErr': "user name is required" }));
       isValid = false;
     }
     if (!values?.password?.trim()) {
       setErrors(prev => ({ ...prev, 'passwordErr': "password is required" }));
+      isValid = false;
+    } else if (values?.password?.length < 8) {
+      setErrors(prev => ({ ...prev, 'passwordErr': "minimum 8 characters required for password" }));
+      isValid = false;
+    } else if (!passwordRegex.test(values.password)) {
+      setErrors(prev => ({ ...prev, 'passwordErr': "password must contain at least one uppercase letter and one special character" }));
       isValid = false;
     }
 

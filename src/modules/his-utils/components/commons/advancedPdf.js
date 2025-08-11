@@ -118,12 +118,27 @@ export const generatePDF1 = async (widgetData, tableData, config, filters = []) 
 };
 
 
-export const generatePDF = async (widgetData, tableData, config, filters = []) => {
+export const generatePDF = async (widgetData, data, config, visibleColumns, filters = []) => {
   if (!widgetData) return;
-  if (!Array.isArray(tableData) || tableData.length === 0) {
+  if (!Array.isArray(data) || data.length === 0) {
     ToastAlert('No data available to download.', 'warning');
     return;
   }
+
+  // Extract column definitions and names from visibleColumns
+  const columnDefinitions = visibleColumns;
+  const columnNames = columnDefinitions.map(col => col.name);
+
+  // Filter the data to only include visible columns
+  const tableData = data.map(row => {
+    const filteredRow = {};
+    columnNames.forEach(key => {
+      if (row.hasOwnProperty(key)) {
+        filteredRow[key] = row[key];
+      }
+    });
+    return filteredRow;
+  });
 
   const {
     pdfTheme,
@@ -739,13 +754,28 @@ export const generateGraphPDF = async (widgetData, tableData, config, filters = 
 };
 
 
-export const generateCSV = (widgetData, tableData, config) => {
-  if (!Array.isArray(tableData) || tableData.length === 0) {
+export const generateCSV = (widgetData, data, config,visibleColumns) => {
+  if (!Array.isArray(data) || data.length === 0) {
     ToastAlert('No data available to download.', 'warning');
     return;
   }
 
   if (!widgetData) return;
+
+  // Extract column definitions and names from visibleColumns
+  const columnDefinitions = visibleColumns;
+  const columnNames = columnDefinitions.map(col => col.name);
+
+  // Filter the data to only include visible columns
+  const tableData = data.map(row => {
+    const filteredRow = {};
+    columnNames.forEach(key => {
+      if (row.hasOwnProperty(key)) {
+        filteredRow[key] = row[key];
+      }
+    });
+    return filteredRow;
+  });
 
   const { rptDisplayName } = widgetData;
   const { reportHeader1, reportHeader2, reportHeader3, isLogoRequired, logoImage, headingAlignment } = config || {};
@@ -841,12 +871,12 @@ export const generateGraphCSV = (widgetData, data, config) => {
   // ]);
 
   const rows = data.categories.map((state, index) => {
-  const row = [state];
-  data.seriesData.forEach(series => {
-    row.push(series.data[index] || 0);
+    const row = [state];
+    data.seriesData.forEach(series => {
+      row.push(series.data[index] || 0);
+    });
+    return row;
   });
-  return row;
-});
 
   // Combine all data
   const finalData = [

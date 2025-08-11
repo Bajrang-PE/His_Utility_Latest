@@ -7,7 +7,7 @@ import HISContextData from './modules/his-utils/contextApi/HISContext.jsx'
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <HISContextData>
-        <App />
+      <App />
     </HISContextData>
   </StrictMode>
 )
