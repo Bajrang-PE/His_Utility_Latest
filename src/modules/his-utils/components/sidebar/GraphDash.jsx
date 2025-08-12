@@ -9,7 +9,6 @@ import { highchartGraphOptions } from "../../localData/DropDownData";
 import { getAuthUserData } from "../../../../utils/CommonFunction";
 import { generateGraphCSV, generateGraphPDF } from "../commons/advancedPdf";
 import { useSearchParams } from "react-router-dom";
-import { getEncryptedParamValue } from "../../../../utils/Security";
 
 const Parameters = lazy(() => import('./Parameters'));
 
@@ -21,9 +20,6 @@ const GraphDash = ({ widgetData, pkColumn, setPkColumn }) => {
   const [graphData, setGraphData] = useState([]);
   const [queryParams] = useSearchParams();
   const isPrev = queryParams.get('isPreview');
-
-  // const encIFUrl = queryParams.get("dbfhttf");
-  // const isPrev = encIFUrl ? getEncryptedParamValue(encIFUrl, "isPreview") : '';
 
   const is3D = widgetData.is3d === "true" || widgetData.is3d === "Yes";
   const xAxisLabel = widgetData.xAxisLabel || "X Axis";
@@ -238,28 +234,6 @@ const GraphDash = ({ widgetData, pkColumn, setPkColumn }) => {
   };
 
 
-  // utils/graphFormatter.js
-  // const formatProcedureDataForGraph = (data) => {
-  //   if (!data || data.length === 0) return { categories: [], seriesData: [] };
-
-  //   const [firstItem] = data;
-  //   const keys = Object.keys(firstItem);
-
-  //   const nameKey = keys[0];  // e.g. "State / UT"
-  //   const valueKey = keys[1]; // e.g. "Base Rate(In INR)"
-
-  //   const categories = data.map(item => item[nameKey]);
-  //   const values = data.map(item => parseFloat(item[valueKey]) || 0);
-
-  //   const seriesData = [{
-  //     name: valueKey,
-  //     data: values,
-  //     colorByPoint: true
-  //   }];
-
-  //   return { categories, seriesData };
-  // };
-
 
   const fetchProcedure = async (widget) => {
     if (widget?.modeOfQuery === "Procedure") {
@@ -355,6 +329,42 @@ const GraphDash = ({ widgetData, pkColumn, setPkColumn }) => {
       }
     }
   };
+
+  // const getSeriesForType = () => {
+  //   if (chartType === "PIE_CHART" || chartType === "DONUT_CHART") {
+  //     return [{
+  //       type: 'pie',
+  //       data: graphData.categories.map((cat, i) => ({
+  //         name: cat,
+  //         y: graphData.seriesData[0]?.data[i] || 0
+  //       })),
+  //       colors: colorList
+  //     }];
+  //   }
+  //   return graphData?.seriesData || [];
+  // };
+
+  const getSeriesForType = () => {
+  if (chartType === "PIE_CHART" || chartType === "DONUT_CHART") {
+    return [{
+      type: 'pie',
+      name: widgetData.rptName || "",
+      data: graphData.categories.map((cat, i) => ({
+        name: cat,
+        y: graphData.seriesData[0]?.data[i] || 0
+      })),
+      colors: colorList
+    }];
+  }
+
+  // For other chart types, return seriesData as is, without pie-specific structure
+  return graphData?.seriesData?.map(s => ({
+    ...s,
+    type: chartTypeMapping[chartType], // force correct type
+    colorByPoint: true
+  })) || [];
+};
+
 
   const options = {
     chart: {
@@ -494,7 +504,7 @@ const GraphDash = ({ widgetData, pkColumn, setPkColumn }) => {
       },
     },
     exporting: exportingOptions,
-    series: graphData?.seriesData,
+    series: getSeriesForType(),
     lang: {
       noData: customMessage || "No data available for this graph",
     },

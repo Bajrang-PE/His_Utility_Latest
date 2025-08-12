@@ -118,27 +118,49 @@ export const generatePDF1 = async (widgetData, tableData, config, filters = []) 
 };
 
 
-export const generatePDF = async (widgetData, data, config, visibleColumns, filters = []) => {
+export const generatePDF = async (widgetData, data, config, visibleColumns, isH2, filters = []) => {
   if (!widgetData) return;
   if (!Array.isArray(data) || data.length === 0) {
     ToastAlert('No data available to download.', 'warning');
     return;
   }
+  let tableData = [];
 
-  // Extract column definitions and names from visibleColumns
-  const columnDefinitions = visibleColumns;
-  const columnNames = columnDefinitions.map(col => col.name);
+  if (isH2 === 'Yes') {
+    // Extract column definitions and names from visibleColumns
+    const columnDefinitions = visibleColumns;
+    const columnNames = columnDefinitions?.map(col => col.name?.trim() ? `${col?.mainHeader}_${col?.name}` : col?.mainHeader);
 
-  // Filter the data to only include visible columns
-  const tableData = data.map(row => {
-    const filteredRow = {};
-    columnNames.forEach(key => {
-      if (row.hasOwnProperty(key)) {
-        filteredRow[key] = row[key];
-      }
+    // Filter the data to only include visible columns
+    tableData = data?.map(row => {
+      const filteredRow = {};
+      columnNames.forEach(key => {
+        if (row.hasOwnProperty(key)) {
+          filteredRow[key] = row[key];
+        }
+      });
+      return filteredRow;
     });
-    return filteredRow;
-  });
+
+  } else {
+    // Extract column definitions and names from visibleColumns
+    const columnDefinitions = visibleColumns;
+    const columnNames = columnDefinitions?.map(col => col.name);
+
+    // Filter the data to only include visible columns
+    tableData = data?.map(row => {
+      const filteredRow = {};
+      columnNames.forEach(key => {
+        if (row.hasOwnProperty(key)) {
+          filteredRow[key] = row[key];
+        }
+      });
+      return filteredRow;
+    });
+  }
+
+
+
 
   const {
     pdfTheme,
@@ -754,7 +776,7 @@ export const generateGraphPDF = async (widgetData, tableData, config, filters = 
 };
 
 
-export const generateCSV = (widgetData, data, config,visibleColumns) => {
+export const generateCSV = (widgetData, data, config, visibleColumns,isH2) => {
   if (!Array.isArray(data) || data.length === 0) {
     ToastAlert('No data available to download.', 'warning');
     return;
@@ -762,20 +784,40 @@ export const generateCSV = (widgetData, data, config,visibleColumns) => {
 
   if (!widgetData) return;
 
-  // Extract column definitions and names from visibleColumns
-  const columnDefinitions = visibleColumns;
-  const columnNames = columnDefinitions.map(col => col.name);
+  let tableData = [];
 
-  // Filter the data to only include visible columns
-  const tableData = data.map(row => {
-    const filteredRow = {};
-    columnNames.forEach(key => {
-      if (row.hasOwnProperty(key)) {
-        filteredRow[key] = row[key];
-      }
+  if (isH2 === 'Yes') {
+    // Extract column definitions and names from visibleColumns
+    const columnDefinitions = visibleColumns;
+    const columnNames = columnDefinitions?.map(col => col.name?.trim() ? `${col?.mainHeader}_${col?.name}` : col?.mainHeader);
+
+    // Filter the data to only include visible columns
+    tableData = data?.map(row => {
+      const filteredRow = {};
+      columnNames.forEach(key => {
+        if (row.hasOwnProperty(key)) {
+          filteredRow[key] = row[key];
+        }
+      });
+      return filteredRow;
     });
-    return filteredRow;
-  });
+
+  } else {
+    // Extract column definitions and names from visibleColumns
+    const columnDefinitions = visibleColumns;
+    const columnNames = columnDefinitions?.map(col => col.name);
+
+    // Filter the data to only include visible columns
+    tableData = data?.map(row => {
+      const filteredRow = {};
+      columnNames.forEach(key => {
+        if (row.hasOwnProperty(key)) {
+          filteredRow[key] = row[key];
+        }
+      });
+      return filteredRow;
+    });
+  }
 
   const { rptDisplayName } = widgetData;
   const { reportHeader1, reportHeader2, reportHeader3, isLogoRequired, logoImage, headingAlignment } = config || {};
@@ -833,7 +875,7 @@ export const generateGraphCSV = (widgetData, data, config) => {
 
   const { rptDisplayName, xAxisLabel,
     yAxisLabel } = widgetData;
-  const { reportHeader1, reportHeader2, reportHeader3 } = config;
+  const { reportHeader1, reportHeader2, reportHeader3 } = config || {};
   const currentDate = new Date().toLocaleDateString('en-GB') + ' ' + new Date().toLocaleTimeString('en-GB');
 
   // Prepare heading

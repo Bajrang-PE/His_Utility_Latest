@@ -10,21 +10,22 @@ import Loader from './modules/his-utils/components/commons/Loader';
 import "react-datepicker/dist/react-datepicker.css";
 import DbConfigMaster from './modules/his-utils/pages/dashboardMasterPgs/DbConfigMaster';
 import { ToastAlert } from './modules/his-utils/utils/commonFunction';
+import BarRaceChart from './modules/his-utils/pages/TestBar';
 
 function App() {
 
   const logout = () => {
     localStorage.clear();
-    if(window.location.search !== ''){
+    if (window.location.search !== '') {
       window.location.search = '?session-out'
     }
     sessionStorage.clear();
     // Cookies.remove('csrfToken');
-    ToastAlert('Your Session Expired!','error')
+    ToastAlert('Your Session Expired!', 'error')
   };
 
   const timerRef = useRef(null);
-  const timeout = 60000*10;
+  const timeout = 60000 * 10;
 
   const resetTimer = () => {
     if (timerRef.current) {
@@ -32,7 +33,7 @@ function App() {
     }
     timerRef.current = setTimeout(logout, timeout);
   };
-  
+
   useEffect(() => {
     resetTimer();
     const events = ['mousemove', 'mousedown', 'keypress', 'scroll', 'touchstart', 'load', 'click', 'resize'];
@@ -60,7 +61,7 @@ function App() {
           {/* <Route path="/dvdms/*" element={<LoginWarRoutes />} /> */}
           <Route index element={<DbConfigMaster />} />
           {/* <Route path="db" element={<DbConfigMaster />} /> */}
-          {/* <Route path="/dvdms" element={<HomePage />} /> */}
+          <Route path="/test" element={<BarRaceChart />} />
           {/* <Route path index element={<NotFound />} /> */}
 
         </Routes>

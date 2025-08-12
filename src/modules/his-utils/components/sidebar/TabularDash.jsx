@@ -31,6 +31,8 @@ const TabularDash = (props) => {
   const [fetching, setFetching] = useState(false);
   const [popupConfig, setPopupConfig] = useState(null);
   const [showPopUpWidget, setShowPopUpWidget] = useState(false);
+  const [MainHeaders, setMainHeaders] = useState([])
+
 
   const [queryParams] = useSearchParams();
   const isPrev = queryParams.get('isPreview');
@@ -308,6 +310,7 @@ const TabularDash = (props) => {
 
           columns.push({
             name: ' ',
+            mainHeader: header?.name,
             selector: row => row[header.name] || '-',
             sortable: true,
             wrap: true,
@@ -342,6 +345,8 @@ const TabularDash = (props) => {
 
           columns.push({
             name: header?.name !== 'sno' ? key : '',
+            title: (<span title={key}>{header?.name !== 'sno' ? key : ''}</span>),
+            mainHeader: header?.name,
             selector: row => row[key] || '-',
             sortable: true,
             wrap: true,
@@ -376,6 +381,7 @@ const TabularDash = (props) => {
             const key = header.name;
             columns.push({
               name: ' ',
+              mainHeader: header?.name,
               selector: row => row[header.name] || '-',
               sortable: true,
               wrap: true,
@@ -407,6 +413,8 @@ const TabularDash = (props) => {
             const key = header.name;
             columns.push({
               name: header?.name,
+              title: (<span title={header?.name}>{header?.name}</span>),
+              mainHeader: header?.name,
               selector: row => row[header.name] || '-',
               sortable: true,
               wrap: true,
@@ -442,6 +450,8 @@ const TabularDash = (props) => {
             const fullKey = `${header.name}_${subHeader}`;
             columns.push({
               name: subHeader,
+              title: (<span title={subHeader}>{subHeader}</span>),
+              mainHeader: header?.name,
               selector: row => row[fullKey] || '-',
               sortable: true,
               wrap: true,
@@ -532,6 +542,7 @@ const TabularDash = (props) => {
 
         return {
           name: key,
+          title: (<span title={key}>{key}</span>),
           selector: row => getFirstValue(row[key]),
           sortable: true,
           wrap: true,
@@ -597,7 +608,7 @@ const TabularDash = (props) => {
   };
 
 
-  const [MainHeaders, setMainHeaders] = useState([])
+  console.log(columns, 'bgbgb')
 
   const fetchData = async (widget) => {
     if (widget?.modeOfQuery === "Procedure") {
@@ -619,7 +630,6 @@ const TabularDash = (props) => {
           formatDateFullYear(new Date()) // to values
         ]
         const response = await fetchProcedureData(widget?.procedureMode, params, widget?.JNDIid);
-        // console.log(response?.data, 'helllllllllll')
         if (response?.data?.length > 0) {
 
           // const formattedData = formatData(response.data || []);
@@ -648,8 +658,6 @@ const TabularDash = (props) => {
             setColumns(columns);
             setMainHeaders(mainHeaders);
             setTableData(datafor);
-            console.log(headers, 'headers')
-            console.log(datafor, 'datafor')
           } else {
             const { headers, datafor } = formatData(filteredData, widget?.isFirstRowColumnName);
             const generatedColumns = generateColumns(datafor, isChildPresent, widget?.isFirstRowColumnName);
@@ -706,6 +714,7 @@ const TabularDash = (props) => {
             setColumns(columns);
             setMainHeaders(mainHeaders);
             setTableData(datafor);
+            console.log(headers, 'mbn')
           } else {
             const { headers, datafor } = formatData(filteredData, widget?.isFirstRowColumnName);
             const generatedColumns = generateColumns(datafor, isChildPresent, widget?.isFirstRowColumnName);
@@ -832,11 +841,23 @@ const TabularDash = (props) => {
 
   const [showAdvancedOptions, setShowAdvancedOptions] = React.useState(false);
   const [sortConfig, setSortConfig] = React.useState([]);
-  const [visibleColumns, setVisibleColumns] = React.useState(columns.map(c => c.selector));
+  const [visibleColumns, setVisibleColumns] = React.useState(columns?.map(c => c.selector));
 
-  // Filter columns based on visibility before passing to <Tabular>
-  const displayedColumns = visibleColumns?.length > 0 ? columns?.filter(c => visibleColumns.includes(c.selector)) : columns;
-
+  const filterColumns = (clms, isSubHead) => {
+    if (isSubHead === 'Yes') {
+      if (clms?.length > 0) {
+        return columns?.filter(column => {
+          return !column.mainHeader || clms.includes(column.mainHeader);
+        });
+      } else {
+        return columns;
+      }
+    } else {
+      const displayedColumns = clms?.length > 0 ? columns?.filter(c => clms?.includes(c.selector)) : columns;
+      return displayedColumns;
+    }
+  }
+  console.log(columns)
 
   return (
     <>
@@ -870,26 +891,27 @@ const TabularDash = (props) => {
                 }
                 {(isActionButtonReq === 'Yes' || isActionButtonReq === 'pdf' || isActionButtonReq === 'pdfAndcsv') &&
                   <li className="p-1 dropdown-item text-primary" style={{ cursor: "pointer" }}
-                    onClick={() => generatePDF(widgetData, widgetLimit ? filterData.slice(0, parseInt(widgetLimit)) : safeLimit ? filterData.slice(0, safeLimit) : filterData, singleConfigData?.databaseConfigVO, displayedColumns)} title="pdf">
+                    onClick={() => generatePDF(widgetData, widgetLimit ? filterData.slice(0, parseInt(widgetLimit)) : safeLimit ? filterData.slice(0, safeLimit) : filterData, singleConfigData?.databaseConfigVO, filterColumns(visibleColumns, isFirstRowHeading), isFirstRowHeading)} title="pdf">
                     <FontAwesomeIcon icon={faFilePdf} className="dropdown-gear-icon me-2" />{dt('Download PDF')}
                   </li>
                 }
                 {(isActionButtonReq === 'Yes' || isActionButtonReq === 'csv' || isActionButtonReq === 'pdfAndcsv') &&
-                  <li className="p-1 dropdown-item text-primary" style={{ cursor: "pointer" }} onClick={() => generateCSV(widgetData, widgetLimit ? filterData.slice(0, parseInt(widgetLimit)) : safeLimit ? filterData.slice(0, safeLimit) : filterData, singleConfigData?.databaseConfigVO,displayedColumns)}>
+                  <li className="p-1 dropdown-item text-primary" style={{ cursor: "pointer" }} onClick={() => generateCSV(widgetData, widgetLimit ? filterData.slice(0, parseInt(widgetLimit)) : safeLimit ? filterData.slice(0, safeLimit) : filterData, singleConfigData?.databaseConfigVO, filterColumns(visibleColumns, isFirstRowHeading), isFirstRowHeading)}>
                     <FontAwesomeIcon icon={faFileExcel} className="dropdown-gear-icon me-2" />{dt('Download CSV')}
                   </li>
                 }
-
-                <li className="p-1 dropdown-item text-primary" style={{ cursor: "pointer" }} onClick={() => setShowAdvancedOptions(true)}>
-                  <FontAwesomeIcon icon={faSliders} className="dropdown-gear-icon me-2" />{dt('Advanced')}</li>
+                {(isActionButtonReq === 'Yes' || isActionButtonReq === 'advanced') &&
+                  <li className="p-1 dropdown-item text-primary" style={{ cursor: "pointer" }} onClick={() => setShowAdvancedOptions(true)}>
+                    <FontAwesomeIcon icon={faSliders} className="dropdown-gear-icon me-2" />{dt('Advanced')}</li>
+                }
               </ul>
             </>)}
             {isDirectDownloadRequired === "Yes" && (<>
-              <button className="small-box-btn-dwn" onClick={() => generatePDF(widgetData, filterData, singleConfigData?.databaseConfigVO,displayedColumns)} title="PDF">
+              <button className="small-box-btn-dwn" onClick={() => generatePDF(widgetData, filterData, singleConfigData?.databaseConfigVO, filterColumns(visibleColumns, isFirstRowHeading), isFirstRowHeading)} title="PDF">
                 <FontAwesomeIcon icon={faFilePdf} />
               </button>
 
-              <button className="small-box-btn-dwn" onClick={() => generateCSV(widgetData, filterData, singleConfigData?.databaseConfigVO,displayedColumns)}>
+              <button className="small-box-btn-dwn" onClick={() => generateCSV(widgetData, filterData, singleConfigData?.databaseConfigVO, filterColumns(visibleColumns, isFirstRowHeading), isFirstRowHeading)}>
                 <FontAwesomeIcon icon={faFileExcel} />
               </button>
             </>)}
@@ -964,7 +986,7 @@ const TabularDash = (props) => {
 
           :
           <Tabular
-            columns={displayedColumns}
+            columns={filterColumns(visibleColumns, isFirstRowHeading)}
             data={widgetLimit ? filterData?.slice(0, parseInt(widgetLimit)) : safeLimit ? filterData?.slice(0, safeLimit) : filterData}
             pagination={isPaginationReq}
             recordsPerPage={recordPerPage}
@@ -977,9 +999,18 @@ const TabularDash = (props) => {
             isTableHeadingRequired={!headingReq}
             theme={theme}
             noDataComponent={<div className="text-danger fw-bold fs-13">{dt(customMessage || "There are no records to display")}</div>}
-            mainHeaders={MainHeaders}
+            mainHeaders={(() => {
+              if (visibleColumns?.length > 0) {
+                return (MainHeaders || []).filter(header => visibleColumns.includes(header.name));
+              } else {
+                return MainHeaders || [];
+              }
+            })()}
             sortConfig={sortConfig}
             onSortConfigChange={setSortConfig}
+            isRecordsLimitedLineRequired={isRecordsLimitedLineRequired}
+            allData={filterData}
+            limit={widgetLimit ? widgetLimit : safeLimit ? safeLimit : ''}
           />
 
         }
@@ -1001,11 +1032,12 @@ const TabularDash = (props) => {
       <AdvancedOptionsModal
         show={showAdvancedOptions}
         onClose={() => setShowAdvancedOptions(false)}
-        columns={columns}
+        columns={isFirstRowHeading === 'Yes' ? MainHeaders : columns}
         sortConfig={sortConfig}
         onSortConfigChange={setSortConfig}
         visibleColumns={visibleColumns}
         onVisibleColumnsChange={setVisibleColumns}
+        isFirstRowHeading={isFirstRowHeading}
       />
 
     </>

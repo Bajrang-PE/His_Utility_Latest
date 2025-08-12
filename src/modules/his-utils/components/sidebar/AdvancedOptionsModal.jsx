@@ -1,14 +1,14 @@
 import React from 'react';
 import { Modal } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { 
-  faSlidersH, 
-  faSort, 
-  faEye, 
-  faArrowUp, 
-  faArrowDown, 
-  faSave, 
-  faBan 
+import {
+  faSlidersH,
+  faSort,
+  faEye,
+  faArrowUp,
+  faArrowDown,
+  faSave,
+  faBan
 } from '@fortawesome/free-solid-svg-icons';
 
 const AdvancedOptionsModal = ({
@@ -18,16 +18,17 @@ const AdvancedOptionsModal = ({
   sortConfig = [],
   onSortConfigChange,
   visibleColumns = [],
-  onVisibleColumnsChange
+  onVisibleColumnsChange,
+  isFirstRowHeading
 }) => {
   const [localSortConfig, setLocalSortConfig] = React.useState([...sortConfig]);
   const [localVisibleColumns, setLocalVisibleColumns] = React.useState([...visibleColumns]);
 
   const handleSortChange = (colKey) => {
     setLocalSortConfig(prev => {
-      const exists = prev.find(s => s.selector === colKey);
+      const exists = prev?.find(s => s.selector === colKey);
       if (exists) {
-        return prev.filter(s => s.selector !== colKey);
+        return prev?.filter(s => s.selector !== colKey);
       } else {
         return [...prev, { selector: colKey, direction: 'asc' }];
       }
@@ -36,7 +37,7 @@ const AdvancedOptionsModal = ({
 
   const handleDirectionToggle = (colKey) => {
     setLocalSortConfig(prev =>
-      prev.map(s =>
+      prev?.map(s =>
         s.selector === colKey
           ? { ...s, direction: s.direction === 'asc' ? 'desc' : 'asc' }
           : s
@@ -49,11 +50,11 @@ const AdvancedOptionsModal = ({
       const newVisible = prev.includes(colKey)
         ? prev.filter(k => k !== colKey)
         : [...prev, colKey];
-      
-      setLocalSortConfig(prevSort => 
-        prevSort.filter(sort => newVisible.includes(sort.selector))
+
+      setLocalSortConfig(prevSort =>
+        prevSort?.filter(sort => newVisible?.includes(sort.selector))
       );
-      
+
       return newVisible;
     });
   };
@@ -64,10 +65,11 @@ const AdvancedOptionsModal = ({
     onClose();
   };
 
+
   return (
-    <Modal 
-      show={show} 
-      onHide={onClose} 
+    <Modal
+      show={show}
+      onHide={onClose}
       size="xl"
       centered
       backdrop="static"
@@ -79,7 +81,7 @@ const AdvancedOptionsModal = ({
           Advanced Options
         </Modal.Title>
       </Modal.Header>
-      
+
       <Modal.Body className="p-4">
         <div className="row g-4">
           {/* Sorting Section */}
@@ -89,47 +91,89 @@ const AdvancedOptionsModal = ({
                 <FontAwesomeIcon icon={faSort} className="me-2" />
                 Sort Columns
               </h5>
-              
-              {columns.map((col) => (
-                <div 
-                  key={col.selector}
-                  className="option-item"
-                >
-                  <div className="form-check form-switch me-3">
-                    <input
-                      className="form-check-input"
-                      type="checkbox"
-                      id={`sort-${col.selector}`}
-                      checked={localSortConfig.some(s => s.selector === col.selector)}
-                      onChange={() => handleSortChange(col.selector)}
-                      disabled={!localVisibleColumns.includes(col.selector)}
-                    />
-                  </div>
-                  
-                  <label 
-                    htmlFor={`sort-${col.selector}`}
-                    className="option-label"
+
+              {columns?.map((col) => (
+                isFirstRowHeading === 'Yes' ? (
+                  <div
+                    key={col.name}
+                    className="option-item"
                   >
-                    {col.name}
-                  </label>
-                  
-                  {localSortConfig.some(s => s.selector === col.selector) && (
-                    <button
-                      className="direction-btn"
-                      onClick={() => handleDirectionToggle(col.selector)}
-                    >
-                      <FontAwesomeIcon 
-                        icon={localSortConfig.find(s => s.selector === col.selector)?.direction === 'asc' 
-                          ? faArrowUp 
-                          : faArrowDown} 
-                        className="me-1" 
+                    <div className="form-check form-switch me-3">
+                      <input
+                        className="form-check-input"
+                        type="checkbox"
+                        id={`sort-${col.name}`}
+                        checked={localSortConfig?.some(s => s.name === col.name)}
+                        onChange={() => handleSortChange(col.name)}
+                        disabled={!localVisibleColumns?.includes(col.name)}
                       />
-                      {localSortConfig.find(s => s.selector === col.selector)?.direction === 'asc' 
-                        ? 'Asc' 
-                        : 'Desc'}
-                    </button>
-                  )}
-                </div>
+                    </div>
+
+                    <label
+                      htmlFor={`sort-${col.name}`}
+                      className="option-label"
+                    >
+                      {col.name}
+                    </label>
+
+                    {localSortConfig?.some(s => s.name === col.name) && (
+                      <button
+                        className="direction-btn"
+                        onClick={() => handleDirectionToggle(col.name)}
+                      >
+                        <FontAwesomeIcon
+                          icon={localSortConfig?.find(s => s.name === col.name)?.direction === 'asc'
+                            ? faArrowUp
+                            : faArrowDown}
+                          className="me-1"
+                        />
+                        {localSortConfig?.find(s => s.name === col.name)?.direction === 'asc'
+                          ? 'Asc'
+                          : 'Desc'}
+                      </button>
+                    )}
+                  </div>
+                ) : (
+                  <div
+                    key={col.selector}
+                    className="option-item"
+                  >
+                    <div className="form-check form-switch me-3">
+                      <input
+                        className="form-check-input"
+                        type="checkbox"
+                        id={`sort-${col.selector}`}
+                        checked={localSortConfig?.some(s => s.selector === col.selector)}
+                        onChange={() => handleSortChange(col.selector)}
+                        disabled={!localVisibleColumns?.includes(col.selector)}
+                      />
+                    </div>
+
+                    <label
+                      htmlFor={`sort-${col.selector}`}
+                      className="option-label"
+                    >
+                      {col.name}
+                    </label>
+
+                    {localSortConfig?.some(s => s.selector === col.selector) && (
+                      <button
+                        className="direction-btn"
+                        onClick={() => handleDirectionToggle(col.selector)}
+                      >
+                        <FontAwesomeIcon
+                          icon={localSortConfig?.find(s => s.selector === col.selector)?.direction === 'asc'
+                            ? faArrowUp
+                            : faArrowDown}
+                          className="me-1"
+                        />
+                        {localSortConfig?.find(s => s.selector === col.selector)?.direction === 'asc'
+                          ? 'Asc'
+                          : 'Desc'}
+                      </button>
+                    )}
+                  </div>
+                )
               ))}
             </div>
           </div>
@@ -141,29 +185,55 @@ const AdvancedOptionsModal = ({
                 <FontAwesomeIcon icon={faEye} className="me-2" />
                 Visible Columns
               </h5>
-              
-              {columns.map((col) => (
-                <div 
-                  key={col.selector}
-                  className="option-item"
-                >
-                  <div className="form-check form-switch me-3">
-                    <input
-                      className="form-check-input"
-                      type="checkbox"
-                      id={`visible-${col.selector}`}
-                      checked={localVisibleColumns.includes(col.selector)}
-                      onChange={() => handleVisibilityChange(col.selector)}
-                    />
-                  </div>
-                  
-                  <label 
-                    htmlFor={`visible-${col.selector}`}
-                    className="option-label"
+
+              {columns?.map((col) => (
+                isFirstRowHeading === 'Yes' ? (
+                  <div
+                    key={col.name}
+                    className="option-item"
                   >
-                    {col.name}
-                  </label>
-                </div>
+                    <div className="form-check form-switch me-3">
+                      <input
+                        className="form-check-input"
+                        type="checkbox"
+                        id={`visible-${col.name}`}
+                        checked={localVisibleColumns?.includes(col.name)}
+                        onChange={() => handleVisibilityChange(col.name)}
+                      />
+                    </div>
+
+                    <label
+                      htmlFor={`visible-${col.name}`}
+                      className="option-label"
+                    >
+                      {col.name}
+                    </label>
+                  </div>
+                )
+                  :
+                  (
+                    <div
+                      key={col.selector}
+                      className="option-item"
+                    >
+                      <div className="form-check form-switch me-3">
+                        <input
+                          className="form-check-input"
+                          type="checkbox"
+                          id={`visible-${col.selector}`}
+                          checked={localVisibleColumns?.includes(col.selector)}
+                          onChange={() => handleVisibilityChange(col.selector)}
+                        />
+                      </div>
+
+                      <label
+                        htmlFor={`visible-${col.selector}`}
+                        className="option-label"
+                      >
+                        {col.name}
+                      </label>
+                    </div>
+                  )
               ))}
             </div>
           </div>
@@ -178,7 +248,7 @@ const AdvancedOptionsModal = ({
           <FontAwesomeIcon icon={faBan} className="me-2" />
           Cancel
         </button>
-        
+
         <button
           className="btn-save"
           onClick={handleSave}

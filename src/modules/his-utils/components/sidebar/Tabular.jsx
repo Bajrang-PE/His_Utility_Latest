@@ -17,7 +17,8 @@ const Tabular = ({
     noDataComponent,
     mainHeaders = [],
     sortConfig = [],
-    onSortConfigChange
+    onSortConfigChange,
+    isRecordsLimitedLineRequired, allData, limit
 }) => {
     const tableRef = useRef();
     const headerRef = useRef();
@@ -45,14 +46,14 @@ const Tabular = ({
         return new Date(dateStr);
     };
 
-       // Handle sort clicks
+    // Handle sort clicks
     const handleSort = (column, sortDirection) => {
         if (typeof column.selector !== 'function') return;
-        
+
         onSortConfigChange(prev => {
             // Check if this column is already being sorted
             const existingIndex = prev.findIndex(s => s.selector === column.selector);
-            
+
             if (existingIndex > -1) {
                 // If same column clicked again, toggle direction
                 if (prev.length === 1) {
@@ -64,7 +65,7 @@ const Tabular = ({
                 // Remove from sort if already sorted and not the only sort
                 return prev.filter(s => s.selector !== column.selector);
             }
-            
+
             // Add new sort (single sort - replace existing)
             return [{
                 selector: column.selector,
@@ -199,7 +200,11 @@ const Tabular = ({
                     ref={tableRef}
                     persistTableHead={true}
                     dense
-                    columns={columns}
+                    // columns={columns}
+                    columns={columns?.map(col => ({
+                        ...col,
+                        name: col.title || col.name
+                    }))}
                     // data={data}
                     data={sortedData}
                     sortServer
@@ -224,6 +229,11 @@ const Tabular = ({
                     {`Showing 1 to ${data.length} of ${data.length} entries`}<br />
                 </div>
             )}
+            {(isRecordsLimitedLineRequired === 'Yes' && allData?.length > data.length) && (
+                <div style={{ textAlign: 'right', marginTop: '8px', fontSize: '12px' }}>
+                    {`*Records limited to ${limit} out of ${allData?.length}`}<br />
+                </div>
+            )}
         </div>
     );
 };
@@ -238,13 +248,13 @@ const CustomTableHeading = ({ mainHeaders, headingBgColor, headingFontColor, tab
                     key={index}
                     className='third-head'
                     style={{
-                        minWidth: `${150 * header.subHeaders}px`,
-                        width: `${(100 / columns.length) * header.subHeaders}%`,
-                        borderBottom: header.isSingle ? 'none' : '1px solid #474646',
+                        minWidth: `${150 * header?.subHeaders}px`,
+                        width: `${(100 / columns?.length) * header?.subHeaders}%`,
+                        borderBottom: header?.isSingle ? 'none' : '1px solid #474646',
                     }}
                 >
 
-                    <div title={header?.name}>{header.name}</div>
+                    <div title={header?.name}>{header?.name}</div>
                 </div >
             ))}
         </>
