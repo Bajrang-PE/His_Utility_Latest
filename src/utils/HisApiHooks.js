@@ -5,10 +5,10 @@ import { decryptAesOrRsa, encryptAesData } from './SecurityConfig';
 
 //  const BaseUrl = 'http://10.226.28.17:8024/';  //server
 // const BaseUrl = 'http://10.226.25.164:8024/';  //server
-const BaseUrl = 'http://10.226.17.6:8024/';  //server
+// const BaseUrl = 'http://10.226.17.6:8024/';  //server
 
 const apiHis = axios.create({
-    baseURL: BaseUrl
+    baseURL: ''
 });
 
 //axios.defaults.baseURL = BaseUrl;
@@ -66,12 +66,10 @@ export const fetchData = async (url, params) => {
             const response = await apiHis.get(url, { params: params ? params : '' });
             // return response?.data
             const decryptedData = decryptAesOrRsa(response?.data)
-            console.log(JSON.parse(decryptedData), url)
             return JSON.parse(decryptedData);
         } else {
             const response = await apiHis.get(url);
             const decryptedData = decryptAesOrRsa(response?.data)
-            console.log(JSON.parse(decryptedData), url)
             return JSON.parse(decryptedData);
             // return response?.data
         }
@@ -90,7 +88,6 @@ export const fetchPostData = async (url, data, rtblob) => {
         } else {
             const response = await apiHis.post(url, encodeURIComponent(encryptAesData(JSON?.stringify(data))));
             const decryptedData = decryptAesOrRsa(response?.data)
-            console.log(JSON.parse(decryptedData), url)
             return JSON.parse(decryptedData);
             // return response.data;7,18,173
         }

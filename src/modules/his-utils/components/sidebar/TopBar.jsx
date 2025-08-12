@@ -49,7 +49,7 @@ const TopBar = ({ data, setActiveTab, dashboardData,setPrevKpiTab,dt }) => {
             setOpenSubMenu(null);
         }else {
             setActiveTab(data[0]);
-            setOpenSubMenu(data[0].id);
+            setOpenSubMenu(data[0]?.id);
         }
         if (scrollRef.current) {
             scrollRef.current.scrollLeft = 0;

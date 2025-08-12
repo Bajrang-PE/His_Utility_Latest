@@ -17,11 +17,11 @@ function App() {
     <>
       <Router>
         <Routes>
-          <Route path="/HIS_dashboard/*" element={<HisRoutes />} />
+          <Route path="/db/HIS_dashboard/*" element={<HisRoutes />} />
           {/* <Route path="/dvdms/*" element={<LoginWarRoutes />} /> */}
-          <Route index element={<DbConfigMaster />} />
-          {/* <Route path="db" element={<DbConfigMaster />} /> */}
-          <Route path="/test" element={<MultiClTable />} />
+          {/* <Route index element={<DbConfigMaster />} /> */}
+          <Route path="db" element={<DbConfigMaster />} />
+          {/* <Route path="/dvdms" element={<HomePage />} /> */}
           {/* <Route path index element={<NotFound />} /> */}
 
         </Routes>

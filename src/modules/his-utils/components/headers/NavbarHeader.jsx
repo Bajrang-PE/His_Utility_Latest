@@ -77,16 +77,16 @@ const NavbarHeader = () => {
 
 
     const dashboardMasterDt = [
-        { label: 'Widget Master', link: "/HIS_dashboard/widget-master" },
-        { label: 'Tab Master', link: "/HIS_dashboard/tab-master" },
-        { label: 'Dashboard Master', link: "/HIS_dashboard/dashboard-master" },
-        { label: 'Parameter Master', link: "/HIS_dashboard/parameter-master" },
-        { label: 'Dashboard Configuration Master', link: "/HIS_dashboard/dashboard-configuration-master" }
+        { label: 'Widget Master', link: "/db/HIS_dashboard/widget-master" },
+        { label: 'Tab Master', link: "/db/HIS_dashboard/tab-master" },
+        { label: 'Dashboard Master', link: "/db/HIS_dashboard/dashboard-master" },
+        { label: 'Parameter Master', link: "/db/HIS_dashboard/parameter-master" },
+        { label: 'Dashboard Configuration Master', link: "/db/HIS_dashboard/dashboard-configuration-master" }
     ]
     const webServiceMaster = [
-        { label: 'Data Service Master', link: "/HIS_dashboard/data-service-master" },
-        { label: 'Service User Master', link: "/HIS_dashboard/service-user-master" },
-        { label: 'Dashboard SubMenu Master', link: "/HIS_dashboard/dashboard-submenu-master" }
+        { label: 'Data Service Master', link: "/db/HIS_dashboard/data-service-master" },
+        { label: 'Service User Master', link: "/db/HIS_dashboard/service-user-master" },
+        { label: 'Dashboard SubMenu Master', link: "/db/HIS_dashboard/dashboard-submenu-master" }
     ]
 
     const languageOptions = [

@@ -1,7 +1,7 @@
 import React, { lazy, useContext, useEffect, useState } from "react";
 import Tabular from "./Tabular";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faArrowCircleLeft, faCog, faFileExcel, faFilePdf, faRefresh, faSortAmountDesc, faTableCells } from "@fortawesome/free-solid-svg-icons";
+import { faArrowCircleLeft, faCog, faFileExcel, faFilePdf, faRefresh, faSliders, faSortAmountDesc, faTableCells } from "@fortawesome/free-solid-svg-icons";
 import { fetchProcedureData, fetchQueryData, formatDateFullYear, formatParams, getOrderedParamValues, ToastAlert } from "../../utils/commonFunction";
 import { HISContext } from "../../contextApi/HISContext";
 import InputField from "../commons/InputField";
@@ -10,6 +10,9 @@ import { getAuthUserData } from "../../../../utils/CommonFunction";
 import { useSearchParams } from "react-router-dom";
 import PopUpWidget from "./PopUpWidget";
 import { fetchPostData } from "../../../../utils/HisApiHooks";
+import { getEncryptedParamValue } from "../../../../utils/Security";
+import AdvancedOptionsModal from "./AdvancedOptionsModal";
+
 
 const Parameters = lazy(() => import('./Parameters'));
 
@@ -334,7 +337,7 @@ const TabularDash = (props) => {
           const key = header.subHeaders[0];
 
           columns.push({
-            name: <div title={header?.name}>{header?.name !== 'sno' ? key : ''}</div>,
+            name: header?.name !== 'sno' ? key : '',
             selector: row => row[key] || '-',
             sortable: true,
             wrap: true,
@@ -368,7 +371,7 @@ const TabularDash = (props) => {
             mainHeaders.push({ name: header.name, subHeaders: 1, isSingle: true });
             const key = header.name;
             columns.push({
-              name: <div title={header?.name}>{' '}</div>,
+              name: ' ',
               selector: row => row[header.name] || '-',
               sortable: true,
               wrap: true,
@@ -399,7 +402,7 @@ const TabularDash = (props) => {
           } else {
             const key = header.name;
             columns.push({
-              name: <div title={header?.name}>{header?.name}</div>,
+              name: header?.name,
               selector: row => row[header.name] || '-',
               sortable: true,
               wrap: true,
@@ -434,7 +437,7 @@ const TabularDash = (props) => {
           header.subHeaders.forEach(subHeader => {
             const fullKey = `${header.name}_${subHeader}`;
             columns.push({
-              name: <div title={subHeader}>{subHeader}</div>,
+              name: subHeader,
               selector: row => row[fullKey] || '-',
               sortable: true,
               wrap: true,
@@ -612,7 +615,7 @@ const TabularDash = (props) => {
           formatDateFullYear(new Date()) // to values
         ]
         const response = await fetchProcedureData(widget?.procedureMode, params, widget?.JNDIid);
-        console.log(response?.data, 'helllllllllll')
+        // console.log(response?.data, 'helllllllllll')
         if (response?.data?.length > 0) {
 
           // const formattedData = formatData(response.data || []);
@@ -821,6 +824,14 @@ const TabularDash = (props) => {
     }
   }
 
+  const [showAdvancedOptions, setShowAdvancedOptions] = React.useState(false);
+  const [sortConfig, setSortConfig] = React.useState([]);
+  const [visibleColumns, setVisibleColumns] = React.useState(columns.map(c => c.selector));
+
+  // Filter columns based on visibility before passing to <Tabular>
+  const displayedColumns = visibleColumns?.length > 0 ? columns?.filter(c => visibleColumns.includes(c.selector)) : columns;
+
+
   return (
     <>
       {/* {currentLevel == 0 && */}
@@ -852,26 +863,27 @@ const TabularDash = (props) => {
                   </li>
                 }
                 {(isActionButtonReq === 'Yes' || isActionButtonReq === 'pdf' || isActionButtonReq === 'pdfAndcsv') &&
-                  <li className="p-1 dropdown-item text-primary" style={{ cursor: "pointer" }} onClick={() => generatePDF(widgetData, widgetLimit ? filterData.slice(0, parseInt(widgetLimit)) : safeLimit ? filterData.slice(0, safeLimit) : filterData, singleConfigData?.databaseConfigVO)} title="pdf">
+                  <li className="p-1 dropdown-item text-primary" style={{ cursor: "pointer" }}
+                    onClick={() => generatePDF(widgetData, widgetLimit ? filterData.slice(0, parseInt(widgetLimit)) : safeLimit ? filterData.slice(0, safeLimit) : filterData, singleConfigData?.databaseConfigVO, displayedColumns)} title="pdf">
                     <FontAwesomeIcon icon={faFilePdf} className="dropdown-gear-icon me-2" />{dt('Download PDF')}
                   </li>
                 }
                 {(isActionButtonReq === 'Yes' || isActionButtonReq === 'csv' || isActionButtonReq === 'pdfAndcsv') &&
-                  <li className="p-1 dropdown-item text-primary" style={{ cursor: "pointer" }} onClick={() => generateCSV(widgetData, widgetLimit ? filterData.slice(0, parseInt(widgetLimit)) : safeLimit ? filterData.slice(0, safeLimit) : filterData, singleConfigData?.databaseConfigVO)}>
+                  <li className="p-1 dropdown-item text-primary" style={{ cursor: "pointer" }} onClick={() => generateCSV(widgetData, widgetLimit ? filterData.slice(0, parseInt(widgetLimit)) : safeLimit ? filterData.slice(0, safeLimit) : filterData, singleConfigData?.databaseConfigVO,displayedColumns)}>
                     <FontAwesomeIcon icon={faFileExcel} className="dropdown-gear-icon me-2" />{dt('Download CSV')}
                   </li>
                 }
-                {/* <li className="p-1 dropdown-item text-primary" style={{ cursor: "pointer" }}>
-                <FontAwesomeIcon icon={faBarChart} className="dropdown-gear-icon me-2" />Advanced
-              </li> */}
+
+                <li className="p-1 dropdown-item text-primary" style={{ cursor: "pointer" }} onClick={() => setShowAdvancedOptions(true)}>
+                  <FontAwesomeIcon icon={faSliders} className="dropdown-gear-icon me-2" />{dt('Advanced')}</li>
               </ul>
             </>)}
             {isDirectDownloadRequired === "Yes" && (<>
-              <button className="small-box-btn-dwn" onClick={() => generatePDF(widgetData, filterData, singleConfigData?.databaseConfigVO)} title="PDF">
+              <button className="small-box-btn-dwn" onClick={() => generatePDF(widgetData, filterData, singleConfigData?.databaseConfigVO,displayedColumns)} title="PDF">
                 <FontAwesomeIcon icon={faFilePdf} />
               </button>
 
-              <button className="small-box-btn-dwn" onClick={() => generateCSV(widgetData, filterData, singleConfigData?.databaseConfigVO)}>
+              <button className="small-box-btn-dwn" onClick={() => generateCSV(widgetData, filterData, singleConfigData?.databaseConfigVO,displayedColumns)}>
                 <FontAwesomeIcon icon={faFileExcel} />
               </button>
             </>)}
@@ -946,7 +958,7 @@ const TabularDash = (props) => {
 
           :
           <Tabular
-            columns={columns}
+            columns={displayedColumns}
             data={widgetLimit ? filterData?.slice(0, parseInt(widgetLimit)) : safeLimit ? filterData?.slice(0, safeLimit) : filterData}
             pagination={isPaginationReq}
             recordsPerPage={recordPerPage}
@@ -960,6 +972,8 @@ const TabularDash = (props) => {
             theme={theme}
             noDataComponent={<div className="text-danger fw-bold fs-13">{dt(customMessage || "There are no records to display")}</div>}
             mainHeaders={MainHeaders}
+            sortConfig={sortConfig}
+            onSortConfigChange={setSortConfig}
           />
 
         }
@@ -978,6 +992,16 @@ const TabularDash = (props) => {
       {(popupConfig && showPopUpWidget) && (
         <PopUpWidget {...{ showPopUpWidget, popupConfig, closePopup }} />
       )}
+      <AdvancedOptionsModal
+        show={showAdvancedOptions}
+        onClose={() => setShowAdvancedOptions(false)}
+        columns={columns}
+        sortConfig={sortConfig}
+        onSortConfigChange={setSortConfig}
+        visibleColumns={visibleColumns}
+        onVisibleColumnsChange={setVisibleColumns}
+      />
+
     </>
   );
 };
