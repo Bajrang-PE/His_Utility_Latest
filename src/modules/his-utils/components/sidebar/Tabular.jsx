@@ -3,7 +3,7 @@ import DataTable from 'react-data-table-component';
 
 const Tabular = ({
     columns,
-    data,
+    data = [],
     pagination,
     recordsPerPage,
     fixedHeader,
@@ -226,10 +226,10 @@ const Tabular = ({
 
             {!pagination && (
                 <div style={{ textAlign: 'right', marginTop: '8px', fontSize: '12px' }}>
-                    {`Showing 1 to ${data.length} of ${data.length} entries`}<br />
+                    {`Showing 1 to ${data?.length} of ${data?.length} entries`}<br />
                 </div>
             )}
-            {(isRecordsLimitedLineRequired === 'Yes' && allData?.length > data.length) && (
+            {(isRecordsLimitedLineRequired === 'Yes' && allData?.length > data?.length) && (
                 <div style={{ textAlign: 'right', marginTop: '8px', fontSize: '12px' }}>
                     {`*Records limited to ${limit} out of ${allData?.length}`}<br />
                 </div>

@@ -572,7 +572,7 @@ export const generatePDFbg = async (widgetData, tableData, config, filters = [])
   }
 };
 
-export const generateGraphPDF = async (widgetData, tableData, config, filters = []) => {
+export const generateGraphPDF = async (widgetData, tableData, config, visibleColumns, sortConfig, filters = []) => {
   if (!widgetData) return;
 
   if (!Array.isArray(tableData?.seriesData) || tableData.seriesData === 0) {
@@ -608,7 +608,7 @@ export const generateGraphPDF = async (widgetData, tableData, config, filters = 
     const logoHeight = 18;
     const margin = 10;
     const textMargin = 10;
-    const alignment = headingAlignment.toLowerCase();
+    const alignment = headingAlignment?.toLowerCase() || 'center';
 
     // Filter valid logos
     const validLogos = isLogoRequired === 'Yes' && Array.isArray(logos)
@@ -695,8 +695,6 @@ export const generateGraphPDF = async (widgetData, tableData, config, filters = 
   const headerEndY = drawHeader(pdf);
   let yPosition = headerEndY + 5;
 
-  // let yPosition = isLogoRequired === 'Yes' && logos.some(logo => logo.position === 'top') ? 45 : 35;
-
   // Filters Section
   if (showFilterDetailsInPDF === 'Yes' && filters.length) {
     pdf.setFontSize(10);
@@ -712,26 +710,46 @@ export const generateGraphPDF = async (widgetData, tableData, config, filters = 
 
   const tabData = [];
 
-  // const headers = [xAxisLabel, yAxisLabel];
-  const headers = [xAxisLabel, ...tableData.seriesData.map(s => s.name)];
+  //  Pick only visible columns, in same order
+  const selectedHeaders = (visibleColumns?.length > 0
+    ? visibleColumns.map(c => c.name)
+    : [xAxisLabel, ...tableData.seriesData.map(s => s.name)]
+  );
 
-  // Assuming first series contains the counts
-  const counts = tableData.seriesData[0]?.data || [];
-
-  // tableData.categories.forEach((state, index) => {
-  //   tabData.push([state, counts[index] || 0]);
-  // });
-
-  tableData.categories.forEach((state, index) => {
-    const row = [state];
-    tableData.seriesData.forEach(series => {
-      row.push(series.data[index] || 0);
+  //  Build row objects first (so we can sort easily)
+  let rows = tableData.categories.map((category, index) => {
+    const rowObj = {};
+    selectedHeaders.forEach(h => {
+      if (h === xAxisLabel) {
+        rowObj[h] = category;
+      } else {
+        const series = tableData.seriesData.find(s => s.name === h);
+        rowObj[h] = series ? (series.data[index] || 0) : '';
+      }
     });
-
-    tabData.push(row);
+    return rowObj;
   });
 
-  console.log(tableData, 'tableData')
+  //  Apply sorting if sortConfig exists
+  if (sortConfig?.length > 0) {
+    sortConfig.forEach(sortRule => {
+      rows.sort((a, b) => {
+        if (a[sortRule.name] < b[sortRule.name]) return sortRule.direction === 'asc' ? -1 : 1;
+        if (a[sortRule.name] > b[sortRule.name]) return sortRule.direction === 'asc' ? 1 : -1;
+        return 0;
+      });
+    });
+  }
+
+  //  Convert sorted row objects to tabData array format
+  rows.forEach(rowObj => {
+    const rowArray = selectedHeaders.map(h => rowObj[h]);
+    tabData.push(rowArray);
+  });
+
+  const headers = selectedHeaders;
+
+
   pdf.autoTable({
     startY: yPosition,
     head: [headers],
@@ -776,7 +794,7 @@ export const generateGraphPDF = async (widgetData, tableData, config, filters = 
 };
 
 
-export const generateCSV = (widgetData, data, config, visibleColumns,isH2) => {
+export const generateCSV = (widgetData, data, config, visibleColumns, isH2) => {
   if (!Array.isArray(data) || data.length === 0) {
     ToastAlert('No data available to download.', 'warning');
     return;
@@ -870,11 +888,10 @@ export const generateCSV = (widgetData, data, config, visibleColumns,isH2) => {
   document.body.removeChild(link);
 };
 
-export const generateGraphCSV = (widgetData, data, config) => {
+export const generateGraphCSV = (widgetData, data, config, visibleColumns, sortConfig,) => {
   if (!widgetData) return;
 
-  const { rptDisplayName, xAxisLabel,
-    yAxisLabel } = widgetData;
+  const { rptDisplayName, xAxisLabel, yAxisLabel } = widgetData || {};
   const { reportHeader1, reportHeader2, reportHeader3 } = config || {};
   const currentDate = new Date().toLocaleDateString('en-GB') + ' ' + new Date().toLocaleTimeString('en-GB');
 
@@ -901,31 +918,62 @@ export const generateGraphCSV = (widgetData, data, config) => {
   }
 
   // Simplified headers for state-wise data
-  const headers = [xAxisLabel, ...data.seriesData.map(s => s.name)];
+  // const headers = [xAxisLabel, ...data.seriesData.map(s => s.name)];
 
-  // Get counts from first series
-  const counts = data.seriesData[0].data;
+  // const rows = data.categories.map((state, index) => {
+  //   const row = [state];
+  //   data.seriesData.forEach(series => {
+  //     row.push(series.data[index] || 0);
+  //   });
+  //   return row;
+  // });
 
-  // Prepare rows
-  // const rows = data.categories.map((state, index) => [
-  //   state,
-  //   counts[index] || 0
-  // ]);
+  // 1. Pick only visible columns (or fallback to all)
+  const selectedHeaders =
+    visibleColumns?.length > 0
+      ? visibleColumns.map((c) => c.name)
+      : [xAxisLabel, ...data.seriesData.map((s) => s.name)];
 
-  const rows = data.categories.map((state, index) => {
-    const row = [state];
-    data.seriesData.forEach(series => {
-      row.push(series.data[index] || 0);
+  // 2. Build row objects first
+  let rows = data.categories.map((category, index) => {
+    const rowObj = {};
+    selectedHeaders.forEach((h) => {
+      if (h === xAxisLabel) {
+        rowObj[h] = category;
+      } else {
+        const series = data.seriesData.find((s) => s.name === h);
+        rowObj[h] = series ? series.data[index] || 0 : "";
+      }
     });
-    return row;
+    return rowObj;
   });
 
+  // 3. Apply multi-column sorting if provided
+  if (sortConfig?.length > 0) {
+    sortConfig.forEach((sortRule) => {
+      rows.sort((a, b) => {
+        if (a[sortRule.name] < b[sortRule.name])
+          return sortRule.direction === "asc" ? -1 : 1;
+        if (a[sortRule.name] > b[sortRule.name])
+          return sortRule.direction === "asc" ? 1 : -1;
+        return 0;
+      });
+    });
+  }
+
+  // 4. Convert to array rows in correct header order
+  const rowsArray = rows.map((rowObj) =>
+    selectedHeaders.map((h) => rowObj[h])
+  );
+
+  const finalData = [...heading, selectedHeaders, ...rowsArray];
+
   // Combine all data
-  const finalData = [
-    ...heading,
-    headers,
-    ...rows
-  ];
+  // const finalData = [
+  //   ...heading,
+  //   headers,
+  //   ...rows
+  // ];
 
   csvContent = Papa.unparse(finalData, {
     skipEmptyLines: false,

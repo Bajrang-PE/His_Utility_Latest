@@ -4,7 +4,6 @@ import { faGear } from '@fortawesome/free-solid-svg-icons';
 import './NavbarHeader.css';
 import { Link } from 'react-router-dom';
 import { HISContext } from '../../contextApi/HISContext';
-import { fetchPostData } from '../../../../utils/HisApiHooks';
 import TranslateModal from './TranslateModal';
 import axios from 'axios';
 import { extractAllPageText, ToastAlert } from '../../utils/commonFunction';
@@ -114,7 +113,7 @@ const NavbarHeader = () => {
             {/* <DashHeader/> */}
             <nav className="navbar navbar-expand-lg navbar-dark navbar-header-his">
                 <div className="container-fluid his-brand">
-                    <a className="navbar-brand logo" href="/dvdms/user-dashboard">{dt("HIS Utility")}</a>
+                    <div className="navbar-brand logo">{dt("HIS Utility")}</div>
                     <button
                         className="navbar-toggler"
                         type="button"

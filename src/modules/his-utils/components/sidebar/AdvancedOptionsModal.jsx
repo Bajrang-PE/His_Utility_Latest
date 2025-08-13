@@ -26,42 +26,78 @@ const AdvancedOptionsModal = ({
 
   const handleSortChange = (colKey) => {
     setLocalSortConfig(prev => {
-      const exists = prev?.find(s => s.selector === colKey);
-      if (exists) {
-        return prev?.filter(s => s.selector !== colKey);
+      if (isFirstRowHeading === 'Yes') {
+        const exists = prev?.find(s => s.name == colKey);
+        if (exists) {
+          return prev?.filter(s => s.name !== colKey);
+        } else {
+          return [...prev, { name: colKey, direction: 'asc' }];
+        }
       } else {
-        return [...prev, { selector: colKey, direction: 'asc' }];
+        const exists = prev?.find(s => s.selector == colKey);
+        if (exists) {
+          return prev?.filter(s => s.selector !== colKey);
+        } else {
+          return [...prev, { selector: colKey, direction: 'asc' }];
+        }
       }
     });
   };
 
   const handleDirectionToggle = (colKey) => {
-    setLocalSortConfig(prev =>
-      prev?.map(s =>
-        s.selector === colKey
-          ? { ...s, direction: s.direction === 'asc' ? 'desc' : 'asc' }
-          : s
-      )
-    );
+    if (isFirstRowHeading === 'Yes') {
+      setLocalSortConfig(prev =>
+        prev?.map(s =>
+          s.name === colKey
+            ? { ...s, direction: s.direction === 'asc' ? 'desc' : 'asc' }
+            : s
+        )
+      );
+    } else {
+      setLocalSortConfig(prev =>
+        prev?.map(s =>
+          s.selector === colKey
+            ? { ...s, direction: s.direction === 'asc' ? 'desc' : 'asc' }
+            : s
+        )
+      );
+    }
   };
 
   const handleVisibilityChange = (colKey) => {
-    setLocalVisibleColumns(prev => {
-      const newVisible = prev.includes(colKey)
-        ? prev.filter(k => k !== colKey)
-        : [...prev, colKey];
+    if (isFirstRowHeading === "Yes") {
+      setLocalVisibleColumns(prev => {
+        const newVisible = prev.includes(colKey)
+          ? prev.filter(k => k !== colKey)
+          : [...prev, colKey];
 
-      setLocalSortConfig(prevSort =>
-        prevSort?.filter(sort => newVisible?.includes(sort.selector))
-      );
+        setLocalSortConfig(prevSort =>
+          prevSort?.filter(sort => newVisible?.includes(sort.name))
+        );
 
-      return newVisible;
-    });
+        return newVisible;
+      });
+    } else {
+      setLocalVisibleColumns(prev => {
+        const newVisible = prev.includes(colKey)
+          ? prev.filter(k => k !== colKey)
+          : [...prev, colKey];
+
+        setLocalSortConfig(prevSort =>
+          prevSort?.filter(sort => newVisible?.includes(sort.selector))
+        );
+
+        return newVisible;
+      });
+    }
   };
 
   const handleSave = () => {
-    onSortConfigChange(localSortConfig);
-    onVisibleColumnsChange(localVisibleColumns);
+    onSortConfigChange(localSortConfig || []);
+    onVisibleColumnsChange(localVisibleColumns || []);
+    onClose();
+  };
+  const handleClose = () => {
     onClose();
   };
 
@@ -69,7 +105,7 @@ const AdvancedOptionsModal = ({
   return (
     <Modal
       show={show}
-      onHide={onClose}
+      onHide={handleClose}
       size="xl"
       centered
       backdrop="static"
@@ -92,17 +128,17 @@ const AdvancedOptionsModal = ({
                 Sort Columns
               </h5>
 
-              {columns?.map((col) => (
+              {columns?.map((col, index) => (
                 isFirstRowHeading === 'Yes' ? (
                   <div
-                    key={col.name}
+                    key={col.name + index}
                     className="option-item"
                   >
                     <div className="form-check form-switch me-3">
                       <input
                         className="form-check-input"
                         type="checkbox"
-                        id={`sort-${col.name}`}
+                        id={`sort-${index}`}
                         checked={localSortConfig?.some(s => s.name === col.name)}
                         onChange={() => handleSortChange(col.name)}
                         disabled={!localVisibleColumns?.includes(col.name)}
@@ -186,10 +222,10 @@ const AdvancedOptionsModal = ({
                 Visible Columns
               </h5>
 
-              {columns?.map((col) => (
+              {columns?.map((col, index) => (
                 isFirstRowHeading === 'Yes' ? (
                   <div
-                    key={col.name}
+                    key={col.name + index}
                     className="option-item"
                   >
                     <div className="form-check form-switch me-3">
@@ -243,7 +279,7 @@ const AdvancedOptionsModal = ({
       <Modal.Footer className="modal-footer-custom">
         <button
           className="btn-cancel"
-          onClick={onClose}
+          onClick={handleClose}
         >
           <FontAwesomeIcon icon={faBan} className="me-2" />
           Cancel

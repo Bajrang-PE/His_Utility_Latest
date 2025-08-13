@@ -61,7 +61,7 @@ function App() {
           {/* <Route path="/dvdms/*" element={<LoginWarRoutes />} /> */}
           <Route index element={<DbConfigMaster />} />
           {/* <Route path="db" element={<DbConfigMaster />} /> */}
-          <Route path="/test" element={<BarRaceChart />} />
+          {/* <Route path="/test" element={<BarRaceChart />} /> */}
           {/* <Route path index element={<NotFound />} /> */}
 
         </Routes>

@@ -16,6 +16,11 @@ const ParamsDetail = (props) => {
     const leftSelectEle = document.getElementById('leftRightSelect');
     const rightSelectEle = document.getElementById('leftRightSelect1');
 
+    const [filterData, setFilterData] = useState([]);
+    const [filterData2, setFilterData2] = useState([]);
+    const [searchInput, setSearchInput] = useState('');
+    const [searchInput2, setSearchInput2] = useState('');
+
 
     const handleLeftSelect = (e) => {
         const value = Array.from(e.target.selectedOptions, option => option.value);
@@ -63,14 +68,43 @@ const ParamsDetail = (props) => {
         }
     };
 
+    useEffect(() => {
+        if (!searchInput) {
+            setFilterData(availableOptions);
+        } else {
+            const lowercasedText = searchInput.toLowerCase();
+            const newFilteredData = availableOptions.filter(row => {
+                const paramId = row?.label?.toString()?.toLowerCase() || "";
+                return paramId?.includes(lowercasedText);
+            });
+            setFilterData(newFilteredData);
+        }
+    }, [searchInput, availableOptions]);
+
+    useEffect(() => {
+        if (!searchInput2) {
+            setFilterData2(selectedOptions);
+        } else {
+            const lowercasedText = searchInput2.toLowerCase();
+            const newFilteredData = selectedOptions.filter(row => {
+                const paramId = row?.label?.toString()?.toLowerCase() || "";
+                return paramId?.includes(lowercasedText);
+            });
+            setFilterData2(newFilteredData);
+        }
+    }, [searchInput2, selectedOptions]);
+
     return (
         <>
             <b><h6 className='header-devider m-0'>{dt('Parameter Details')}</h6></b>
             <div className='d-flex justify-content-center mt-1 mb-2 role-theme'>
                 <div className='' style={{ width: "30%" }}>
                     <b><h6 className='mb-2 text-center'>{dt('Parameter Name')}</h6></b>
+
+                    <input className='form-control form-control-sm backcolorinput mb-1' type="search" placeholder='search...' value={searchInput} onChange={(e) => setSearchInput(e?.target?.value)} />
+
                     <select className="form-select form-select-sm backcolorinput" id='leftRightSelect' size="6" aria-label="size 4 select example" onChange={handleLeftSelect}>
-                        {availableOptions?.map((opt, index) => (
+                        {filterData?.map((opt, index) => (
                             <option value={opt.value} key={index}>{opt.label}</option>
                         ))}
                     </select>
@@ -94,8 +128,11 @@ const ParamsDetail = (props) => {
 
                 <div className='' style={{ width: "30%" }}>
                     <b><h6 className='mb-2 text-center'>{dt('Selected Parameter Name')}</h6></b>
+
+                    <input className='form-control form-control-sm backcolorinput mb-1' type="search" placeholder='search...' value={searchInput2} onChange={(e) => setSearchInput2(e?.target?.value)} />
+
                     <select className="form-select form-select-sm backcolorinput" id='leftRightSelect1' size="6" aria-label="size 4 select example" onChange={handleRightSelect}>
-                        {selectedOptions?.map((opt, index) => (
+                        {filterData2?.map((opt, index) => (
                             <option value={opt.value} key={index}>{opt.label}</option>
                         ))}
                     </select>

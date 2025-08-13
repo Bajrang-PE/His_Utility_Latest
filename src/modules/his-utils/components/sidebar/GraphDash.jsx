@@ -2,13 +2,14 @@ import React, { useState, useEffect, useContext, lazy } from "react";
 import Highcharts from "highcharts";
 import HighchartsReact from "highcharts-react-official";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCog, faFileCsv, faFilePdf, faRefresh } from "@fortawesome/free-solid-svg-icons";
+import { faCog, faFileCsv, faFileExcel, faFilePdf, faRefresh, faSliders } from "@fortawesome/free-solid-svg-icons";
 import { fetchProcedureData, fetchQueryData, formatDateFullYear, formatParams, getOrderedParamValues } from "../../utils/commonFunction";
 import { HISContext } from "../../contextApi/HISContext";
 import { highchartGraphOptions } from "../../localData/DropDownData";
 import { getAuthUserData } from "../../../../utils/CommonFunction";
 import { generateGraphCSV, generateGraphPDF } from "../commons/advancedPdf";
 import { useSearchParams } from "react-router-dom";
+import AdvancedOptionsModal from "./AdvancedOptionsModal";
 
 const Parameters = lazy(() => import('./Parameters'));
 
@@ -18,6 +19,7 @@ const GraphDash = ({ widgetData, pkColumn, setPkColumn }) => {
   const [filteredGraphOptions, setFilteredGraphOptions] = useState([]);
   const [chartType, setChartType] = useState('BAR_GRAPH');
   const [graphData, setGraphData] = useState([]);
+  const [allGraphData, setAllGraphData] = useState([]);
   const [queryParams] = useSearchParams();
   const isPrev = queryParams.get('isPreview');
 
@@ -186,6 +188,7 @@ const GraphDash = ({ widgetData, pkColumn, setPkColumn }) => {
 
       // Extract unique category values
       const categories = limitedData.map(item => item[categoriesKey]);
+      const allcategories = data.map(item => item[categoriesKey]);
 
       // Create dynamic series data
       const seriesData = seriesKeys.map(key => ({
@@ -193,8 +196,14 @@ const GraphDash = ({ widgetData, pkColumn, setPkColumn }) => {
         data: limitedData.map(item => item[key]),
         colorByPoint: true,
       }));
+      const allseriesData = seriesKeys.map(key => ({
+        name: key,
+        data: data.map(item => item[key]),
+        colorByPoint: true,
+      }));
 
       setGraphData({ categories, seriesData });
+      setAllGraphData({ categories: allcategories, seriesData: allseriesData })
       setIsSearchQuery(false)
       setSearchScope({ scope: "", id: "" })
 
@@ -301,6 +310,14 @@ const GraphDash = ({ widgetData, pkColumn, setPkColumn }) => {
     }
   }, [isSearchQuery]);
 
+  const refreshData = (widgetData) => {
+    if (widgetData && widgetData?.modeOfQuery === "Procedure") {
+      fetchProcedure(widgetData)
+    } else {
+      fetchDataQry(widgetData);
+    }
+  }
+
   const exportingOptions = {
     enabled: isActionButtonReq !== "No" && isActionButtonReq !== "None",
     allowHTML: true,
@@ -330,40 +347,27 @@ const GraphDash = ({ widgetData, pkColumn, setPkColumn }) => {
     }
   };
 
-  // const getSeriesForType = () => {
-  //   if (chartType === "PIE_CHART" || chartType === "DONUT_CHART") {
-  //     return [{
-  //       type: 'pie',
-  //       data: graphData.categories.map((cat, i) => ({
-  //         name: cat,
-  //         y: graphData.seriesData[0]?.data[i] || 0
-  //       })),
-  //       colors: colorList
-  //     }];
-  //   }
-  //   return graphData?.seriesData || [];
-  // };
 
   const getSeriesForType = () => {
-  if (chartType === "PIE_CHART" || chartType === "DONUT_CHART") {
-    return [{
-      type: 'pie',
-      name: widgetData.rptName || "",
-      data: graphData.categories.map((cat, i) => ({
-        name: cat,
-        y: graphData.seriesData[0]?.data[i] || 0
-      })),
-      colors: colorList
-    }];
-  }
+    if (chartType === "PIE_CHART" || chartType === "DONUT_CHART") {
+      return [{
+        type: 'pie',
+        name: widgetData.rptName || "",
+        data: graphData.categories.map((cat, i) => ({
+          name: cat,
+          y: graphData.seriesData[0]?.data[i] || 0
+        })),
+        colors: colorList
+      }];
+    }
 
-  // For other chart types, return seriesData as is, without pie-specific structure
-  return graphData?.seriesData?.map(s => ({
-    ...s,
-    type: chartTypeMapping[chartType], // force correct type
-    colorByPoint: true
-  })) || [];
-};
+    // For other chart types, return seriesData as is, without pie-specific structure
+    return graphData?.seriesData?.map(s => ({
+      ...s,
+      type: chartTypeMapping[chartType],
+      colorByPoint: true
+    })) || [];
+  };
 
 
   const options = {
@@ -543,6 +547,33 @@ const GraphDash = ({ widgetData, pkColumn, setPkColumn }) => {
     },
   };
 
+  const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
+  const [sortConfig, setSortConfig] = useState([]);
+  const [visibleColumns, setVisibleColumns] = useState();
+  const [columns, setColumns] = useState([]);
+
+
+  const filterColumns = (clms) => {
+    if (clms?.length > 0) {
+      return columns?.filter(column => {
+        return clms.includes(column.name);
+      });
+    } else {
+      return columns;
+    }
+  }
+
+  const onClickAdvanced = () => {
+    const headers = [xAxisLabel, ...graphData.seriesData.map(s => s.name)];
+    const headerWithName = headers?.map(h => ({
+      name: h
+    }))
+    setColumns(headerWithName)
+    setShowAdvancedOptions(true)
+  }
+  
+
+
   return (
     <div className={`high-chart-main ${theme === 'Dark' ? 'dark-theme' : ""}`} style={{ border: `7px solid ${theme === 'Dark' ? 'white' : 'black'}` }}>
 
@@ -562,18 +593,31 @@ const GraphDash = ({ widgetData, pkColumn, setPkColumn }) => {
               <FontAwesomeIcon icon={faCog} className="dropdown-gear-icon" />
             </button>
             <ul className="dropdown-menu p-2">
-              <li className="p-1 dropdown-item text-primary" style={{ cursor: "pointer" }}>
+              <li className="p-1 dropdown-item text-primary" style={{ cursor: "pointer" }} onClick={() => refreshData(widgetData)}>
                 <FontAwesomeIcon icon={faRefresh} className="dropdown-gear-icon me-2" />{dt('Refresh Data')}
               </li>
+
+              <li className="p-1 dropdown-item text-primary" style={{ cursor: "pointer" }}
+                onClick={() => generateGraphPDF(widgetData, graphData, singleConfigData?.databaseConfigVO, filterColumns(visibleColumns),sortConfig)} title="pdf">
+                <FontAwesomeIcon icon={faFilePdf} className="dropdown-gear-icon me-2" />{dt('Download PDF')}
+              </li>
+
+              <li className="p-1 dropdown-item text-primary" style={{ cursor: "pointer" }} onClick={() => generateGraphCSV(widgetData, graphData, singleConfigData?.databaseConfigVO,filterColumns(visibleColumns),sortConfig)}>
+                <FontAwesomeIcon icon={faFileExcel} className="dropdown-gear-icon me-2" />{dt('Download CSV')}
+              </li>
+
+              <li className="p-1 dropdown-item text-primary" style={{ cursor: "pointer" }}
+                onClick={() => onClickAdvanced()}>
+                <FontAwesomeIcon icon={faSliders} className="dropdown-gear-icon me-2" />{dt('Advanced')}</li>
             </ul>
             <button type="button" className="small-box-btn-dwn"
-              onClick={() => generateGraphPDF(widgetData, graphData, singleConfigData?.databaseConfigVO)}
+              onClick={() => generateGraphPDF(widgetData, allGraphData, singleConfigData?.databaseConfigVO,filterColumns(visibleColumns),sortConfig)}
               title="PDF"
             >
               <FontAwesomeIcon icon={faFilePdf} className="dropdown-gear-icon" />
             </button>
             <button type="button" className="small-box-btn-dwn"
-              onClick={() => generateGraphCSV(widgetData, graphData, singleConfigData?.databaseConfigVO)}
+              onClick={() => generateGraphCSV(widgetData, allGraphData, singleConfigData?.databaseConfigVO,filterColumns(visibleColumns),sortConfig)}
               title="CSV"
             >
               <FontAwesomeIcon icon={faFileCsv} className="dropdown-gear-icon" />
@@ -618,6 +662,16 @@ const GraphDash = ({ widgetData, pkColumn, setPkColumn }) => {
           <span>{footerText}</span>
         </div>
       }
+      <AdvancedOptionsModal
+        show={showAdvancedOptions}
+        onClose={() => setShowAdvancedOptions(false)}
+        columns={columns}
+        sortConfig={sortConfig}
+        onSortConfigChange={setSortConfig}
+        visibleColumns={visibleColumns}
+        onVisibleColumnsChange={setVisibleColumns}
+        isFirstRowHeading={'Yes'}
+      />
     </div>
   );
 };

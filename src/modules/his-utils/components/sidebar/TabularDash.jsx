@@ -10,7 +10,6 @@ import { getAuthUserData } from "../../../../utils/CommonFunction";
 import { useSearchParams } from "react-router-dom";
 import PopUpWidget from "./PopUpWidget";
 import { fetchPostData } from "../../../../utils/HisApiHooks";
-import { getEncryptedParamValue } from "../../../../utils/Security";
 import AdvancedOptionsModal from "./AdvancedOptionsModal";
 
 
@@ -32,6 +31,7 @@ const TabularDash = (props) => {
   const [popupConfig, setPopupConfig] = useState(null);
   const [showPopUpWidget, setShowPopUpWidget] = useState(false);
   const [MainHeaders, setMainHeaders] = useState([])
+  const [multipleTables, setMultipleTables] = useState([]);
 
 
   const [queryParams] = useSearchParams();
@@ -608,7 +608,6 @@ const TabularDash = (props) => {
   };
 
 
-  console.log(columns, 'bgbgb')
 
   const fetchData = async (widget) => {
     if (widget?.modeOfQuery === "Procedure") {
@@ -631,11 +630,6 @@ const TabularDash = (props) => {
         ]
         const response = await fetchProcedureData(widget?.procedureMode, params, widget?.JNDIid);
         if (response?.data?.length > 0) {
-
-          // const formattedData = formatData(response.data || []);
-          // const generatedColumns = generateColumns(formattedData, isChildPresent);
-          // setColumns(generatedColumns);
-          // setTableData(formattedData);
 
           let filteredData = response.data;
 
@@ -686,18 +680,27 @@ const TabularDash = (props) => {
       }
     } else {
       if (!widget?.queryVO?.length > 0) return;
-
-      const params = getOrderedParamValues(widget?.queryVO[0]?.mainQuery, paramsValues, widget?.rptId);
       try {
         setFetching(true)
 
-        const data = await fetchQueryData(widget?.queryVO?.length > 0 ? widget?.queryVO : [], widget?.JNDIid, params, pkColumn);
-        if (data?.length > 0) {
+        const allQueryResults = await Promise.all(
+          widget.queryVO.map(async (queryObj) => {
+            const params = getOrderedParamValues(queryObj?.mainQuery, paramsValues, widget?.rptId);
+            const data = await fetchQueryData([queryObj], widget?.JNDIid, params, pkColumn);
+            return { queryObj, data };
+          })
+        );
+
+        // const params = getOrderedParamValues(widget?.queryVO[0]?.mainQuery, paramsValues, widget?.rptId);
+        // const data = await fetchQueryData(widget?.queryVO?.length > 0 ? widget?.queryVO : [], widget?.JNDIid, params, pkColumn);
+
+        // Format results for each query
+        const processedTables = allQueryResults.map(({ queryObj, data }) => {
           let filteredData = data;
 
-          if (widget?.isQuerychild && widget?.isQuerychild === "1") {
+          if (widget?.isQuerychild === "1") {
             const columnIndexes = widget?.columnIndexesParent || [];
-            const keys = Object.keys(data[0]);
+            const keys = Object.keys(data[0] || {});
             filteredData = data.map(row => {
               const filteredRow = {};
               columnIndexes.forEach(idx => {
@@ -711,29 +714,62 @@ const TabularDash = (props) => {
           if (widget?.isFirstRowColumnName === 'Yes') {
             const { headers, datafor, isH2 } = formatData(filteredData, widget?.isFirstRowColumnName);
             const { columns, mainHeaders } = generateColumns(datafor, isChildPresent, widget?.isFirstRowColumnName, headers, isH2);
-            setColumns(columns);
-            setMainHeaders(mainHeaders);
-            setTableData(datafor);
-            console.log(headers, 'mbn')
+            return { columns, mainHeaders, data: datafor,queryObj };
           } else {
-            const { headers, datafor } = formatData(filteredData, widget?.isFirstRowColumnName);
-            const generatedColumns = generateColumns(datafor, isChildPresent, widget?.isFirstRowColumnName);
-            setColumns(generatedColumns);
-            setMainHeaders([]);
-            setTableData(datafor);
+            const { datafor } = formatData(filteredData, widget?.isFirstRowColumnName);
+            const columns = generateColumns(datafor, isChildPresent, widget?.isFirstRowColumnName);
+            return { columns, mainHeaders: [], data: datafor ,queryObj};
           }
+        });
+
+        console.log(processedTables,'processedTables')
+
+        setFetching(false);
+
+        // Store all table data in state
+        setMultipleTables(processedTables);
 
 
-          setLoading(false)
-          setIsSearchQuery(false)
-          setFetching(false)
-          setSearchScope({ scope: "", id: "" })
-        } else {
-          setColumns([]);
-          setTableData([]);
-          setFetching(false)
-          setIsSearchQuery(false)
-        }
+        // if (data?.length > 0) {
+        //   let filteredData = data;
+
+        //   if (widget?.isQuerychild && widget?.isQuerychild === "1") {
+        //     const columnIndexes = widget?.columnIndexesParent || [];
+        //     const keys = Object.keys(data[0]);
+        //     filteredData = data.map(row => {
+        //       const filteredRow = {};
+        //       columnIndexes.forEach(idx => {
+        //         const key = keys[idx];
+        //         if (key) filteredRow[key] = row[key];
+        //       });
+        //       return filteredRow;
+        //     });
+        //   }
+
+        //   if (widget?.isFirstRowColumnName === 'Yes') {
+        //     const { headers, datafor, isH2 } = formatData(filteredData, widget?.isFirstRowColumnName);
+        //     const { columns, mainHeaders } = generateColumns(datafor, isChildPresent, widget?.isFirstRowColumnName, headers, isH2);
+        //     setColumns(columns);
+        //     setMainHeaders(mainHeaders);
+        //     setTableData(datafor);
+        //   } else {
+        //     const { headers, datafor } = formatData(filteredData, widget?.isFirstRowColumnName);
+        //     const generatedColumns = generateColumns(datafor, isChildPresent, widget?.isFirstRowColumnName);
+        //     setColumns(generatedColumns);
+        //     setMainHeaders([]);
+        //     setTableData(datafor);
+        //   }
+        //   setLoading(false)
+        //   setIsSearchQuery(false)
+        //   setFetching(false)
+        //   setSearchScope({ scope: "", id: "" })
+        // } else {
+        //   setColumns([]);
+        //   setTableData([]);
+        //   setFetching(false)
+        //   setIsSearchQuery(false)
+        // }
+
       } catch (error) {
         console.error("Error loading query data:", error);
         setFetching(false)
@@ -768,7 +804,7 @@ const TabularDash = (props) => {
   const isDataSearchReq = widgetData?.isDataSearchReq === 'Yes' ? true : false;
   const isHeadingFixed = widgetData?.isHeadingFixed === 'Yes' ? true : false;
   const recordPerPage = widgetData?.recordPerPage || 5;
-  const scrollHeight = widgetData?.scrollYValue || "500";
+  const scrollHeight = widgetData?.scrollYValue;
   const isDirectDownloadRequired = widgetData?.isDirectDownloadRequired || 'No';
   const isActionButtonReq = widgetData?.isActionButtonReq;
   const paramsData = widgetData.selFilterIds || "";
@@ -839,11 +875,11 @@ const TabularDash = (props) => {
     }
   }
 
-  const [showAdvancedOptions, setShowAdvancedOptions] = React.useState(false);
-  const [sortConfig, setSortConfig] = React.useState([]);
-  const [visibleColumns, setVisibleColumns] = React.useState(columns?.map(c => c.selector));
+  const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
+  const [sortConfig, setSortConfig] = useState([]);
+  const [visibleColumns, setVisibleColumns] = useState(columns?.map(c => c.selector));
 
-  const filterColumns = (clms, isSubHead) => {
+  const filterColumns = (columns,clms, isSubHead) => {
     if (isSubHead === 'Yes') {
       if (clms?.length > 0) {
         return columns?.filter(column => {
@@ -857,7 +893,7 @@ const TabularDash = (props) => {
       return displayedColumns;
     }
   }
-  console.log(columns)
+  console.log(widgetData, 'widgetdta')
 
   return (
     <>
@@ -977,43 +1013,43 @@ const TabularDash = (props) => {
           }
         </div>
 
-        {fetching
+        {fetching ? (
+          <h6 className="text-center">{dt('Data Fetching')}...</h6>
+        ) : (
+          multipleTables.map((table, index) => (
+            <Tabular
+              key={index}
+              columns={filterColumns(table?.columns,visibleColumns, isFirstRowHeading)}
+              // data={widgetLimit ? filterData?.slice(0, parseInt(widgetLimit)) : safeLimit ? filterData?.slice(0, safeLimit) : filterData}
+              data={widgetLimit ? table.data.slice(0, parseInt(widgetLimit)) || [] : safeLimit ? table.data.slice(0, safeLimit) || [] : table.data || []}
+              pagination={isPaginationReq}
+              recordsPerPage={recordPerPage}
+              fixedHeader={isHeadingFixed}
+              scrollHeight={scrollHeight}
+              headingFontColor={headingFontClr || "#ffffff"}
+              headingBgColor={headingBgClr || "#000000"}
+              headingAlignment={headingAlignTable}
+              recordsPerPageOptions={[recordPerPage, 10, 20, 50]}
+              isTableHeadingRequired={!headingReq}
+              theme={theme}
+              noDataComponent={<div className="text-danger fw-bold fs-13">{dt(customMessage || "There are no records to display")}</div>}
+              mainHeaders={(() => {
+                if (visibleColumns?.length > 0) {
+                  return ( table.mainHeaders || []).filter(header => visibleColumns.includes(header.name));
+                } else {
+                  return  table.mainHeaders || [];
+                }
+              })()}
+              sortConfig={sortConfig}
+              onSortConfigChange={setSortConfig}
+              isRecordsLimitedLineRequired={isRecordsLimitedLineRequired}
+              allData={table.data}
+              limit={widgetLimit ? widgetLimit : safeLimit ? safeLimit : ''}
+            />
 
-          ?
-          <>
-            <h6 className="text-center">{dt('Data Fetching')}...</h6>
-          </>
 
-          :
-          <Tabular
-            columns={filterColumns(visibleColumns, isFirstRowHeading)}
-            data={widgetLimit ? filterData?.slice(0, parseInt(widgetLimit)) : safeLimit ? filterData?.slice(0, safeLimit) : filterData}
-            pagination={isPaginationReq}
-            recordsPerPage={recordPerPage}
-            fixedHeader={isHeadingFixed}
-            scrollHeight={scrollHeight}
-            headingFontColor={headingFontClr || "#ffffff"}
-            headingBgColor={headingBgClr || "#000000"}
-            headingAlignment={headingAlignTable}
-            recordsPerPageOptions={[recordPerPage, 10, 20, 50]}
-            isTableHeadingRequired={!headingReq}
-            theme={theme}
-            noDataComponent={<div className="text-danger fw-bold fs-13">{dt(customMessage || "There are no records to display")}</div>}
-            mainHeaders={(() => {
-              if (visibleColumns?.length > 0) {
-                return (MainHeaders || []).filter(header => visibleColumns.includes(header.name));
-              } else {
-                return MainHeaders || [];
-              }
-            })()}
-            sortConfig={sortConfig}
-            onSortConfigChange={setSortConfig}
-            isRecordsLimitedLineRequired={isRecordsLimitedLineRequired}
-            allData={filterData}
-            limit={widgetLimit ? widgetLimit : safeLimit ? safeLimit : ''}
-          />
-
-        }
+          ))
+        )}
 
         {footerText && footerText.trim() !== '' && (
           <>

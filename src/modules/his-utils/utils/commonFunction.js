@@ -195,11 +195,6 @@ export const getOrderedParamValues = (query, paramsValues,widgetId) => {
     idToValue[id] = values[index];
   });
 
-  // return {
-  //   strGroupParaId: Object.keys(idToValue).join(','),
-  //   strGroupParaValue: Object.values(idToValue).join(',')
-  // };
-
  const filteredIds = [];
   const filteredValues = [];
 
