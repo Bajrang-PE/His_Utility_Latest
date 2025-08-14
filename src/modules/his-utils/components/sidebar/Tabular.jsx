@@ -18,7 +18,7 @@ const Tabular = ({
     mainHeaders = [],
     sortConfig = [],
     onSortConfigChange,
-    isRecordsLimitedLineRequired, allData, limit
+    isRecordsLimitedLineRequired, allData, limit, isFirstRowHeading
 }) => {
     const tableRef = useRef();
     const headerRef = useRef();
@@ -83,12 +83,20 @@ const Tabular = ({
 
         const sorted = [...data].sort((a, b) => {
             for (const config of sortConfig) {
-                const { selector, direction } = config;
-                const col = columns.find(c => c.selector === selector);
+                let col, direction, valA, valB;
+
+                if (isFirstRowHeading === 'Yes' && config.name) {
+                    direction = config.direction;
+                    col = columns.find(c => c.mainHeader === config.name);
+                } else if (config.selector) {
+                    direction = config.direction;
+                    col = columns.find(c => c.selector === config.selector);
+                }
+
                 if (!col) continue;
 
-                let valA = col.selector(a);
-                let valB = col.selector(b);
+                valA = col.selector(a);
+                valB = col.selector(b);
 
                 // Handle date sorting
                 if (isDateString(valA)) {
@@ -110,6 +118,7 @@ const Tabular = ({
 
         setSortedData(sorted);
     }, [data, sortConfig, columns]);
+
 
 
 
@@ -176,25 +185,26 @@ const Tabular = ({
                     position: 'relative'
                 }}
             >
-                <div
-                    className='first-head'
-
-
-                >
+                {mainHeaders?.length >0  &&
                     <div
-                        ref={headerRef}
-                        className='second-head'
+                        className='first-head'
+
 
                     >
-                        {mainHeaders && <CustomTableHeading
-                            mainHeaders={mainHeaders}
-                            headingBgColor={headingBgColor}
-                            headingFontColor={headingFontColor}
-                            tableWidth={tableWidth}
-                            columns={columns}
-                        />}
-                    </div>
-                </div>
+                        <div
+                            ref={headerRef}
+                            className='second-head'
+
+                        >
+                            <CustomTableHeading
+                                mainHeaders={mainHeaders}
+                                headingBgColor={headingBgColor}
+                                headingFontColor={headingFontColor}
+                                tableWidth={tableWidth}
+                                columns={columns}
+                            />
+                        </div>
+                    </div>}
 
                 <DataTable
                     ref={tableRef}

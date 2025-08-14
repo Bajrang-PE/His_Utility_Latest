@@ -135,83 +135,96 @@ const GraphDash = ({ widgetData, pkColumn, setPkColumn }) => {
 
 
   const fetchDataQry = async (widget) => {
-    const query = widget?.queryVO?.length > 0 ? widget?.queryVO : []
-    if (!query) return;
-    const params = getOrderedParamValues(widget?.queryVO[0]?.mainQuery, paramsValues, widget?.rptId);
+    const queries = widget?.queryVO?.length > 0 ? widget?.queryVO : [];
+    if (!queries.length) return;
+
     try {
-      const data = await fetchQueryData(query, widgetData?.JNDIid, params);
+      const results = await Promise.all(
+        queries.map(async (q) => {
+          const params = getOrderedParamValues(q?.mainQuery, paramsValues, widget?.rptId);
+          const data = await fetchQueryData([q], widgetData?.JNDIid, params);
+          let filteredData = data;
 
-      let filteredData = data;
+          if (widget?.isQuerychild && widget?.isQuerychild === "1") {
+            const columnIndexes = widget?.columnIndexesParent || [];
+            if (data.length > 0 && columnIndexes.length > 0) {
+              const keys = Object.keys(data[0]);
+              filteredData = data.map(row => {
+                const filteredRow = {};
+                columnIndexes.forEach(idx => {
+                  const key = keys[idx];
+                  if (key) filteredRow[key] = row[key];
+                });
+                return filteredRow;
+              });
+            }
+          }
 
-      if (widget?.isQuerychild && widget?.isQuerychild === "1") {
-        const columnIndexes = widget?.columnIndexesParent || [];
+          const limit = widgetLimit
+            ? parseInt(widgetLimit)
+            : safeLimit
+              ? parseInt(safeLimit)
+              : filteredData.length;
 
-        if (data.length > 0 && columnIndexes.length > 0) {
-          const keys = Object.keys(data[0]);
-          filteredData = data.map(row => {
-            const filteredRow = {};
-            columnIndexes.forEach(idx => {
-              const key = keys[idx];
-              if (key) filteredRow[key] = row[key];
-            });
-            setIsSearchQuery(false)
-            return filteredRow;
-          });
-        }
-      }
-      const limit = widgetLimit
-        ? parseInt(widgetLimit)
-        : safeLimit
-          ? parseInt(safeLimit)
-          : filteredData.length;
+          const limitedData = filteredData.slice(0, limit);
 
-      const limitedData = filteredData.slice(0, limit);
+          if (!limitedData.length) {
+            return {
+              limited: { queryName: q?.mainQuery || '', categories: [], seriesData: [] },
+              all: { queryName: q?.mainQuery || '', categories: [], seriesData: [] }
+            };
+          }
 
-      // If no data, do nothing
-      if (!limitedData.length) {
-        setGraphData({ categories: [], seriesData: [] });
-        setIsSearchQuery(false)
-        return;
-      }
+          const columnNames = Object.keys(limitedData[0]);
+          if (columnNames.length < 1) {
+            console.warn(`Insufficient columns for query:`);
+            return {
+              limited: { queryName: q?.mainQuery || '', categories: [], seriesData: [] },
+              all: { queryName: q?.mainQuery || '', categories: [], seriesData: [] }
+            };
+          }
 
-      // Get dynamic column names
-      const columnNames = Object.keys(limitedData[0]);
+          const categoriesKey = columnNames[0];
+          const seriesKeys = columnNames.slice(1);
 
-      if (columnNames.length < 1) {
-        console.warn("Insufficient columns to generate graph");
-        setIsSearchQuery(false)
-        return;
-      }
+          const categories = limitedData.map(item => item[categoriesKey]);
+          const seriesData = seriesKeys.map(key => ({
+            name: key,
+            data: limitedData.map(item => item[key]),
+            colorByPoint: true,
+          }));
 
-      const categoriesKey = columnNames[0];
-      const seriesKeys = columnNames.slice(1);
+          const allcategories = data.map(item => item[categoriesKey]);
+          const allseriesData = seriesKeys.map(key => ({
+            name: key,
+            data: data.map(item => item[key]),
+            colorByPoint: true,
+          }));
 
-      // Extract unique category values
-      const categories = limitedData.map(item => item[categoriesKey]);
-      const allcategories = data.map(item => item[categoriesKey]);
+          return {
+            limited: { queryName: q?.mainQuery || '', categories, seriesData },
+            all: { queryName: q?.mainQuery || '', categories: allcategories, seriesData: allseriesData }
+          };
+        })
+      );
 
-      // Create dynamic series data
-      const seriesData = seriesKeys.map(key => ({
-        name: key,
-        data: limitedData.map(item => item[key]),
-        colorByPoint: true,
-      }));
-      const allseriesData = seriesKeys.map(key => ({
-        name: key,
-        data: data.map(item => item[key]),
-        colorByPoint: true,
-      }));
+      const limitedResults = results.map(r => r.limited);
+      const allResults = results.map(r => r.all);
 
-      setGraphData({ categories, seriesData });
-      setAllGraphData({ categories: allcategories, seriesData: allseriesData })
-      setIsSearchQuery(false)
-      setSearchScope({ scope: "", id: "" })
+      setGraphData(limitedResults);
+      setAllGraphData(allResults);
+
+      setIsSearchQuery(false);
+      setSearchScope({ scope: "", id: "" });
 
     } catch (error) {
       console.error("Error loading query data:", error);
-      setIsSearchQuery(false)
+      setIsSearchQuery(false);
     }
   };
+
+  console.log(allGraphData, 'allgdt')
+  console.log(graphData, 'gdt')
 
   const formatProcedureDataForGraph = (data) => {
     if (!data || data.length === 0) return { categories: [], seriesData: [] };
@@ -241,8 +254,6 @@ const GraphDash = ({ widgetData, pkColumn, setPkColumn }) => {
 
     return { categories, seriesData };
   };
-
-
 
   const fetchProcedure = async (widget) => {
     if (widget?.modeOfQuery === "Procedure") {
@@ -348,203 +359,26 @@ const GraphDash = ({ widgetData, pkColumn, setPkColumn }) => {
   };
 
 
-  const getSeriesForType = () => {
+  const getSeriesForType = (cats, ser) => {
     if (chartType === "PIE_CHART" || chartType === "DONUT_CHART") {
+
       return [{
         type: 'pie',
         name: widgetData.rptName || "",
-        data: graphData.categories.map((cat, i) => ({
+        data: cats?.map((cat, i) => ({
           name: cat,
-          y: graphData.seriesData[0]?.data[i] || 0
+          y: ser[0]?.data[i] || 0
         })),
         colors: colorList
       }];
     }
 
     // For other chart types, return seriesData as is, without pie-specific structure
-    return graphData?.seriesData?.map(s => ({
+    return ser?.map(s => ({
       ...s,
       type: chartTypeMapping[chartType],
       colorByPoint: true
     })) || [];
-  };
-
-
-  const options = {
-    chart: {
-      type: chartTypeMapping[chartType],
-      height: parseInt(widgetData.graphHeight, 10) || 350,
-      backgroundColor: isDarkTheme ? "#1f1f1f" : "#ffffff",
-      options3d: {
-        enabled: is3D,
-        alpha: alpha,
-        beta: beta,
-        depth: 50,
-      },
-    },
-    title: {
-      text: widgetData.rptName || "",
-      style: { color: isDarkTheme ? "#ffffff" : "#000000" }
-    },
-    xAxis: {
-      categories: graphData.categories,
-      type: "category",
-      title: {
-        text: xAxisLabel,
-        style: {
-          fontSize: `${xAxisFontSize}px`,
-          color: isDarkTheme ? "#ffffff" : "#000000"
-        },
-      },
-      labels: {
-        //  useHTML: true,
-        y: chartTypeMapping[chartType] !== 'bar' ? 45 : 0,
-        rotation: chartTypeMapping[chartType] === 'bar' ? 0 : (labelRotation ? parseInt(labelRotation, 10) : -45),
-        // rotation: labelRotation ? parseInt(labelRotation, 10) : -45,
-        style: {
-          fontSize: "10px",
-          color: isDarkTheme ? "#ffffff" : "#000000",
-          textOverflow: 'none'
-        },
-        step: 1,
-        align: chartTypeMapping[chartType] === 'bar' ? 'right' : 'center',
-        reserveSpace: true,
-        formatter: function () {
-          const maxLength = 15;
-          const value = this.value;
-          if (value.length > maxLength) {
-            const words = value.split(' ');
-            let lines = [''];
-            let lineIndex = 0;
-
-            words.forEach(word => {
-              if ((lines[lineIndex] + word).length > maxLength) {
-                lineIndex++;
-                lines[lineIndex] = word;
-              } else {
-                lines[lineIndex] += (lines[lineIndex].length ? ' ' : '') + word;
-              }
-            });
-
-            return lines.join('<br>');
-          }
-          return value;
-        }
-      },
-      scrollbar: {
-        enabled: isScrollbarRequired,
-      },
-      gridLineColor: isDarkTheme ? "#444444" : "#e6e6e6",
-    },
-    yAxis: {
-      title: {
-        text: yAxisLabel,
-        style: {
-          fontSize: `${yAxisFontSize}px`,
-          color: isDarkTheme ? "#ffffff" : "#000000"
-        },
-      },
-      labels: {
-        style: {
-          color: isDarkTheme ? "#ffffff" : "#000000",
-        }
-      },
-
-      gridLineColor: isDarkTheme ? "#444444" : "#e6e6e6",
-    },
-    legend: {
-      enabled: showLegend,
-      itemStyle: {
-        color: isDarkTheme ? "#ffffff" : "#000000"
-      }
-    },
-    plotOptions: {
-      series: {
-        dataLabels: {
-          enabled: dataLabelsEnabled,
-          style: {
-            color: isDarkTheme ? "#ffffff" : "#000000"
-          }
-        },
-        colorByPoint: chartType === "PIE_CHART" || chartType === "BAR_GRAPH",
-      },
-      pie: {
-        allowPointSelect: true,
-        cursor: "pointer",
-        colors: colorList,
-        dataLabels: {
-          enabled: true,
-          format: "<b>{point.name}</b>: {point.y}",
-          style: { color: isDarkTheme ? "#ffffff" : "#000000" }
-        },
-        innerSize: chartType === "DONUT_CHART" ? "50%" : "0%",
-      },
-      bar: {
-        colors: colorList || ["red", "blue", "green"],
-      },
-      column: {
-        colors: colorList,
-        stacking: chartType === "STACKED_BAR_GRAPH" || chartType === "STACKED_GRAPH" ? "normal" : undefined,
-      },
-      line: {
-        marker: {
-          enabled: true,
-          fillColor: "red",
-          lineColor: "black",
-          lineWidth: 2,
-          radius: 4,
-        },
-      },
-      area: {
-        stacking: chartType === "AREA_STACKED_GRAPH" ? "normal" : undefined,
-      }
-    },
-    tooltip: {
-      shared: true,
-      valueSuffix: " units",
-      backgroundColor: isDarkTheme ? "rgba(0, 0, 0, 0.85)" : "#ffffff",
-      style: {
-        color: isDarkTheme ? "#ffffff" : "#000000"
-      },
-    },
-    exporting: exportingOptions,
-    series: getSeriesForType(),
-    lang: {
-      noData: customMessage || "No data available for this graph",
-    },
-    noData: {
-      position: {
-        align: "center",
-        verticalAlign: "middle",
-        x: 0,
-        y: 0,
-      },
-      style: {
-        fontSize: "14px",
-        fontWeight: "bold",
-        color: isDarkTheme ? "#ff6666" : "#ff0000",
-        textAlign: "center"
-      },
-    },
-    drilldown: {
-      series: [],
-      activeDataLabelStyle: {
-        color: "#0022ff",
-        cursor: "pointer",
-        fontWeight: "bold",
-        textDecoration: "none"
-      },
-      breadcrumbs: {
-        position: {
-          align: "right",
-        },
-        buttonTheme: {
-          style: {
-            color: "#006400",
-          },
-        },
-      },
-    },
   };
 
   const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
@@ -564,14 +398,13 @@ const GraphDash = ({ widgetData, pkColumn, setPkColumn }) => {
   }
 
   const onClickAdvanced = () => {
-    const headers = [xAxisLabel, ...graphData.seriesData.map(s => s.name)];
+    const headers = [xAxisLabel, graphData[0]?.seriesData?.map(s => s.name)];
     const headerWithName = headers?.map(h => ({
       name: h
     }))
     setColumns(headerWithName)
     setShowAdvancedOptions(true)
   }
-  
 
 
   return (
@@ -598,11 +431,11 @@ const GraphDash = ({ widgetData, pkColumn, setPkColumn }) => {
               </li>
 
               <li className="p-1 dropdown-item text-primary" style={{ cursor: "pointer" }}
-                onClick={() => generateGraphPDF(widgetData, graphData, singleConfigData?.databaseConfigVO, filterColumns(visibleColumns),sortConfig)} title="pdf">
+                onClick={() => generateGraphPDF(widgetData, graphData, singleConfigData?.databaseConfigVO, filterColumns(visibleColumns), sortConfig)} title="pdf">
                 <FontAwesomeIcon icon={faFilePdf} className="dropdown-gear-icon me-2" />{dt('Download PDF')}
               </li>
 
-              <li className="p-1 dropdown-item text-primary" style={{ cursor: "pointer" }} onClick={() => generateGraphCSV(widgetData, graphData, singleConfigData?.databaseConfigVO,filterColumns(visibleColumns),sortConfig)}>
+              <li className="p-1 dropdown-item text-primary" style={{ cursor: "pointer" }} onClick={() => generateGraphCSV(widgetData, graphData, singleConfigData?.databaseConfigVO, filterColumns(visibleColumns), sortConfig)}>
                 <FontAwesomeIcon icon={faFileExcel} className="dropdown-gear-icon me-2" />{dt('Download CSV')}
               </li>
 
@@ -611,13 +444,13 @@ const GraphDash = ({ widgetData, pkColumn, setPkColumn }) => {
                 <FontAwesomeIcon icon={faSliders} className="dropdown-gear-icon me-2" />{dt('Advanced')}</li>
             </ul>
             <button type="button" className="small-box-btn-dwn"
-              onClick={() => generateGraphPDF(widgetData, allGraphData, singleConfigData?.databaseConfigVO,filterColumns(visibleColumns),sortConfig)}
+              onClick={() => generateGraphPDF(widgetData, allGraphData, singleConfigData?.databaseConfigVO, filterColumns(visibleColumns), sortConfig)}
               title="PDF"
             >
               <FontAwesomeIcon icon={faFilePdf} className="dropdown-gear-icon" />
             </button>
             <button type="button" className="small-box-btn-dwn"
-              onClick={() => generateGraphCSV(widgetData, allGraphData, singleConfigData?.databaseConfigVO,filterColumns(visibleColumns),sortConfig)}
+              onClick={() => generateGraphCSV(widgetData, allGraphData, singleConfigData?.databaseConfigVO, filterColumns(visibleColumns), sortConfig)}
               title="CSV"
             >
               <FontAwesomeIcon icon={faFileCsv} className="dropdown-gear-icon" />
@@ -626,23 +459,208 @@ const GraphDash = ({ widgetData, pkColumn, setPkColumn }) => {
         }
       </div>
 
-      <div className="px-2 py-2" style={{ marginTop: `${widgetTopMargin}px` }}>
-        <h4 style={{ fontWeight: "500", fontSize: "20px" }}>{dt('Query')} :{widgetData?.rptId}</h4>
-        {(widgetData?.modeOfQuery === 'Query' && isPrev == 1) &&
-          <span>{mainQuery}</span>
-        }
-        {(widgetData?.modeOfQuery === "Procedure" && isPrev == 1) &&
-          <span>{widgetData?.procedureMode}</span>
-        }
-      </div>
       {paramsData && (
         <div className='parameter-box'>
           <Parameters params={paramsData} setParamsValues={setWidParamsValues} scope={'widgetParams'} widgetId={widgetData?.rptId} />
         </div>
       )}
-      <div className="high-chart-box">
-        <HighchartsReact highcharts={Highcharts} options={options} />
-      </div>
+      {graphData?.map((gdata, index) => {
+
+        const options = {
+          chart: {
+            type: chartTypeMapping[chartType],
+            height: parseInt(widgetData.graphHeight, 10) || 350,
+            backgroundColor: isDarkTheme ? "#1f1f1f" : "#ffffff",
+            options3d: {
+              enabled: is3D,
+              alpha: alpha,
+              beta: beta,
+              depth: 50,
+            },
+          },
+          title: {
+            text: widgetData.rptName || "",
+            style: { color: isDarkTheme ? "#ffffff" : "#000000" }
+          },
+          xAxis: {
+            categories: gdata?.categories,
+            type: "category",
+            title: {
+              text: xAxisLabel,
+              style: {
+                fontSize: `${xAxisFontSize}px`,
+                color: isDarkTheme ? "#ffffff" : "#000000"
+              },
+            },
+            labels: {
+              //  useHTML: true,
+              y: chartTypeMapping[chartType] !== 'bar' ? 45 : 0,
+              rotation: chartTypeMapping[chartType] === 'bar' ? 0 : (labelRotation ? parseInt(labelRotation, 10) : -45),
+              // rotation: labelRotation ? parseInt(labelRotation, 10) : -45,
+              style: {
+                fontSize: "10px",
+                color: isDarkTheme ? "#ffffff" : "#000000",
+                textOverflow: 'none'
+              },
+              step: 1,
+              align: chartTypeMapping[chartType] === 'bar' ? 'right' : 'center',
+              reserveSpace: true,
+              formatter: function () {
+                const maxLength = 15;
+                const value = this.value;
+                if (value.length > maxLength) {
+                  const words = value.split(' ');
+                  let lines = [''];
+                  let lineIndex = 0;
+
+                  words.forEach(word => {
+                    if ((lines[lineIndex] + word).length > maxLength) {
+                      lineIndex++;
+                      lines[lineIndex] = word;
+                    } else {
+                      lines[lineIndex] += (lines[lineIndex].length ? ' ' : '') + word;
+                    }
+                  });
+
+                  return lines.join('<br>');
+                }
+                return value;
+              }
+            },
+            scrollbar: {
+              enabled: isScrollbarRequired,
+            },
+            gridLineColor: isDarkTheme ? "#444444" : "#e6e6e6",
+          },
+          yAxis: {
+            title: {
+              text: yAxisLabel,
+              style: {
+                fontSize: `${yAxisFontSize}px`,
+                color: isDarkTheme ? "#ffffff" : "#000000"
+              },
+            },
+            labels: {
+              style: {
+                color: isDarkTheme ? "#ffffff" : "#000000",
+              }
+            },
+
+            gridLineColor: isDarkTheme ? "#444444" : "#e6e6e6",
+          },
+          legend: {
+            enabled: showLegend,
+            itemStyle: {
+              color: isDarkTheme ? "#ffffff" : "#000000"
+            }
+          },
+          plotOptions: {
+            series: {
+              dataLabels: {
+                enabled: dataLabelsEnabled,
+                style: {
+                  color: isDarkTheme ? "#ffffff" : "#000000"
+                }
+              },
+              colorByPoint: chartType === "PIE_CHART" || chartType === "BAR_GRAPH",
+            },
+            pie: {
+              allowPointSelect: true,
+              cursor: "pointer",
+              colors: colorList,
+              dataLabels: {
+                enabled: true,
+                format: "<b>{point.name}</b>: {point.y}",
+                style: { color: isDarkTheme ? "#ffffff" : "#000000" }
+              },
+              innerSize: chartType === "DONUT_CHART" ? "50%" : "0%",
+            },
+            bar: {
+              colors: colorList || ["red", "blue", "green"],
+            },
+            column: {
+              colors: colorList,
+              stacking: chartType === "STACKED_BAR_GRAPH" || chartType === "STACKED_GRAPH" ? "normal" : undefined,
+            },
+            line: {
+              marker: {
+                enabled: true,
+                fillColor: "red",
+                lineColor: "black",
+                lineWidth: 2,
+                radius: 4,
+              },
+            },
+            area: {
+              stacking: chartType === "AREA_STACKED_GRAPH" ? "normal" : undefined,
+            }
+          },
+          tooltip: {
+            shared: true,
+            valueSuffix: " units",
+            backgroundColor: isDarkTheme ? "rgba(0, 0, 0, 0.85)" : "#ffffff",
+            style: {
+              color: isDarkTheme ? "#ffffff" : "#000000"
+            },
+          },
+          exporting: exportingOptions,
+          series: getSeriesForType(gdata?.categories, gdata?.seriesData),
+          lang: {
+            noData: customMessage || "No data available for this graph",
+          },
+          noData: {
+            position: {
+              align: "center",
+              verticalAlign: "middle",
+              x: 0,
+              y: 0,
+            },
+            style: {
+              fontSize: "14px",
+              fontWeight: "bold",
+              color: isDarkTheme ? "#ff6666" : "#ff0000",
+              textAlign: "center"
+            },
+          },
+          drilldown: {
+            series: [],
+            activeDataLabelStyle: {
+              color: "#0022ff",
+              cursor: "pointer",
+              fontWeight: "bold",
+              textDecoration: "none"
+            },
+            breadcrumbs: {
+              position: {
+                align: "right",
+              },
+              buttonTheme: {
+                style: {
+                  color: "#006400",
+                },
+              },
+            },
+          },
+        };
+        return (
+          <>
+            <div className="px-2 py-2" style={{ marginTop: `${widgetTopMargin}px` }}>
+              <h4 style={{ fontWeight: "500", fontSize: "20px" }}>{dt('Query')} :{widgetData?.rptId}</h4>
+              {(widgetData?.modeOfQuery === 'Query' && isPrev == 1) &&
+                <span>{gdata?.queryName}</span>
+              }
+              {(widgetData?.modeOfQuery === "Procedure" && isPrev == 1) &&
+                <span>{widgetData?.procedureMode}</span>
+              }
+            </div>
+
+            <div className="high-chart-box">
+              <HighchartsReact highcharts={Highcharts} options={options} />
+            </div>
+          </>
+        )
+      })}
+
       {filteredGraphOptions?.length > 0 &&
         <select
           value={chartType}

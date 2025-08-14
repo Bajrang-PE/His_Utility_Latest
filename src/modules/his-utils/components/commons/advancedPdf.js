@@ -118,13 +118,16 @@ export const generatePDF1 = async (widgetData, tableData, config, filters = []) 
 };
 
 
-export const generatePDF = async (widgetData, data, config, visibleColumns, isH2, filters = []) => {
+export const generatePDFff = async (widgetData, data, config, visibleColumns, isH2, filters = []) => {
   if (!widgetData) return;
   if (!Array.isArray(data) || data.length === 0) {
     ToastAlert('No data available to download.', 'warning');
     return;
   }
+
   let tableData = [];
+
+  console.log(data, 'data')
 
   if (isH2 === 'Yes') {
     // Extract column definitions and names from visibleColumns
@@ -158,9 +161,6 @@ export const generatePDF = async (widgetData, data, config, visibleColumns, isH2
       return filteredRow;
     });
   }
-
-
-
 
   const {
     pdfTheme,
@@ -397,6 +397,206 @@ export const generatePDF = async (widgetData, data, config, visibleColumns, isH2
 
   }
 };
+
+export const generatePDF = async (widgetData, multipleTables, config, visibleColumns, isH2, filters = []) => {
+  if (!widgetData) return;
+  if (!Array.isArray(multipleTables) || multipleTables.length === 0) {
+    ToastAlert('No data available to download.', 'warning');
+    return;
+  }
+
+  const {
+    pdfTheme,
+    printPDFIn,
+    pdfTableFontSize,
+    pdfTableheaderBarColor,
+    pdfTableheadingFontColour,
+    showFilterDetailsInPDF,
+    isReportPrintDateRequired,
+    isDirectDownloadRequired,
+    rptDisplayName,
+    isPdfHeaderReqInAllPages
+  } = widgetData || {};
+
+  const { reportHeader1, reportHeader2, reportHeader3, isLogoRequired, headingAlignment, logos } = config || {};
+  const orientation = printPDFIn === 'Landscape' ? 'l' : 'p';
+  const pdf = new jsPDF(orientation, 'mm', 'a4');
+  const pageWidth = pdf.internal.pageSize.getWidth();
+
+  const drawHeader = (doc) => {
+    const logoWidth = 15, logoHeight = 18, margin = 10, textMargin = 10;
+    const alignment = headingAlignment?.toLowerCase() || 'center';
+    const validLogos = isLogoRequired === 'Yes' && Array.isArray(logos)
+      ? logos.filter(logo => !!logo.image)
+      : [];
+
+    if (validLogos.length === 1) {
+      try {
+        const logoX = pageWidth / 2 - logoWidth / 2;
+        doc.addImage(validLogos[0].image, 'JPEG', logoX, 5, logoWidth, logoHeight);
+      } catch (error) { console.error('Error adding single logo:', error); }
+    } else if (validLogos.length > 1) {
+      validLogos.forEach(logo => {
+        if (!logo.image) return;
+        let logoX, logoY = 5;
+        switch (logo.position?.toLowerCase()) {
+          case 'left': logoX = margin; break;
+          case 'right': logoX = pageWidth - logoWidth - margin; break;
+          default: logoX = pageWidth / 2 - logoWidth / 2;
+        }
+        try { doc.addImage(logo.image, 'JPEG', logoX, logoY, logoWidth, logoHeight); }
+        catch (error) { console.error('Error adding logo:', error); }
+      });
+    }
+
+    const headerYStart = validLogos.length > 0 ? logoHeight + 10 : 10;
+    let headerX;
+    switch (alignment) {
+      case 'left': headerX = textMargin; break;
+      case 'right': headerX = pageWidth - textMargin; break;
+      default: headerX = pageWidth / 2;
+    }
+
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    let currentY = headerYStart;
+    if (reportHeader1) { doc.text(reportHeader1, headerX, currentY, { align: alignment }); currentY += 5; }
+    if (reportHeader2) { doc.text(reportHeader2, headerX, currentY, { align: alignment }); currentY += 5; }
+    if (reportHeader3) { doc.text(reportHeader3, headerX, currentY, { align: alignment }); currentY += 5; }
+    doc.setFontSize(11);
+    doc.text(rptDisplayName || 'Report', headerX, currentY + 1, { align: alignment });
+    currentY += 5;
+    return currentY;
+  };
+
+  const headerEndY = drawHeader(pdf);
+  let yPosition = headerEndY;
+
+  // Filters
+  if (showFilterDetailsInPDF === 'Yes' && filters.length) {
+    pdf.setFontSize(10);
+    pdf.setFont('helvetica', 'normal');
+    pdf.text('Filters Applied:', 14, yPosition);
+    yPosition += 5;
+    filters.forEach((filter) => {
+      pdf.text(`${filter.label}: ${filter.value}`, 14, yPosition);
+      yPosition += 5;
+    });
+    yPosition += 5;
+  }
+  const maxColsPerPage = 10;
+  // CHANGE START — Loop through each table in multipleTables
+  multipleTables.forEach((data, tableIndex) => {
+    if (!Array.isArray(data?.data) || data?.data.length === 0) return;
+
+    let tableData = [];
+    if (isH2 === 'Yes') {
+      const columnDefinitions = visibleColumns;
+      const columnNames = columnDefinitions?.map(col => col.name?.trim() ? `${col?.mainHeader}_${col?.name}` : col?.mainHeader);
+      tableData = data?.data?.map(row => {
+        const filteredRow = {};
+        columnNames.forEach(key => { if (row.hasOwnProperty(key)) filteredRow[key] = row[key]; });
+        return filteredRow;
+      });
+    } else {
+      const columnDefinitions = visibleColumns;
+      const columnNames = columnDefinitions?.map(col => col.name);
+      tableData = data?.data?.map(row => {
+        const filteredRow = {};
+        columnNames.forEach(key => { if (row.hasOwnProperty(key)) filteredRow[key] = row[key]; });
+        return filteredRow;
+      });
+    }
+
+    const unwantedKeys = ['pkcolumn'];
+    const headers = Object.keys(tableData[0] || {})
+      .filter(key => !unwantedKeys.includes(key))
+      .map(key => ({ header: key.toString().toUpperCase(), dataKey: key }));
+
+    const columnCount = headers.length;
+    const availableWidth = pdf.internal.pageSize.getWidth() - 10;
+    const avgColumnWidth = availableWidth / columnCount;
+    if (headers.length < maxColsPerPage) {
+      headers.forEach(header => { header.width = Math.min(avgColumnWidth); });
+    }
+
+    for (let start = 0; start < headers.length; start += maxColsPerPage) {
+      const chunkHeaders = headers.slice(start, start + maxColsPerPage);
+      const chunkData = tableData.map(row =>
+        chunkHeaders.map(header => {
+          const content = row[header.dataKey];
+          if (content === null || content === undefined) return '';
+          if (typeof content === 'object') return JSON.stringify(content);
+          if (typeof content === 'string' && content.includes('##')) {
+            return content.split('##')[0];
+          }
+          return content.toString();
+        })
+      );
+
+      pdf.autoTable({
+        startY: yPosition,
+        head: [chunkHeaders.map(h => h.header)],
+        body: chunkData,
+        theme: ['grid', 'striped', 'plain'].includes(pdfTheme) ? pdfTheme : 'striped',
+        headStyles: {
+          fillColor: pdfTableheaderBarColor || "#000000",
+          textColor: pdfTableheadingFontColour || '#ffffff',
+          fontSize: parseInt(pdfTableFontSize) || 10,
+          fontStyle: 'bold',
+          halign: headingAlignment?.toLowerCase() || 'center',
+          lineWidth: 0.1,
+          lineColor: '#8c8f92',
+        },
+        bodyStyles: {
+          fontSize: parseInt(pdfTableFontSize) || 10,
+          overflow: 'linebreak',
+          cellPadding: 2,
+          minCellHeight: 8,
+          valign: 'top'
+        },
+        columnStyles: headers.reduce((styles, header, idx) => {
+          styles[idx] = { cellWidth: header.width, halign: 'left' };
+          return styles;
+        }, {}),
+        styles: { overflow: 'linebreak', fontSize: parseInt(pdfTableFontSize), cellPadding: 2 },
+        tableWidth: 'auto',
+        showHead: isPdfHeaderReqInAllPages === 'Yes' ? 'everyPage' : 'firstPage',
+        pageBreak: 'auto',
+        margin: { top: isPdfHeaderReqInAllPages === 'Yes' ? 50 : 10, left: 5, right: 10 },
+        didDrawPage: (data) => {
+          const pageNumber = data.pageNumber;
+          if (pageNumber === 1 && tableIndex === 0 && start === 0) {
+            drawHeader(pdf);
+          }
+          if (isReportPrintDateRequired === 'Yes') {
+            pdf.setFontSize(9);
+            const reportDate = `Print Date: ${new Date().toLocaleDateString()}`;
+            const textWidth = pdf.getTextWidth(reportDate);
+            pdf.text(reportDate, pageWidth - textWidth - 10, pdf.internal.pageSize.getHeight() - 10);
+          }
+        }
+      });
+
+      yPosition = pdf.lastAutoTable.finalY + 10; // spacing between tables
+      if (start + maxColsPerPage < headers.length) {
+        pdf.addPage();
+        yPosition = isPdfHeaderReqInAllPages === 'Yes' ? 50 : 10;
+      }
+    }
+  });
+  // CHANGE END
+
+  if (isDirectDownloadRequired === 'Yes') {
+    pdf.save(`${rptDisplayName || 'report'}.pdf`);
+  } else {
+    const pdfBlob = pdf.output('blob');
+    const pdfUrl = URL.createObjectURL(pdfBlob);
+    window.open(pdfUrl, '_blank');
+    setTimeout(() => URL.revokeObjectURL(pdfUrl), 10000);
+  }
+};
+
 
 export const generatePDFbg = async (widgetData, tableData, config, filters = []) => {
   if (!widgetData) return;
@@ -794,8 +994,8 @@ export const generateGraphPDF = async (widgetData, tableData, config, visibleCol
 };
 
 
-export const generateCSV = (widgetData, data, config, visibleColumns, isH2) => {
-  if (!Array.isArray(data) || data.length === 0) {
+export const generateCSVfff = (widgetData, multipleTables, config, visibleColumns, isH2) => {
+  if (!Array.isArray(multipleTables) || multipleTables.length === 0) {
     ToastAlert('No data available to download.', 'warning');
     return;
   }
@@ -837,7 +1037,7 @@ export const generateCSV = (widgetData, data, config, visibleColumns, isH2) => {
     });
   }
 
-  const { rptDisplayName } = widgetData;
+  const { rptDisplayName } = widgetData || {};
   const { reportHeader1, reportHeader2, reportHeader3, isLogoRequired, logoImage, headingAlignment } = config || {};
   const currentDate = new Date().toLocaleDateString('en-GB') + ' ' + new Date().toLocaleTimeString('en-GB');
 
@@ -855,8 +1055,6 @@ export const generateCSV = (widgetData, data, config, visibleColumns, isH2) => {
   const unwantedKeys = ['pkcolumn'];
 
   const tableHeaders = Object.keys(tableData[0] || {}).filter(key => !unwantedKeys.includes(key));
-  // const tableHeaders = Object.keys(tableData[0]);
-  // const tableRows = tableData.map(row => tableHeaders.map(header => row[header]));
 
   const tableRows = tableData.map(row =>
     tableHeaders.map(header => {
@@ -887,6 +1085,93 @@ export const generateCSV = (widgetData, data, config, visibleColumns, isH2) => {
   link.click();
   document.body.removeChild(link);
 };
+
+
+export const generateCSV = (widgetData, multipleTables, config, visibleColumns, isH2) => {
+  if (!Array.isArray(multipleTables) || multipleTables.length === 0) {
+    ToastAlert('No data available to download.', 'warning');
+    return;
+  }
+
+  if (!widgetData) return;
+
+  const { rptDisplayName } = widgetData;
+  const { reportHeader1, reportHeader2, reportHeader3 } = config || {};
+  const currentDate = new Date().toLocaleDateString('en-GB') + ' ' + new Date().toLocaleTimeString('en-GB');
+
+  let finalData = [];
+
+  // Heading section (only once at the top)
+  finalData.push([reportHeader1 || '']);
+  finalData.push([reportHeader2 || '']);
+  finalData.push([reportHeader3 || '']);
+  finalData.push([rptDisplayName || 'Report Title']);
+  finalData.push([]);
+  finalData.push([`Date: ${currentDate}`]);
+  finalData.push([]);
+
+  // Loop through each table
+  multipleTables.forEach((tableObj, tableIndex) => {
+    const { data, title } = tableObj;
+
+    if (!Array.isArray(data) || data.length === 0) {
+      finalData.push([`Table ${tableIndex + 1}: ${title || ''}`]);
+      finalData.push(['No Data Available']);
+      finalData.push([]);
+      return;
+    }
+
+    // Add table title
+    // finalData.push([`Table ${tableIndex + 1}: ${title || ''}`]);
+    // finalData.push([]);
+
+    // Get columns
+    let columnNames;
+    if (isH2 === 'Yes') {
+      columnNames = visibleColumns?.map(col => 
+        col.name?.trim() ? `${col?.mainHeader}_${col?.name}` : col?.mainHeader
+      );
+    } else {
+      columnNames = visibleColumns?.map(col => col.name);
+    }
+
+    const unwantedKeys = ['pkcolumn'];
+    const tableHeaders = columnNames.filter(col => !unwantedKeys.includes(col));
+
+    // Add column headings
+    finalData.push(tableHeaders);
+
+    // Add rows
+    data.forEach(row => {
+      const filteredRow = tableHeaders.map(header => {
+        const content = row[header];
+        if (content === null || content === undefined) return '';
+        if (typeof content === 'object') return JSON.stringify(content);
+        if (typeof content === 'string' && content.includes('##')) {
+          return content.split('##')[0];
+        }
+        return content.toString();
+      });
+      finalData.push(filteredRow);
+    });
+
+    // Add an empty line after each table
+    finalData.push([]);
+  });
+
+  // Convert to CSV
+  const csvContent = Papa.unparse(finalData, { skipEmptyLines: false });
+
+  // Download CSV
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.setAttribute('download', `${rptDisplayName || 'report'}.csv`);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+};
+
 
 export const generateGraphCSV = (widgetData, data, config, visibleColumns, sortConfig,) => {
   if (!widgetData) return;

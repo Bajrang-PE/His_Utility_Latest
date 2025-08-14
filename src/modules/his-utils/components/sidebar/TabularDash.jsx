@@ -24,7 +24,7 @@ const TabularDash = (props) => {
 
   const [tableData, setTableData] = useState([]);
   const [currentLevel, setCurrentLevel] = useState(0);
-  const [searchInput, setSearchInput] = useState('');
+  const [searchInput, setSearchInput] = useState({});
   const [filterData, setFilterData] = useState(tableData)
   const [columns, setColumns] = useState([]);
   const [fetching, setFetching] = useState(false);
@@ -51,11 +51,11 @@ const TabularDash = (props) => {
   //parameter search
   useEffect(() => {
     if (!searchInput) {
-      setFilterData(tableData);
+      setFilterData(multipleTables);
     } else {
-      const lowercasedText = searchInput.toLowerCase();
+      const lowercasedText = searchInput.text?.toLowerCase();
 
-      const newFilteredData = tableData?.length > 0 && tableData?.filter(row => {
+      const newFilteredData = multipleTables?.length > 0 && multipleTables?.filter(row => {
         return Object.values(row)?.some(val =>
           val?.toString()?.toLowerCase()?.includes(lowercasedText)
         );
@@ -63,7 +63,7 @@ const TabularDash = (props) => {
 
       setFilterData(newFilteredData);
     }
-  }, [searchInput, tableData]);
+  }, [searchInput, multipleTables]);
 
 
   // const formatData = (rawData = []) => {
@@ -629,48 +629,35 @@ const TabularDash = (props) => {
           formatDateFullYear(new Date()) // to values
         ]
         const response = await fetchProcedureData(widget?.procedureMode, params, widget?.JNDIid);
-        if (response?.data?.length > 0) {
+        // if (response?.data?.length > 0) {
 
-          let filteredData = response.data;
+        let filteredData = response.data;
 
-          if (widget?.isQuerychild && widget?.isQuerychild === "1") {
-            const columnIndexes = widget?.columnIndexesParent || [];
-            const keys = Object.keys(data[0]);
-            filteredData = response?.data?.map(row => {
-              const filteredRow = {};
-              columnIndexes.forEach(idx => {
-                const key = keys[idx];
-                if (key) filteredRow[key] = row[key];
-              });
-              return filteredRow;
+        if (widget?.isQuerychild && widget?.isQuerychild === "1") {
+          const columnIndexes = widget?.columnIndexesParent || [];
+          const keys = Object.keys(data[0]);
+          filteredData = response?.data?.map(row => {
+            const filteredRow = {};
+            columnIndexes.forEach(idx => {
+              const key = keys[idx];
+              if (key) filteredRow[key] = row[key];
             });
-          }
+            return filteredRow;
+          });
+        }
 
-          if (widget?.isFirstRowColumnName === 'Yes') {
-            const { headers, datafor, isH2 } = formatData(filteredData, widget?.isFirstRowColumnName);
-            const { columns, mainHeaders } = generateColumns(datafor, isChildPresent, widget?.isFirstRowColumnName, headers, isH2);
-            setColumns(columns);
-            setMainHeaders(mainHeaders);
-            setTableData(datafor);
-          } else {
-            const { headers, datafor } = formatData(filteredData, widget?.isFirstRowColumnName);
-            const generatedColumns = generateColumns(datafor, isChildPresent, widget?.isFirstRowColumnName);
-            setColumns(generatedColumns);
-            setMainHeaders([]);
-            setTableData(datafor);
-          }
-          setLoading(false)
-          setIsSearchQuery(false)
-          setFetching(false)
-          setSearchScope({ scope: "", id: "" })
+        if (widget?.isFirstRowColumnName === 'Yes') {
+          const { headers, datafor, isH2 } = formatData(filteredData, widget?.isFirstRowColumnName);
+          const { columns, mainHeaders } = generateColumns(datafor, isChildPresent, widget?.isFirstRowColumnName, headers, isH2);
+          setMultipleTables([{ columns, mainHeaders, data: datafor, queryObj: widget?.procedureMode }])
 
         } else {
-          setColumns([]);
-          setTableData([]);
-          setLoading(false)
-          setFetching(false)
-          setIsSearchQuery(false)
+          const { datafor } = formatData(filteredData, widget?.isFirstRowColumnName);
+          const columns = generateColumns(datafor, isChildPresent, widget?.isFirstRowColumnName);
+          setMultipleTables([{ columns, mainHeaders: [], data: datafor, queryObj: widget?.procedureMode }])
         }
+
+        setFetching(false);
 
       } catch (error) {
         console.error("Error loading query data:", error);
@@ -690,9 +677,6 @@ const TabularDash = (props) => {
             return { queryObj, data };
           })
         );
-
-        // const params = getOrderedParamValues(widget?.queryVO[0]?.mainQuery, paramsValues, widget?.rptId);
-        // const data = await fetchQueryData(widget?.queryVO?.length > 0 ? widget?.queryVO : [], widget?.JNDIid, params, pkColumn);
 
         // Format results for each query
         const processedTables = allQueryResults.map(({ queryObj, data }) => {
@@ -714,61 +698,16 @@ const TabularDash = (props) => {
           if (widget?.isFirstRowColumnName === 'Yes') {
             const { headers, datafor, isH2 } = formatData(filteredData, widget?.isFirstRowColumnName);
             const { columns, mainHeaders } = generateColumns(datafor, isChildPresent, widget?.isFirstRowColumnName, headers, isH2);
-            return { columns, mainHeaders, data: datafor,queryObj };
+            return { columns, mainHeaders, data: datafor, queryObj };
           } else {
             const { datafor } = formatData(filteredData, widget?.isFirstRowColumnName);
             const columns = generateColumns(datafor, isChildPresent, widget?.isFirstRowColumnName);
-            return { columns, mainHeaders: [], data: datafor ,queryObj};
+            return { columns, mainHeaders: [], data: datafor, queryObj };
           }
         });
 
-        console.log(processedTables,'processedTables')
-
         setFetching(false);
-
-        // Store all table data in state
         setMultipleTables(processedTables);
-
-
-        // if (data?.length > 0) {
-        //   let filteredData = data;
-
-        //   if (widget?.isQuerychild && widget?.isQuerychild === "1") {
-        //     const columnIndexes = widget?.columnIndexesParent || [];
-        //     const keys = Object.keys(data[0]);
-        //     filteredData = data.map(row => {
-        //       const filteredRow = {};
-        //       columnIndexes.forEach(idx => {
-        //         const key = keys[idx];
-        //         if (key) filteredRow[key] = row[key];
-        //       });
-        //       return filteredRow;
-        //     });
-        //   }
-
-        //   if (widget?.isFirstRowColumnName === 'Yes') {
-        //     const { headers, datafor, isH2 } = formatData(filteredData, widget?.isFirstRowColumnName);
-        //     const { columns, mainHeaders } = generateColumns(datafor, isChildPresent, widget?.isFirstRowColumnName, headers, isH2);
-        //     setColumns(columns);
-        //     setMainHeaders(mainHeaders);
-        //     setTableData(datafor);
-        //   } else {
-        //     const { headers, datafor } = formatData(filteredData, widget?.isFirstRowColumnName);
-        //     const generatedColumns = generateColumns(datafor, isChildPresent, widget?.isFirstRowColumnName);
-        //     setColumns(generatedColumns);
-        //     setMainHeaders([]);
-        //     setTableData(datafor);
-        //   }
-        //   setLoading(false)
-        //   setIsSearchQuery(false)
-        //   setFetching(false)
-        //   setSearchScope({ scope: "", id: "" })
-        // } else {
-        //   setColumns([]);
-        //   setTableData([]);
-        //   setFetching(false)
-        //   setIsSearchQuery(false)
-        // }
 
       } catch (error) {
         console.error("Error loading query data:", error);
@@ -879,7 +818,7 @@ const TabularDash = (props) => {
   const [sortConfig, setSortConfig] = useState([]);
   const [visibleColumns, setVisibleColumns] = useState(columns?.map(c => c.selector));
 
-  const filterColumns = (columns,clms, isSubHead) => {
+  const filterColumns = (columns, clms, isSubHead) => {
     if (isSubHead === 'Yes') {
       if (clms?.length > 0) {
         return columns?.filter(column => {
@@ -893,7 +832,13 @@ const TabularDash = (props) => {
       return displayedColumns;
     }
   }
-  console.log(widgetData, 'widgetdta')
+  
+  const handleSearchChange = (index, value) => {
+    setSearchInput(prev => ({
+      ...prev,
+      [index]: value
+    }));
+  };
 
   return (
     <>
@@ -927,12 +872,33 @@ const TabularDash = (props) => {
                 }
                 {(isActionButtonReq === 'Yes' || isActionButtonReq === 'pdf' || isActionButtonReq === 'pdfAndcsv') &&
                   <li className="p-1 dropdown-item text-primary" style={{ cursor: "pointer" }}
-                    onClick={() => generatePDF(widgetData, widgetLimit ? filterData.slice(0, parseInt(widgetLimit)) : safeLimit ? filterData.slice(0, safeLimit) : filterData, singleConfigData?.databaseConfigVO, filterColumns(visibleColumns, isFirstRowHeading), isFirstRowHeading)} title="pdf">
+                    onClick={() => {
+                      const limitedTables = multipleTables.map(table => ({
+                        ...table,
+                        data: widgetLimit
+                          ? table.data.slice(0, parseInt(widgetLimit))
+                          : safeLimit
+                            ? table.data.slice(0, safeLimit)
+                            : table.data
+                      }));
+                      generatePDF(widgetData, limitedTables, singleConfigData?.databaseConfigVO, filterColumns(multipleTables[0]?.columns, visibleColumns, isFirstRowHeading), isFirstRowHeading)
+                    }} title="PDF">
                     <FontAwesomeIcon icon={faFilePdf} className="dropdown-gear-icon me-2" />{dt('Download PDF')}
                   </li>
                 }
                 {(isActionButtonReq === 'Yes' || isActionButtonReq === 'csv' || isActionButtonReq === 'pdfAndcsv') &&
-                  <li className="p-1 dropdown-item text-primary" style={{ cursor: "pointer" }} onClick={() => generateCSV(widgetData, widgetLimit ? filterData.slice(0, parseInt(widgetLimit)) : safeLimit ? filterData.slice(0, safeLimit) : filterData, singleConfigData?.databaseConfigVO, filterColumns(visibleColumns, isFirstRowHeading), isFirstRowHeading)}>
+                  <li className="p-1 dropdown-item text-primary" style={{ cursor: "pointer" }}
+                    onClick={() => {
+                      const limitedTables = multipleTables.map(table => ({
+                        ...table,
+                        data: widgetLimit
+                          ? table.data.slice(0, parseInt(widgetLimit))
+                          : safeLimit
+                            ? table.data.slice(0, safeLimit)
+                            : table.data
+                      }));
+                      generateCSV(widgetData, limitedTables, singleConfigData?.databaseConfigVO, filterColumns(multipleTables[0]?.columns, visibleColumns, isFirstRowHeading), isFirstRowHeading)
+                    }} title="CSV">
                     <FontAwesomeIcon icon={faFileExcel} className="dropdown-gear-icon me-2" />{dt('Download CSV')}
                   </li>
                 }
@@ -943,11 +909,11 @@ const TabularDash = (props) => {
               </ul>
             </>)}
             {isDirectDownloadRequired === "Yes" && (<>
-              <button className="small-box-btn-dwn" onClick={() => generatePDF(widgetData, filterData, singleConfigData?.databaseConfigVO, filterColumns(visibleColumns, isFirstRowHeading), isFirstRowHeading)} title="PDF">
+              <button className="small-box-btn-dwn" onClick={() => generatePDF(widgetData, multipleTables, singleConfigData?.databaseConfigVO, filterColumns(multipleTables[0]?.columns, visibleColumns, isFirstRowHeading), isFirstRowHeading)} title="PDF">
                 <FontAwesomeIcon icon={faFilePdf} />
               </button>
 
-              <button className="small-box-btn-dwn" onClick={() => generateCSV(widgetData, filterData, singleConfigData?.databaseConfigVO, filterColumns(visibleColumns, isFirstRowHeading), isFirstRowHeading)}>
+              <button className="small-box-btn-dwn" onClick={() => generateCSV(widgetData, multipleTables, singleConfigData?.databaseConfigVO, filterColumns(multipleTables[0]?.columns, visibleColumns, isFirstRowHeading), isFirstRowHeading)} title="CSV">
                 <FontAwesomeIcon icon={faFileExcel} />
               </button>
             </>)}
@@ -988,67 +954,84 @@ const TabularDash = (props) => {
             <Parameters params={paramsData} scope={'widgetParams'} widgetId={widgetData?.rptId} />
           </div>
         )}
-        <div className="px-2 py-2" >
-          <h4 style={{ fontWeight: "500", fontSize: "20px" }}>{dt('Query')} : {widgetData?.rptId}</h4>
-          {(widgetData?.modeOfQuery === 'Query' && isPrev == 1) &&
-            <span>{mainQuery}</span>
-          }
-          {(widgetData?.modeOfQuery === "Procedure" && isPrev == 1) &&
-            <span>{widgetData?.procedureMode}</span>
-          }
-          {isDataSearchReq &&
-            <div className="d-flex align-items-center">
-              <label className="col-form-label me-2">{dt('Search')} :</label>
-              <div className=''>
-                <InputField
-                  type="search"
-                  id="customMsgForNoData"
-                  name="customMsgForNoData"
-                  placeholder="Enter"
-                  className={`${theme === 'Dark' ? 'backcolorinput-dark' : 'backcolorinput'}`}
-                  onChange={(e) => { setSearchInput(e?.target?.value); }}
-                />
-              </div>
-            </div>
-          }
-        </div>
 
         {fetching ? (
           <h6 className="text-center">{dt('Data Fetching')}...</h6>
         ) : (
-          multipleTables.map((table, index) => (
-            <Tabular
-              key={index}
-              columns={filterColumns(table?.columns,visibleColumns, isFirstRowHeading)}
-              // data={widgetLimit ? filterData?.slice(0, parseInt(widgetLimit)) : safeLimit ? filterData?.slice(0, safeLimit) : filterData}
-              data={widgetLimit ? table.data.slice(0, parseInt(widgetLimit)) || [] : safeLimit ? table.data.slice(0, safeLimit) || [] : table.data || []}
-              pagination={isPaginationReq}
-              recordsPerPage={recordPerPage}
-              fixedHeader={isHeadingFixed}
-              scrollHeight={scrollHeight}
-              headingFontColor={headingFontClr || "#ffffff"}
-              headingBgColor={headingBgClr || "#000000"}
-              headingAlignment={headingAlignTable}
-              recordsPerPageOptions={[recordPerPage, 10, 20, 50]}
-              isTableHeadingRequired={!headingReq}
-              theme={theme}
-              noDataComponent={<div className="text-danger fw-bold fs-13">{dt(customMessage || "There are no records to display")}</div>}
-              mainHeaders={(() => {
-                if (visibleColumns?.length > 0) {
-                  return ( table.mainHeaders || []).filter(header => visibleColumns.includes(header.name));
-                } else {
-                  return  table.mainHeaders || [];
-                }
-              })()}
-              sortConfig={sortConfig}
-              onSortConfigChange={setSortConfig}
-              isRecordsLimitedLineRequired={isRecordsLimitedLineRequired}
-              allData={table.data}
-              limit={widgetLimit ? widgetLimit : safeLimit ? safeLimit : ''}
-            />
+          multipleTables.map((table, index) => {
+            const lowercasedText = searchInput[index]?.toLowerCase() || "";
 
+            const filteredData = lowercasedText
+              ? table.data.filter(row =>
+                Object.values(row).some(val =>
+                  val?.toString()?.toLowerCase()?.includes(lowercasedText)
+                )
+              )
+              : table.data;
 
-          ))
+            return (
+              <>
+                <div className="px-2 py-2" >
+                  <h4 style={{ fontWeight: "500", fontSize: "20px" }}>{dt('Query')} : {widgetData?.rptId}</h4>
+                  {(widgetData?.modeOfQuery === 'Query' && isPrev == 1) &&
+                    <span>{table?.queryObj?.mainQuery}</span>
+                  }
+                  {(widgetData?.modeOfQuery === "Procedure" && isPrev == 1) &&
+                    <span>{widgetData?.procedureMode}</span>
+                  }
+                  {isDataSearchReq &&
+                    <div className="d-flex align-items-center">
+                      <label className="col-form-label me-2">{dt('Search')} :</label>
+                      <div className=''>
+                        <InputField
+                          type="search"
+                          id="customMsgForNoData"
+                          name="customMsgForNoData"
+                          placeholder="Enter"
+                          className={`${theme === 'Dark' ? 'backcolorinput-dark' : 'backcolorinput'}`}
+                          onChange={(e) => { handleSearchChange(index, e?.target?.value); }}
+                        />
+                      </div>
+                    </div>
+                  }
+                </div>
+
+                <Tabular
+                  key={index}
+                  columns={filterColumns(table?.columns, visibleColumns, isFirstRowHeading)}
+                  // data={widgetLimit ? filterData?.slice(0, parseInt(widgetLimit)) : safeLimit ? filterData?.slice(0, safeLimit) : filterData}
+                  data={widgetLimit ? filteredData.slice(0, parseInt(widgetLimit)) || [] : safeLimit ? filteredData.slice(0, safeLimit) || [] : filteredData || []}
+                  pagination={isPaginationReq}
+                  recordsPerPage={recordPerPage}
+                  fixedHeader={isHeadingFixed}
+                  scrollHeight={scrollHeight}
+                  headingFontColor={headingFontClr || "#ffffff"}
+                  headingBgColor={headingBgClr || "#000000"}
+                  headingAlignment={headingAlignTable}
+                  recordsPerPageOptions={[recordPerPage, 10, 20, 50]}
+                  isTableHeadingRequired={!headingReq}
+                  theme={theme}
+                  noDataComponent={<div className="text-danger fw-bold fs-13">{dt(customMessage || "There are no records to display")}</div>}
+                  mainHeaders={(() => {
+                    if (visibleColumns?.length > 0) {
+                      return (table.mainHeaders || []).filter(header => visibleColumns.includes(header.name));
+                    } else {
+                      return table.mainHeaders || [];
+                    }
+                  })()}
+                  sortConfig={sortConfig}
+                  onSortConfigChange={setSortConfig}
+                  isRecordsLimitedLineRequired={isRecordsLimitedLineRequired}
+                  allData={table.data}
+                  limit={widgetLimit ? widgetLimit : safeLimit ? safeLimit : ''}
+                  isFirstRowHeading={isFirstRowHeading}
+                />
+
+              </>
+            )
+          }
+
+          )
         )}
 
         {footerText && footerText.trim() !== '' && (
@@ -1068,7 +1051,7 @@ const TabularDash = (props) => {
       <AdvancedOptionsModal
         show={showAdvancedOptions}
         onClose={() => setShowAdvancedOptions(false)}
-        columns={isFirstRowHeading === 'Yes' ? MainHeaders : columns}
+        columns={isFirstRowHeading === 'Yes' ? multipleTables[0]?.mainHeaders : multipleTables[0]?.columns}
         sortConfig={sortConfig}
         onSortConfigChange={setSortConfig}
         visibleColumns={visibleColumns}
