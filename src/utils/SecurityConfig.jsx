@@ -46,6 +46,7 @@ const decryptAes = (encryptedData, iv, key) => {
 };
 
 
+
 export function encryptAesData(data) {
   // Generate a random 32-byte AES key
   const aesKey = CryptoJS.lib.WordArray.random(32);

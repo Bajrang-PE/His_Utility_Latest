@@ -9,6 +9,7 @@ import { ToastAlert } from '../../utils/commonFunction'
 import { HISContext } from '../../contextApi/HISContext'
 import { fetchData, fetchPostData } from '../../../../utils/HisApiHooks'
 import LogoUploader from '../../components/commons/LogoUploader'
+import { decryptAesOrRsa } from '../../../../utils/SecurityConfig'
 
 const DbConfigMaster = () => {
   const { dashboardForDt, getDashboardForDrpData, setSelectedOption, setLoading, setShowConfirmSave, confirmSave, setConfirmSave, singleConfigData, getDashConfigData, clearAllCache, dt } = useContext(HISContext);
@@ -55,8 +56,12 @@ const DbConfigMaster = () => {
   }, [dashFor])
 
   useEffect(() => {
-    if (dashboardForDt?.length === 0) { getDashboardForDrpData(); }
-    getDashConfigData();
+    const init = async () => {
+      await getDashConfigData();
+      if (dashboardForDt?.length === 0) { getDashboardForDrpData(); }
+    };
+
+    init();
   }, [])
 
   useEffect(() => {
@@ -292,7 +297,7 @@ const DbConfigMaster = () => {
   }, [confirmSave])
 
   const reset = () => {
-    setValues({ "configurationFor": '', "serverName": "WEBSPHERE", "jndiServer": '', "jndiServer1": '', "jndiServer2": '', "jndiServer3": '', "driverClass": "", "userName": "", "connectionURL": "", "password": "", "staticReportHead1": "", "staticReportHead2": "", "staticReportHead3": "", "reportHeaderByQuery": "", "logoImageUrl": "", "staticDefaultLimit": "", "logoImageUrl1": "", "logoImageUrl2": "", "logoImageUrl3": "" });
+    setValues({ "configurationFor": dashFor, "serverName": "WEBSPHERE", "jndiServer": '', "jndiServer1": '', "jndiServer2": '', "jndiServer3": '', "driverClass": "", "userName": "", "connectionURL": "", "password": "", "staticReportHead1": "", "staticReportHead2": "", "staticReportHead3": "", "reportHeaderByQuery": "", "logoImageUrl": "", "staticDefaultLimit": "", "logoImageUrl1": "", "logoImageUrl2": "", "logoImageUrl3": "" });
 
     setErrors({ "configurationForErr": '', "serverNameErr": '', "driverClassErr": '', "connectionURLErr": '', "userNameErr": '', "passwordErr": '', "staticReportHead1Err": '', "reportHeaderByQueryErr": '', "jndiServerErr": '', "jndiServer1Err": '', "isDashboardCachedErr": '', });
     setLoading(false)
@@ -1296,6 +1301,7 @@ const DbConfigMaster = () => {
                         id='servicePassword'
                         value={newRow?.servicePassword}
                         onChange={(e) => handleInputChange("servicePassword", e.target.value)}
+                        maxLength={20}
                       />
                     </td>
                     <td className='px-0 action-buttons'>
@@ -1310,7 +1316,7 @@ const DbConfigMaster = () => {
                       <td>{row?.serviceInitialServerURL || "---"}</td>
                       <td>{row?.defaultMethod || "---"}</td>
                       <td>{row?.serviceUserName || "---"}</td>
-                      <td>{row?.servicePassword || "---"}</td>
+                      <td>{("*")?.repeat(row?.servicePassword?.length)}</td>
                       <td className=''>
                         <div className='text-center'>
                           <button

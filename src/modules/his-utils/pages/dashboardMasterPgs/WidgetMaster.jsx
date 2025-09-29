@@ -27,7 +27,7 @@ const WidgetMaster = () => {
   const { setShowDataTable, allWidgetData, getAllWidgetData, dashboardForDt, getDashboardForDrpData, parameterData, getAllParameterData, widgetDrpData, getAllServiceData, dataServiceData, selectedOption, setSelectedOption, actionMode, setActionMode, parameterDrpData, setLoading, setShowConfirmSave, confirmSave, setConfirmSave, getAllTabsData, tabDrpData, getDashConfigData, singleConfigData, dt } = useContext(HISContext);
 
   const [values, setValues] = useState({
-    "id": "", "widgetFor": "", "widgetType": "columnBased", "widgetNameDisplay": "", "widgetNameInternal": "", "widgetRefreshTime": "", "widgetRefreshDelayTime": "", "cachingStatus": "", "limit": "", "widgetHadingClr": "", "widgetTopMargin": "", "headingBgColor": "", "headingFontColor": "", "headingDisplayStyle": "", "recordsPerPage": "", "pagePerBlock": "", "DataScrollHeight": "", "parentWidget": "", "columnNoToDisplay": "", "leftClmNoToFixed": "", "rightClmNoToFixed": "", "linkedWidget": [], "actionBtnReq": "", "pdfTableFontSize": "", "pdfTableHeadBarClr": "", "pdfTableHeadTxtFontClr": "", "groupClmNoComma": "", "query": "", "webQuery": "", "procedureName": "", "recordsPerPageTreeCh": "", "parameterOption": "", "loadOption": "ONWINDOWLOAD", "paraComboBgColor": "", "paraComboFontColor": "", "paraLabelFontColor": "", "jndiSavingData": "", "stmtTimeOut": "", "lastUpdatedQuery": "", "FooterText": "", "customMsgForNoData": "", "treeChildQuery": "", "treeChildProcedure": "", "popUpDetails": [], "queryLabel": '', "htmlText": '', 'iconName': "",
+    "id": "", "widgetFor": "", "widgetType": "columnBased", "widgetNameDisplay": "", "widgetNameInternal": "", "widgetRefreshTime": "", "widgetRefreshDelayTime": "", "cachingStatus": "Cache for All", "limit": "150", "widgetHadingClr": "", "widgetTopMargin": "", "headingBgColor": "", "headingFontColor": "", "headingDisplayStyle": "", "recordsPerPage": "", "pagePerBlock": "", "DataScrollHeight": "", "parentWidget": "", "columnNoToDisplay": "", "leftClmNoToFixed": "", "rightClmNoToFixed": "", "linkedWidget": [], "actionBtnReq": "", "pdfTableFontSize": "", "pdfTableHeadBarClr": "", "pdfTableHeadTxtFontClr": "", "groupClmNoComma": "", "query": "", "webQuery": "", "procedureName": "", "recordsPerPageTreeCh": "", "parameterOption": "", "loadOption": "ONWINDOWLOAD", "paraComboBgColor": "", "paraComboFontColor": "", "paraLabelFontColor": "", "jndiSavingData": "", "stmtTimeOut": "5", "lastUpdatedQuery": "", "FooterText": "", "customMsgForNoData": "", "treeChildQuery": "", "treeChildProcedure": "", "popUpDetails": [], "queryLabel": '', "htmlText": '', 'iconName': "",
     //graphs fields
     "defaultPluginName": "highchart", "defaultGraphType": "BAR_GRAPH", "graphTypes": [], "clmNameForLineGraph": "", "colorsForBars": "", "graphHeight": "", "graphBottomMargin": "", "graphBgStartColor": "", "graphBgEndColor": "", "graphFontColor": "", "graphTypeBgColor": "", "graphTypeFontColor": "", "labelRotation": "", "alphaGraph3D": "", "betaGraph3D": "", "xAxisLabel": "", "yAxisLabel": "", "xAxisFontSize": "", "yAxisFontSize": "", "annotationFontSize": "", "maxValueOfAxis": "", "parentWidgetGraph": "", "isActionBtnReqGraph": "Yes", "minValueOfAxis": '',
     //kpi details
@@ -96,6 +96,17 @@ const WidgetMaster = () => {
   });
 
   useEffect(() => {
+    const init = async () => {
+      if (!singleConfigData) {
+        await getDashConfigData();
+      }
+      if (dashboardForDt?.length === 0) { getDashboardForDrpData(); }
+      if (dataServiceData?.length === 0) { getAllServiceData(); }
+    };
+    init();
+  }, [])
+
+  useEffect(() => {
     if (values?.selFilterIds !== "") {
       const selectedIds = values?.selFilterIds?.split(",")?.map(id => id?.trim());
       // const fdt = parameterDrpData?.filter(dt => selectedIds?.includes(dt?.value?.toString()));
@@ -154,14 +165,6 @@ const WidgetMaster = () => {
       getAllTabsData(values?.widgetFor)
     }
   }, [values?.widgetFor])
-
-  useEffect(() => {
-    if (dashboardForDt?.length === 0) { getDashboardForDrpData(); }
-    if (dataServiceData?.length === 0) { getAllServiceData(); }
-    if (!singleConfigData) {
-      getDashConfigData()
-    }
-  }, [])
 
 
   const handleRadioChange = (e) => {
@@ -286,7 +289,7 @@ const WidgetMaster = () => {
     // const isReset = window.confirm('Do you want to reset whole form!');
     // if (isReset) {
     setValues({
-      "id": "", "widgetFor": dashFor || "", "widgetType": "columnBased", "widgetNameDisplay": "", "widgetNameInternal": "", "widgetRefreshTime": "", "widgetRefreshDelayTime": "", "cachingStatus": "", "limit": "", "widgetHadingClr": "", "widgetTopMargin": "", "headingBgColor": "", "headingFontColor": "", "headingDisplayStyle": "", "recordsPerPage": "", "pagePerBlock": "", "DataScrollHeight": "", "parentWidget": "", "columnNoToDisplay": "", "leftClmNoToFixed": "", "rightClmNoToFixed": "", "linkedWidget": [], "actionBtnReq": "", "pdfTableFontSize": "", "pdfTableHeadBarClr": "", "pdfTableHeadTxtFontClr": "", "groupClmNoComma": "", "query": "", "procedureName": "", "recordsPerPageTreeCh": "", "parameterOption": "", "loadOption": "ONWINDOWLOAD", "paraComboBgColor": "", "paraComboFontColor": "", "paraLabelFontColor": "", "jndiSavingData": "", "stmtTimeOut": "", "lastUpdatedQuery": "", "FooterText": "", "customMsgForNoData": "", "treeChildQuery": "", "treeChildProcedure": "", "popUpDetails": [], "webQuery": "", "queryLabel": '', "htmlText": '', 'iconName': "",
+      "id": "", "widgetFor": dashFor || "", "widgetType": "columnBased", "widgetNameDisplay": "", "widgetNameInternal": "", "widgetRefreshTime": "", "widgetRefreshDelayTime": "", "cachingStatus": "Cache for All", "limit": "150", "widgetHadingClr": "", "widgetTopMargin": "", "headingBgColor": "", "headingFontColor": "", "headingDisplayStyle": "", "recordsPerPage": "", "pagePerBlock": "", "DataScrollHeight": "", "parentWidget": "", "columnNoToDisplay": "", "leftClmNoToFixed": "", "rightClmNoToFixed": "", "linkedWidget": [], "actionBtnReq": "", "pdfTableFontSize": "", "pdfTableHeadBarClr": "", "pdfTableHeadTxtFontClr": "", "groupClmNoComma": "", "query": "", "procedureName": "", "recordsPerPageTreeCh": "", "parameterOption": "", "loadOption": "ONWINDOWLOAD", "paraComboBgColor": "", "paraComboFontColor": "", "paraLabelFontColor": "", "jndiSavingData": "", "stmtTimeOut": "5", "lastUpdatedQuery": "", "FooterText": "", "customMsgForNoData": "", "treeChildQuery": "", "treeChildProcedure": "", "popUpDetails": [], "webQuery": "", "queryLabel": '', "htmlText": '', 'iconName': "",
       //graphs fields
       "defaultPluginName": "highchart", "defaultGraphType": "BAR_GRAPH", "graphTypes": [], "clmNameForLineGraph": "", "colorsForBars": "", "graphHeight": "", "graphBottomMargin": "", "graphBgStartColor": "", "graphBgEndColor": "", "graphFontColor": "", "graphTypeBgColor": "", "graphTypeFontColor": "", "labelRotation": "", "alphaGraph3D": "", "betaGraph3D": "", "xAxisLabel": "", "yAxisLabel": "", "xAxisFontSize": "", "yAxisFontSize": "", "annotationFontSize": "", "maxValueOfAxis": "", "parentWidgetGraph": "", "isActionBtnReqGraph": "Yes", "minValueOfAxis": "",
       //kpi details
@@ -365,6 +368,8 @@ const WidgetMaster = () => {
       return 'right';
     } else if (val === 'center' || val === "Center") {
       return 'center';
+    }else{
+      return "left";
     }
   }
 
@@ -375,6 +380,8 @@ const WidgetMaster = () => {
 
     return widgetDrpData.filter(item => ids.includes(String(item.value)));
   }
+
+
   useEffect(() => {
     if (singleData?.length > 0) {
       setLoading(true)
@@ -387,8 +394,8 @@ const WidgetMaster = () => {
         widgetNameInternal: singleData[0]?.rptName,//
         widgetRefreshTime: singleData[0]?.widgetRefreshTime,//
         widgetRefreshDelayTime: singleData[0]?.widgetRefreshDelayTime,//
-        cachingStatus: singleData[0]?.cachingStatusForWidget,//
-        limit: singleData[0]?.limitHTMLFromDb,//
+        cachingStatus: singleData[0]?.cachingStatusForWidget || "Cache for All",//
+        limit: singleData[0]?.limitHTMLFromDb || '150',//
         widgetHadingClr: singleData[0]?.widgetHeadingColor,//
         widgetTopMargin: singleData[0]?.widgetTopMargin,//
         //table
@@ -425,7 +432,7 @@ const WidgetMaster = () => {
         paraComboFontColor: singleData[0]?.widgetParameterComboFontColor,//
         paraLabelFontColor: singleData[0]?.widgetParameterLabelFontColor,//
         jndiSavingData: singleData[0]?.JNDIid,//
-        stmtTimeOut: singleData[0]?.statementTimeOut,//
+        stmtTimeOut: singleData[0]?.statementTimeOut||'5',//
         lastUpdatedQuery: singleData[0]?.lastUpdatedQuery,//
         FooterText: singleData[0]?.footerText,//
         customMsgForNoData: singleData[0]?.customMessage,//
@@ -494,37 +501,37 @@ const WidgetMaster = () => {
         isWidgetNameVisible: singleData[0]?.isWidgetNameVisible,//
         widgetPurpose: singleData[0]?.widgetShowOrDownload,//
         widgetHeadingAlign: returnAlignment(singleData[0]?.widgetHeadingAlignment),//
-        isRecordLimitReq: singleData[0]?.isRecordsLimitedLineRequired,//
-        isWidgetBorderReq: singleData[0]?.isWidgetBorderRequired,//
+        isRecordLimitReq: singleData[0]?.isRecordsLimitedLineRequired || 'No',//
+        isWidgetBorderReq: singleData[0]?.isWidgetBorderRequired || 'Yes',//
 
         selectedModeQuery: singleData[0]?.modeOfQuery,//
 
         isTableHeadingReq: singleData[0]?.tableHeadingRequired === 'yes' || singleData[0]?.tableHeadingRequired === 'Yes' ? 'Yes' : 'No',//
         tableHeadingAlign: singleData[0]?.tableHeadingAlignment,//
-        isFirstRowHeading: singleData[0]?.isFirstRowColumnName,//
-        isDataTblReq: singleData[0]?.isDataTableRequired,//
-        isIndexNumReq: singleData[0]?.isIndexNumberRequired,//
-        isPaginationReq: singleData[0]?.isPaginationReq,//
-        isSearchReq: singleData[0]?.isDataSearchReq,//
-        isHeadingFixed: singleData[0]?.isHeadingFixed,//
-        isLastRowTotal: singleData[0]?.isLastRowTotal,//
-        isCardViewMobile: singleData[0]?.isCardViewMobile,//=============
+        isFirstRowHeading: singleData[0]?.isFirstRowColumnName || 'No',//
+        isDataTblReq: singleData[0]?.isDataTableRequired || 'Yes',//
+        isIndexNumReq: singleData[0]?.isIndexNumberRequired || 'No',//
+        isPaginationReq: singleData[0]?.isPaginationReq || 'No',//
+        isSearchReq: singleData[0]?.isDataSearchReq || 'Yes',//
+        isHeadingFixed: singleData[0]?.isHeadingFixed || "No",//
+        isLastRowTotal: singleData[0]?.isLastRowTotal || 'No',//
+        isCardViewMobile: singleData[0]?.isCardViewMobile || 'No',//=============
 
-        isShowPrntHeadChild: singleData[0]?.showParentDetailsinChild,//
-        isShowPrntParamsChild: singleData[0]?.showParentParameterDetailsinChild,//
+        isShowPrntHeadChild: singleData[0]?.showParentDetailsinChild || 'Yes',//
+        isShowPrntParamsChild: singleData[0]?.showParentParameterDetailsinChild || 'Yes',//
 
         printPdfIn: singleData[0]?.printPDFIn,//
-        pdfTheme: singleData[0]?.pdfTheme,//
-        isPdfHeadReqAllPgs: singleData[0]?.isPdfHeaderReqInAllPages,//
-        showFilterDtlsInPdf: singleData[0]?.showFilterDetailsInPDF,//
-        isReportByJsPdfPlug: singleData[0]?.isReportByjsPDFPlugin,//
-        isReportPrintDtReq: singleData[0]?.isReportPrintDateRequired,//
-        isGlobalHeaderReq: singleData[0]?.isGlobalHeaderRequired,//
-        isTableBorderReq: singleData[0]?.isTableBorderRequired,//
-        isPositiveWidget: singleData[0]?.isPositiveWidget,//
-        isDirectDownloadBtn: singleData[0]?.isDirectDownloadRequired,//
-        isPopupBasedReq: singleData[0]?.isPopupBasedOnDataClickRequired,//
-        isTreeChildReq: singleData[0]?.isTreeChildRequired,//
+        pdfTheme: singleData[0]?.pdfTheme || 'grid',//
+        isPdfHeadReqAllPgs: singleData[0]?.isPdfHeaderReqInAllPages || 'No',//
+        showFilterDtlsInPdf: singleData[0]?.showFilterDetailsInPDF || 'Yes',//
+        isReportByJsPdfPlug: singleData[0]?.isReportByjsPDFPlugin || 'Yes',//
+        isReportPrintDtReq: singleData[0]?.isReportPrintDateRequired || 'Yes',//
+        isGlobalHeaderReq: singleData[0]?.isGlobalHeaderRequired || 'Yes',//
+        isTableBorderReq: singleData[0]?.isTableBorderRequired || 'Yes',//
+        isPositiveWidget: singleData[0]?.isPositiveWidget || 'Yes',//
+        isDirectDownloadBtn: singleData[0]?.isDirectDownloadRequired || 'No',//
+        isPopupBasedReq: singleData[0]?.isPopupBasedOnDataClickRequired || 'No',//
+        isTreeChildReq: singleData[0]?.isTreeChildRequired || 'No',//
 
         treeChildDataBy: singleData[0]?.treeChildDataBy,//
         dataDisplay: singleData[0]?.treeChildDataDisplay,//

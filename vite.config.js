@@ -1,19 +1,12 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
-import fs from 'fs'
-import path from 'path'
 import { dirname, resolve } from 'path';
 
-// https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
   base: '/',
   server: {
-    // https: {
-    //   key: fs.readFileSync(path.resolve(__dirname, 'certs/uat.dcservices.in.key')),
-    //   cert: fs.readFileSync(path.resolve(__dirname, 'certs/uat.dcservices.in.crt')),
-    // },
-    // port: 3000,
+    port: 5175,
     host: '0.0.0.0',
     open: true,
     proxy: {
@@ -22,16 +15,16 @@ export default defineConfig({
       //   changeOrigin: true,
       //   secure: false,
       // },
-      // '/hisutils': {
-      //   target: 'http://10.226.17.6:8024',
-      //   changeOrigin: true,
-      //   secure: false,
-      // }
+      '/hisutils': {
+        target: 'http://10.226.17.6:8024',
+        changeOrigin: true,
+        secure: false,
+      }
     }
   },
   resolve: {
     alias: {
-      '@': resolve(__dirname, 'src'), // Use @ to refer to /src directory
+      '@': resolve(__dirname, 'src'),
     },
   },
   build: {

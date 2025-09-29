@@ -5,7 +5,6 @@ import { Modal, Button } from 'react-bootstrap';
 import DataTable from 'react-data-table-component';
 import InputField from './InputField';
 import { HISContext } from '../../contextApi/HISContext';
-import InputSelect from './InputSelect';
 
 
 const GlobalDataTable = (props) => {

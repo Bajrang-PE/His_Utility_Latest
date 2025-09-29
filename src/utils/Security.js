@@ -77,7 +77,6 @@ export const getEncryptedParamValue = (encString, key) => {
     
     if (decDtArr?.length > 0) {
         const found = decDtArr.find(param => param.name === key);
-        console.log(found,'decDtArr')
         return found ? decodeURIComponent(found.value) : null;
     } else {
         return null;

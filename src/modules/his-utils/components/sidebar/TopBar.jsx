@@ -12,11 +12,11 @@ const TopBar = ({ data, setActiveTab, dashboardData,setPrevKpiTab,dt }) => {
     const scrollRef = useRef(null);
     const tabRefs = useRef({});
 
-
     // Memoize root tabs to avoid recalculation on every render
     const rootTabs = useMemo(() => {
-        return data?.filter(tab => !tab.jsonData.parentTabId || tab.jsonData.parentTabId === "0") || [];
+        return data?.filter(dt=>dt?.jsonData?.isTabUsedForDrillDown === "No")?.filter(tab => !tab.jsonData.parentTabId || tab.jsonData.parentTabId === "0") || [];
     }, [data]);
+
 
     // Memoize child tab lookup
     const getChildTabs = useCallback((parentId) => {
@@ -91,7 +91,7 @@ const TopBar = ({ data, setActiveTab, dashboardData,setPrevKpiTab,dt }) => {
 
                 <div className="collapse navbar-collapse scrollable-navbar-container " id="navbarNavDropdown">
                     <ul className="navbar-nav scrollable-navbar" ref={scrollRef} onScroll={checkScroll}>
-                        {rootTabs.map((tab, index) => {
+                        {(rootTabs?.length > 0 ? rootTabs : data).map((tab, index) => {
                             const childTabs = getChildTabs(tab.id);
                             return (
                                 <React.Fragment key={tab.id}>

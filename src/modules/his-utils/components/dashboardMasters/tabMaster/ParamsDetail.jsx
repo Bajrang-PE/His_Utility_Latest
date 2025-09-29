@@ -1,5 +1,5 @@
 import React, { lazy, useEffect, useState } from 'react'
-import { ToastAlert } from '../../../utils/commonFunction';
+import { sanitizeInput, ToastAlert } from '../../../utils/commonFunction';
 import { leftCaret, rightCaret } from '../../../utils/commonSVG';
 
 import { parameterOptions } from '../../../localData/DropDownData';
@@ -232,6 +232,7 @@ const ParamsDetail = (props) => {
                                     rows="2"
                                     onChange={handleValueChange}
                                     value={values?.paraRemark}
+                                    // value={sanitizeInput(values?.paraRemark, true)}
                                 ></textarea>
                             </div>
                         </div>

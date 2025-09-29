@@ -459,7 +459,7 @@ const AboutWidget = (props) => {
                                         id="cachingStatus"
                                         name="cachingStatus"
                                         options={cachingStatusForWidgetOptions}
-                                        placeholder="Select value..."
+                                        // placeholder="Select value..."
                                         className="backcolorinput"
                                         onChange={handleValueChange}
                                         value={values?.cachingStatus}

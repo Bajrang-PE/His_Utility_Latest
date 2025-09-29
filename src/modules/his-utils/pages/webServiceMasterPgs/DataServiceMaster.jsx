@@ -39,11 +39,14 @@ const DataServiceMaster = () => {
   }
 
   useEffect(() => {
-    if (dataServiceData?.length === 0) { getAllServiceData(); }
-    if (parameterData?.length === 0) { getAllParameterData('CENTRAL DASHBOARD'); }
-    if (!singleConfigData) {
-      getDashConfigData()
-    }
+    const init = async () => {
+      if (!singleConfigData) {
+        await getDashConfigData();
+      }
+      if (dataServiceData?.length === 0) { getAllServiceData(); }
+      if (parameterData?.length === 0) { getAllParameterData('CENTRAL DASHBOARD'); }
+    };
+    init();
   }, [])
 
   useEffect(() => {

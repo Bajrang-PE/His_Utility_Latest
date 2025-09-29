@@ -3,7 +3,7 @@ import NavbarHeader from '../../components/headers/NavbarHeader'
 import GlobalButtonGroup from '../../components/commons/GlobalButtonGroup'
 import InputField from '../../components/commons/InputField'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faAdd, faMinus } from '@fortawesome/free-solid-svg-icons'
+import { faAdd, faEye, faMinus } from '@fortawesome/free-solid-svg-icons'
 import InputSelect from '../../components/commons/InputSelect'
 import { HISContext } from '../../contextApi/HISContext'
 import { ToastAlert } from '../../utils/commonFunction'
@@ -11,7 +11,7 @@ import GlobalDataTable from '../../components/commons/GlobalDataTable'
 import { fetchPostData } from '../../../../utils/HisApiHooks'
 
 const ServiceUserMaster = () => {
-  const { setShowDataTable, getAllServiceData, dataServiceDrpData, selectedOption, setSelectedOption, setActionMode, actionMode, getUserServiceData, userServiceData, setLoading, setShowConfirmSave, confirmSave, setConfirmSave, dt } = useContext(HISContext);
+  const { setShowDataTable, getAllServiceData, dataServiceDrpData, selectedOption, setSelectedOption, setActionMode, actionMode, getUserServiceData, userServiceData, setLoading, setShowConfirmSave, confirmSave, setConfirmSave, dt, getDashConfigData, singleConfigData } = useContext(HISContext);
 
   const [values, setValues] = useState({
     "username": "", "password": "", "id": '', "dashboardFor": ""
@@ -25,8 +25,14 @@ const ServiceUserMaster = () => {
   const [filterData, setFilterData] = useState(userServiceData)
 
   useEffect(() => {
-    if (dataServiceDrpData?.length === 0) { getAllServiceData(); }
-    if (userServiceData?.length === 0) { getUserServiceData(); }
+    const init = async () => {
+      if (!singleConfigData) {
+        await getDashConfigData();
+      }
+      if (dataServiceDrpData?.length === 0) { getAllServiceData(); }
+      if (userServiceData?.length === 0) { getUserServiceData(); }
+    };
+    init();
   }, [])
 
   const handleValueChange = (e) => {
@@ -53,7 +59,6 @@ const ServiceUserMaster = () => {
         return paramId?.includes(lowercasedText) || paramName.includes(lowercasedText) || paramDisplayName.includes(lowercasedText);
       });
       setFilterData(newFilteredData);
-      console.log(newFilteredData, 'newFilteredData')
     }
   }, [searchInput, userServiceData]);
 
@@ -159,8 +164,8 @@ const ServiceUserMaster = () => {
   const handleDeleteServiceUser = () => {
     if (selectedOption?.length > 0) {
       setLoading(true)
-      const isReset = window.confirm('Do you want to reset whole form!');
-      if (isReset) {
+      // const isReset = window.confirm('Do you want to reset whole form!');
+      // if (isReset) {
         const val = { "id": selectedOption[0]?.id, "dashboardFor": "GLOBAL", "masterName": "ServiceUserMst" };
         fetchPostData("/hisutils/ServiceUserDelete", val).then((data) => {
           if (data?.status === 1) {
@@ -172,11 +177,12 @@ const ServiceUserMaster = () => {
           } else {
             ToastAlert(data?.message, 'error');
             setLoading(false)
+            setSelectedOption([]);
           }
         })
-      } else {
-        setSelectedOption([]);
-      }
+      // } else {
+      //   setSelectedOption([]);
+      // }
     } else {
       ToastAlert('Please select a record', 'warning');
     }
@@ -343,7 +349,7 @@ const ServiceUserMaster = () => {
                 <label className="col-sm-5 col-form-label pe-0 required-label">{dt('Password')} : </label>
                 <div className="col-sm-7 ps-0 align-content-center">
                   <InputField
-                    type="text"
+                    type="password"
                     className="backcolorinput"
                     placeholder="Enter value..."
                     name='password'
@@ -351,6 +357,7 @@ const ServiceUserMaster = () => {
                     onChange={handleValueChange}
                     value={values?.password}
                   />
+                  {/* <FontAwesomeIcon icon={faEye} /> */}
                   {errors?.passwordErr &&
                     <div className="required-input">
                       {errors?.passwordErr}

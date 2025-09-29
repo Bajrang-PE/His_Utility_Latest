@@ -57,19 +57,20 @@ const ParameterMaster = () => {
   }, [dashFor])
 
   useEffect(() => {
+    const init = async () => {
+      if (!singleConfigData) {
+        await getDashConfigData();
+      }
+      if (dashboardForDt?.length === 0) { getDashboardForDrpData(); }
+      if (dataServiceData?.length === 0) { getAllServiceData(); }
+    };
+    init();
+  }, []);
+
+  useEffect(() => {
     if (values?.parameterFor) { getAllParameterData(values?.parameterFor); }
   }, [values?.parameterFor])
 
-  useEffect(() => {
-    if (!singleConfigData) {
-      getDashConfigData()
-    }
-  }, [])
-
-  useEffect(() => {
-    if (dashboardForDt?.length === 0) { getDashboardForDrpData(); }
-    if (dataServiceData?.length === 0) { getAllServiceData(); }
-  }, [])
 
   const handleValueChange = (e) => {
     const { name, value } = e.target;
@@ -390,7 +391,7 @@ const ParameterMaster = () => {
   }
 
   const reset = () => {
-    setValues({ "parameterFor": "", "parameterType": "combo", "parameterInternal": "", "parameterDisplay": "", "placeHolder": "", "parameterWidth": "", "parameterAlignment": "", "paraLabelWidth": "", "paraLabelAlignment": "", "paraControlWidth": "", "paraControlAlignment": "", "mandatory": "", "defaultValueIfLeft": "", "defaultValue": "", "validation": "", "maxLength": "", "minLength": "", "parentID": [], "modeForQuery": 'query', "query": "", "defaultOptValue": "", "defaultOptText": "", "defOptFilterVal": "", "defOptFilterTxt": "", "jndiSavingData": "", "stmtTimeOut": "", "id": "", "shouldBeLess": "", "shouldBeGreater": "", "minDaysBefore": "", "maxDaysAfter": "" })
+    setValues({ "parameterFor": dashFor, "parameterType": "combo", "parameterInternal": "", "parameterDisplay": "", "placeHolder": "", "parameterWidth": "", "parameterAlignment": "", "paraLabelWidth": "", "paraLabelAlignment": "", "paraControlWidth": "", "paraControlAlignment": "", "mandatory": "", "defaultValueIfLeft": "", "defaultValue": "", "validation": "", "maxLength": "", "minLength": "", "parentID": [], "modeForQuery": 'query', "query": "", "defaultOptValue": "", "defaultOptText": "", "defOptFilterVal": "", "defOptFilterTxt": "", "jndiSavingData": "", "stmtTimeOut": "", "id": "", "shouldBeLess": "", "shouldBeGreater": "", "minDaysBefore": "", "maxDaysAfter": "" })
     setActionMode('home');
     setShowParamsTable(false);
     setShowDataTable(false);

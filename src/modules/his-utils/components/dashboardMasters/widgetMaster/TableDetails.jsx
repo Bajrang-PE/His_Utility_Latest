@@ -21,7 +21,6 @@ const TableDetails = (props) => {
     const [isEditing, setIsEditing] = useState(null);
 
     const handleInputChange = (field, e) => {
-        console.log(e, 'e')
         if (e.target.name === 'popupWidgetId') {
             setNewRow({ ...newRow, [field]: e.target.value, ['drillWidgetName']: e.target.label })
         } else {
@@ -508,7 +507,7 @@ const TableDetails = (props) => {
                         <div className="col-sm-7 ps-0 align-content-center">
                             <InputSelect
                                 className="backcolorinput "
-                                placeholder="Enter value..."
+                                placeholder="No Parent"
                                 name='parentWidget'
                                 id="parentWidget"
                                 options={parentWidget}

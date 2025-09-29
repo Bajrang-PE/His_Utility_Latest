@@ -1,0 +1,59 @@
+@use '../Util/variables' as *;
+
+
+.parameterMaster {
+  padding-top: $global-top-padding;
+  width: 90%;
+  height: auto;
+
+  &__sqlEditor {
+    height: 30rem;
+    width: 80%;
+    box-shadow: $box-spherical-shadow;
+    overflow: hidden;
+    border-radius: 2rem;
+  }
+
+  &__controlBox {
+    margin-top: 2rem;
+    padding-bottom: 4rem;
+    display: flex;
+    gap: 2rem;
+  }
+
+  &__config {
+    width: 90%;
+    display: flex;
+    align-itrems: center;
+    gap: 3rem;
+    margin-bottom: 2.5rem;
+    flex-wrap: wrap;
+
+    &--preview {
+      background-image: $gradient-success;
+
+      border-radius: 2rem;
+      box-shadow: $box-spherical-light-shadow;
+      padding: 2rem 4rem;
+
+      & label {
+        color: $pure-white !important;
+      }
+    }
+  }
+
+  &__title {
+    width: 100%;
+    display: flex;
+    gap: 2rem;
+    align-itrems: center;
+  }
+
+  &__type {
+    font-family: $secondary-font;
+    font-size: 2.2rem;
+    font-weight: 500;
+    letter-spacing: 2px;
+    margin-bottom: 2rem;
+  }
+}

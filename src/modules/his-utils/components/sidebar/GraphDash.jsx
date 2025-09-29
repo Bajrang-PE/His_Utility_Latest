@@ -13,7 +13,7 @@ import AdvancedOptionsModal from "./AdvancedOptionsModal";
 
 const Parameters = lazy(() => import('./Parameters'));
 
-const GraphDash = ({ widgetData, pkColumn, setPkColumn }) => {
+const GraphDash = ({ widgetData, pkColumn, setPkColumn, isLayoutWithPreview }) => {
   const { theme, paramsValues, singleConfigData, isSearchQuery, setIsSearchQuery, setSearchScope, searchScope, dt } = useContext(HISContext);
   const [widParamsValues, setWidParamsValues] = useState();
   const [filteredGraphOptions, setFilteredGraphOptions] = useState([]);
@@ -223,9 +223,6 @@ const GraphDash = ({ widgetData, pkColumn, setPkColumn }) => {
     }
   };
 
-  console.log(allGraphData, 'allgdt')
-  console.log(graphData, 'gdt')
-
   const formatProcedureDataForGraph = (data) => {
     if (!data || data.length === 0) return { categories: [], seriesData: [] };
 
@@ -287,7 +284,7 @@ const GraphDash = ({ widgetData, pkColumn, setPkColumn }) => {
         const limitedData = data?.data?.slice(0, limit);
 
         const formattedData = formatProcedureDataForGraph(limitedData);
-        setGraphData(formattedData);
+        setGraphData([formattedData]);
         setIsSearchQuery(false)
         setSearchScope({ scope: "", id: "" })
       } catch (error) {
@@ -386,7 +383,6 @@ const GraphDash = ({ widgetData, pkColumn, setPkColumn }) => {
   const [visibleColumns, setVisibleColumns] = useState();
   const [columns, setColumns] = useState([]);
 
-
   const filterColumns = (clms) => {
     if (clms?.length > 0) {
       return columns?.filter(column => {
@@ -398,7 +394,7 @@ const GraphDash = ({ widgetData, pkColumn, setPkColumn }) => {
   }
 
   const onClickAdvanced = () => {
-    const headers = [xAxisLabel, graphData[0]?.seriesData?.map(s => s.name)];
+    const headers = [xAxisLabel, ...graphData[0]?.seriesData?.map(s => s.name)];
     const headerWithName = headers?.map(h => ({
       name: h
     }))
@@ -408,7 +404,7 @@ const GraphDash = ({ widgetData, pkColumn, setPkColumn }) => {
 
 
   return (
-    <div className={`high-chart-main ${theme === 'Dark' ? 'dark-theme' : ""}`} style={{ border: `7px solid ${theme === 'Dark' ? 'white' : 'black'}` }}>
+    <div className={`high-chart-main ${theme === 'Dark' ? 'dark-theme' : ""}`} style={{ border: `7px solid ${theme === 'Dark' ? 'white' : 'black'}`, height: isLayoutWithPreview ? '100%' : '650px', }} key={widgetData?.id}>
 
 
       <div className="row px-2 py-2 border-bottom">
@@ -493,36 +489,20 @@ const GraphDash = ({ widgetData, pkColumn, setPkColumn }) => {
               },
             },
             labels: {
-              //  useHTML: true,
               y: chartTypeMapping[chartType] !== 'bar' ? 45 : 0,
               rotation: chartTypeMapping[chartType] === 'bar' ? 0 : (labelRotation ? parseInt(labelRotation, 10) : -45),
-              // rotation: labelRotation ? parseInt(labelRotation, 10) : -45,
               style: {
-                fontSize: "10px",
+                fontSize: "11px",
                 color: isDarkTheme ? "#ffffff" : "#000000",
-                textOverflow: 'none'
               },
               step: 1,
               align: chartTypeMapping[chartType] === 'bar' ? 'right' : 'center',
               reserveSpace: true,
               formatter: function () {
-                const maxLength = 15;
+                const maxLength = 25;
                 const value = this.value;
                 if (value.length > maxLength) {
-                  const words = value.split(' ');
-                  let lines = [''];
-                  let lineIndex = 0;
-
-                  words.forEach(word => {
-                    if ((lines[lineIndex] + word).length > maxLength) {
-                      lineIndex++;
-                      lines[lineIndex] = word;
-                    } else {
-                      lines[lineIndex] += (lines[lineIndex].length ? ' ' : '') + word;
-                    }
-                  });
-
-                  return lines.join('<br>');
+                  return value.substring(0, maxLength) + "...";
                 }
                 return value;
               }
@@ -542,10 +522,11 @@ const GraphDash = ({ widgetData, pkColumn, setPkColumn }) => {
             },
             labels: {
               style: {
+                fontSize: "11px",
                 color: isDarkTheme ? "#ffffff" : "#000000",
-              }
-            },
 
+              },
+            },
             gridLineColor: isDarkTheme ? "#444444" : "#e6e6e6",
           },
           legend: {

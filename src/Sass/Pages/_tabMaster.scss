@@ -1,0 +1,115 @@
+@use '../Util/variables' as *;
+
+.react-draggable-dragging {
+  cursor: grabbing !important;
+}
+
+.react-resizable-handle {
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  bottom: 0;
+  right: 0;
+  cursor: se-resize;
+  z-index: 10;
+}
+
+.tabMaster {
+  width: 100%;
+  display: flex;
+  overflow-y: scroll;
+  justify-content: space-evenly;
+  background-image: $snow-gradient;
+
+  &__Wrapper {
+    padding-top: $global-top-padding;
+
+    // flex: 0 1 85%;
+    width: 75%;
+    &--title {
+      width: 100%;
+      display: flex;
+      gap: 2rem;
+      align-itrems: center;
+    }
+
+
+    &-config {
+      display: flex;
+      align-itrems: center;
+      gap: 4rem;
+      margin-bottom: 3rem;
+    }
+
+    &-paramfilter {
+      position: relative;
+      height: 5rem !important;
+      width: 5rem !important;
+      border-radius: 50%;
+      cursor: pointer;
+
+      &--img {
+        position: absolute;
+        height: 50%;
+        width: 50%;
+        pointer-events: none;
+        top: 50%;
+        left: 50%;
+        z-index: 10;
+        transform: translate(-50%, -50%);
+      }
+    }
+
+    &--mappedWidgits {
+      margin-top: 4rem;
+    }
+  }
+
+  &__options {
+    padding-top: $global-top-padding;
+    // flex: 0 1 15%;
+    width: 25%;
+
+    &--heading {
+      text-align: center;
+      margin-top: 1rem;
+    }
+  }
+}
+
+.layoutWrapper {
+  position: relative;
+  height: auto;
+  // margin-left: -1rem;
+  font-family: $secondary-font;
+  font-weight: 500;
+  padding-left: 1rem;
+  font-size: 1.8rem;
+  border-right: 1px solid rgba($underline-color, 0.04);
+  background-color: transparent;
+  user-select: none;
+  cursor: grab;
+  transition: cursor 0.2s ease;
+  z-index: 0;
+
+  &__close {
+    position: fixed;
+    top: 0;
+    right: 5px;
+    font-size: 2rem;
+    font-weight: 500;
+    z-index: 999999;
+    cursor: pointer;
+    user-select: none;
+    backdrop-filter: none;
+  }
+}
+
+.parameter__container {
+  width: 100% !important;
+  height: 100%;
+  display: flex;
+  align-itrems: center;
+  flex-wrap: wrap;
+  gap: 5px;
+}

@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { Menu, MenuItem, SubMenu, Sidebar } from "react-pro-sidebar";
-import { FaBars } from "react-icons/fa";
+import { FaAtom, FaBars } from "react-icons/fa";
 import * as SolidIcons from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import * as FaIcons from "react-icons/fa";
 
 
 const DashSidebar = ({ data, setActiveTab, activeTab, dashboardData, setPrevKpiTab, dt }) => {
@@ -10,7 +11,7 @@ const DashSidebar = ({ data, setActiveTab, activeTab, dashboardData, setPrevKpiT
     const [collapsed, setCollapsed] = useState(false);
     const [openSubMenu, setOpenSubMenu] = useState(null);
 
-    const rootTabs = data?.filter(tab => !tab.jsonData.parentTabId || tab.jsonData.parentTabId === "0");
+    const rootTabs = data?.filter(dt=>dt?.jsonData?.isTabUsedForDrillDown === "No")?.filter(tab => !tab.jsonData.parentTabId || tab.jsonData.parentTabId === "0");
 
     // Fetch child tabs with memoization
     const getChildTabs = (parentId) => {
@@ -24,18 +25,32 @@ const DashSidebar = ({ data, setActiveTab, activeTab, dashboardData, setPrevKpiT
     const isSidebarCollapse = dashboardData?.jsonData?.isSidebarCollapse || 'Yes';
 
     const getDynamicIcon = (iconName) => {
-        if (!iconName) return SolidIcons.faBarChart;
+        if (!iconName) return <FontAwesomeIcon icon={SolidIcons.faBarChart} />;
 
-        const formattedIconName = "fa" + iconName.replace(/-o$/, "")
-            .replace("fa-", "")
-            .replace(/-([a-z])/g, (_, letter) => letter.toUpperCase());
+        if (iconName?.includes("_") || iconName?.includes("-")) {
+            const formattedIconName =
+                "fa" +
+                iconName
+                    .replace(/-o$/, "")
+                    .replace(/^fa-/, "")
+                    .replace(/-([a-z])/g, (_, letter) => letter.toUpperCase());
 
-        const iconKey = Object.keys(SolidIcons).find(key =>
-            key.toLowerCase() === formattedIconName.toLowerCase() ||
-            key.toLowerCase().includes(formattedIconName.replace(/[^a-zA-Z]/g, "").toLowerCase())
-        );
+            const iconKey = Object.keys(SolidIcons).find(
+                (key) =>
+                    key.toLowerCase() === formattedIconName.toLowerCase() ||
+                    key
+                        .toLowerCase()
+                        .includes(
+                            formattedIconName.replace(/[^a-zA-Z]/g, "").toLowerCase()
+                        )
+            );
 
-        return iconKey ? SolidIcons[iconKey] : SolidIcons.faBarChart;
+            const IconDef = iconKey ? SolidIcons[iconKey] : SolidIcons.faBarChart;
+            return <FontAwesomeIcon icon={IconDef} />;
+        }
+
+        const Cmp = FaIcons[iconName] || FaBars;
+        return <Cmp />;
     };
 
     useEffect(() => {
@@ -60,6 +75,7 @@ const DashSidebar = ({ data, setActiveTab, activeTab, dashboardData, setPrevKpiT
         }
     };
 
+
     return (
         <Sidebar width="270px" style={{ minHeight: "100vh", color: "#ECF0F1" }} collapsed={collapsed} toggled backgroundColor="#071b2f">
             <Menu iconShape="square">
@@ -81,7 +97,8 @@ const DashSidebar = ({ data, setActiveTab, activeTab, dashboardData, setPrevKpiT
                             <SubMenu
                                 key={tab.id}
                                 label={!collapsed && tab?.jsonData?.dashboardActualName}
-                                icon={<FontAwesomeIcon icon={getDynamicIcon(tab?.jsonData?.iconName)} />}
+                                // icon={<FontAwesomeIcon icon={getDynamicIcon(tab?.jsonData?.iconName)} />}
+                                icon={getDynamicIcon(tab?.jsonData?.iconName)}
                                 className={`submenu-tab-side ${isActive ? 'activeSideTab' : ''}`}
                                 open={activeTab?.jsonData?.parentTabId == tab.id || openSubMenu == tab.id}
                                 onClick={() => { handleSubMenuClick(tab.id); setActiveTab(tab); setPrevKpiTab([]); }}
@@ -95,13 +112,14 @@ const DashSidebar = ({ data, setActiveTab, activeTab, dashboardData, setPrevKpiT
                                         key={child.id}
                                         onClick={() => { setActiveTab(child); setPrevKpiTab([]) }}
                                         className={`menu-tab-item ${activeTab?.jsonData?.dashboardId === child?.jsonData?.dashboardId ? 'activeSideTab' : ''}`}
-                                        icon={<FontAwesomeIcon icon={getDynamicIcon(child?.jsonData?.iconName)} />}
+                                        // icon={<FontAwesomeIcon icon={getDynamicIcon(child?.jsonData?.iconName)} />}
+                                        icon={getDynamicIcon(child?.jsonData?.iconName)}
                                         id={`menu-tab-item${child.id}`}
                                         onMouseOver={() => handleHover(`menu-tab-item${child.id}`, true)}
                                         onMouseOut={() => handleHover(`menu-tab-item${child.id}`, false)}
                                         style={{ color: tabFont }}
                                     >
-                                        {child?.jsonData?.dashboardActualName}
+                                        {child?.jsonData?.dashboardName}
                                     </MenuItem>
                                 ))}
                             </SubMenu>
@@ -111,7 +129,9 @@ const DashSidebar = ({ data, setActiveTab, activeTab, dashboardData, setPrevKpiT
                     return (
                         <MenuItem
                             key={tab.id}
-                            icon={<FontAwesomeIcon icon={getDynamicIcon(tab?.jsonData?.iconName)} />}
+                            icon={getDynamicIcon(tab?.jsonData?.iconName)}
+                            // icon={<FontAwesomeIcon icon={getDynamicIcon(tab?.jsonData?.iconName)} />}
+                            // icon={<FaAtom />}
                             onClick={() => { setActiveTab(tab); handleSubMenuClick(''); setPrevKpiTab([]) }}
                             className={`menu-tab-item ${isActive ? 'activeSideTab' : ''}`}
                             id={`menu-tab-item${tab.id}`}
@@ -119,7 +139,7 @@ const DashSidebar = ({ data, setActiveTab, activeTab, dashboardData, setPrevKpiT
                             onMouseOut={() => handleHover(`menu-tab-item${tab.id}`, false)}
                             style={{ color: tabFont }}
                         >
-                            {!collapsed && tab?.jsonData?.dashboardActualName}
+                            {!collapsed && tab?.jsonData?.dashboardName}
                         </MenuItem>
                     );
                 })

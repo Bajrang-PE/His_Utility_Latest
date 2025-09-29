@@ -1,10 +1,6 @@
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { fetchPostData } from '../../../utils/HisApiHooks';
-import { HISContext } from '../contextApi/HISContext';
-import { useContext } from 'react';
-
-
 
 //FUNCTION TO MANAGE GLOBAL ALERTS
 export const ToastAlert = (message, type) => {
@@ -54,7 +50,7 @@ export const convertToISODate = (dateStr) => {
   };
 
   const [day, month, year] = dateStr.split("-");
-  const formattedYear = `20${year}`;
+  const formattedYear = year?.length === 2 ? `20${year}` : year;
   const formattedMonth = months[month?.toUpperCase()];
 
   return `${formattedYear}-${formattedMonth}-${day}`;
@@ -77,16 +73,18 @@ export const fetchQueryData = async (queryVO = [], jndiServer, params, pkColumn)
     const popupIdStr = popupIds?.join(",");
 
     const requestBody = {
-      query, params: {},
+      query, 
+      params: {},
       jndi: jndiServer,
       strGroupParaId: params?.strGroupParaId,
       strGroupParaValue: params?.strGroupParaValue,
       popupId: popupIdStr ? popupIdStr : "",
       popupValue: pkColumn ? pkColumn?.toString() : ""
-      // popupValue: "22@2020@"
+      // popupValue: "99929068@99929068"
     };
+console.log('requestBody', requestBody)
     const response = await fetchPostData("/hisutils/GenericApiQry", requestBody);
-
+    console.log('response', response)
     return response?.data || [];
   } catch (error) {
     console.error("Error fetching query data:", error);
@@ -94,7 +92,7 @@ export const fetchQueryData = async (queryVO = [], jndiServer, params, pkColumn)
   }
 };
 
-export const fetchProcedureData = async (procedure, params, jndiServer) => {
+export const fetchProcedureData = async (procedure, params, jndiServer,signal=null) => {
   if (!procedure) {
     return [];
   }
@@ -105,7 +103,7 @@ export const fetchProcedureData = async (procedure, params, jndiServer) => {
       "parameters": params,
       "jndi": jndiServer
     };
-    const response = await fetchPostData(`/hisutils/procedures/execute`, requestBody);
+    const response = await fetchPostData(`/hisutils/procedures/execute`, requestBody,null,signal);
 
     return response?.data || [];
   } catch (error) {
@@ -153,7 +151,7 @@ export const fetchLocalLogoAsBase64 = (filePath) => {
 export const formatParams = (allParams, widgetId) => {
   const tabParams = allParams?.tabParams || {};
   const widgetSpecificParams = allParams?.widgetParams?.[widgetId] || {};
-
+  
   const combinedParams = {
     ...tabParams,
     ...widgetSpecificParams
@@ -165,7 +163,6 @@ export const formatParams = (allParams, widgetId) => {
       paramsValue: ""
     };
   }
-
   return {
     paramsId: Object.keys(combinedParams).join(','),
     paramsValue: Object.values(combinedParams).join(',')
@@ -175,7 +172,6 @@ export const formatParams = (allParams, widgetId) => {
 
 export const getOrderedParamValues = (query, paramsValues,widgetId) => {
   const paramVal = formatParams(paramsValues ? paramsValues : null, widgetId || '');
-
   const paramOrder = [];
   const regex = /#PARA#(\d+)#PARA#/g;
   let match;
@@ -204,6 +200,7 @@ export const getOrderedParamValues = (query, paramsValues,widgetId) => {
       filteredValues.push(idToValue[id]);
     }
   });
+
 
   return {
     strGroupParaId: filteredIds.join(','),
@@ -302,4 +299,41 @@ export const extractAllPageText = (config = {}) => {
   }
 
   return Array.from(texts);
+};
+
+// Sanitizer with whitelist + escape rules
+export const sanitizeInput = (val, isSpecialChrs = false) => {
+  if (val == null) return val;
+  let clean = String(val);
+
+  // If special characters are allowed → skip sanitization
+  if (isSpecialChrs) {
+    return clean;
+  }
+
+  // Remove HTML tags completely
+  clean = clean.replace(/<[^>]*>/g, "");
+
+  //remove from starting
+  // clean = clean.replace(/^[=+\-@]+/, "");
+
+  //remove from everywhere
+  clean = clean.replace(/[=+\-@]/g, "");
+
+  return clean;
+};
+
+
+// Validator to enforce whitelist rules
+export const validateInput = (input) => {
+  if (input == null) return true;
+
+  const htmlPattern = /<[^>]*>/g;       // HTML not allowed
+  const dangerousPattern = /^[=+\-@]+/;  // invalid if starts with =,+,-,@
+
+  if (htmlPattern.test(input) || dangerousPattern.test(input)) {
+    return false; // invalid
+  }
+
+  return true; // valid
 };

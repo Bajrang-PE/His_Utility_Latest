@@ -2,8 +2,6 @@ import React, { useContext, useEffect, useState } from 'react'
 import GlobalButtonGroup from '../../components/commons/GlobalButtonGroup'
 import NavbarHeader from '../../components/headers/NavbarHeader'
 import { HISContext } from '../../contextApi/HISContext';
-import InputSelect from '../../components/commons/InputSelect';
-import InputField from '../../components/commons/InputField';
 import TabNav from '../../components/commons/TabNav';
 import AboutTab from '../../components/dashboardMasters/tabMaster/AboutTab';
 import TabDetails from '../../components/dashboardMasters/tabMaster/TabDetails';
@@ -17,6 +15,8 @@ import { faArrowLeft, faArrowRight } from '@fortawesome/free-solid-svg-icons';
 import GlobalDataTable from '../../components/commons/GlobalDataTable';
 import { ToastAlert } from '../../utils/commonFunction';
 import { fetchPostData } from '../../../../utils/HisApiHooks';
+import { useDispatch, useSelector } from 'react-redux';
+import { setPopupData } from '../../Features/Popup/popupSlice';
 
 const TabMaster = () => {
 
@@ -28,13 +28,19 @@ const TabMaster = () => {
   const [singleData, setSingleData] = useState([]);
   const [filterData, setFilterData] = useState(allTabsData)
   const [rows, setRows] = useState([{ rptId: "", displayOrder: "", widgetWidth: "", widgetHeight: "0", widgetColor: "", widgetDisplay: "", sectionId: "1", animation: "" }]);
-  const [isInputChanged, setIsInputChanged] = useState(false);
+  const [tabLayout, setTablayout] = useState([]);
+
+  const droppedComponents = useSelector(
+    (state) => state.popupData.parametersData
+  );
+  const dispatch = useDispatch();
+
 
   const [values, setValues] = useState({
     "tabFor": "", "tabNameDisplay": "", "tabNameInternal": "", "parentTab": "", "ellipseInDisplay": "",
     "tabIconImage": "", "iconName": "", "id": '',
     //tab details
-    "tabNameFontWeight": "500", "tabDetailBgColor": "", "tabTopPadding": "10", "buttonMarginHeading": "",
+    "tabNameFontWeight": "500", "tabDetailBgColor": "#ffffff", "tabTopPadding": "10", "buttonMarginHeading": "",
     "tabNameFontSize": "12", "tabNameTxtDecorat": "none", "tabDetailTitleColor": "",
     //parameter detail
     "parameterOption": "1", "loadOption": "ONWINDOWLOAD", "paraComboBgColor": "", "paraComboFontColor": "", "paraLabelFontColor": "", "paraRemark": "", 'allParameters': "",
@@ -53,14 +59,25 @@ const TabMaster = () => {
     //tab details
     "showTabNameInDetail": "Yes", "widgetMaxMin": "No",
     //footer detail
-    "isLegendCollapes": "Yes", "isMarqueeReq": "No", "isLegendBorderReq": "Yes",
+    "isLegendCollapes": "Yes", "isMarqueeReq": "No", "isLegendBorderReq": "Yes", "isLayout": 'No'
   })
 
   //multi params
   const [availableOptions, setAvailableOptions] = useState([]);
   const [selectedOptions, setSelectedOptions] = useState([]);
 
-  const [errors, setErrors] = useState({ tabForErr: "", tabNameDisplayErr: "", tabNameInternalErr: "", tabNameFontWeightErr: "", tabNameFontSizeErr: "", tabNameTxtDecoratErr: "", showTabNameInDetailErr: "", displayOrderErr: "", widgetWidthErr: "", widgetHeightErr: "", fileNameForManualDocumentErr: "", displayNameForManualDocumentErr: "" });
+  const [errors, setErrors] = useState({ tabForErr: "", tabNameDisplayErr: "", tabNameInternalErr: "", tabNameFontWeightErr: "", tabNameFontSizeErr: "", tabNameTxtDecoratErr: "", showTabNameInDetailErr: "", displayOrderErr: "", widgetWidthErr: "", widgetHeightErr: "", fileNameForManualDocumentErr: "", displayNameForManualDocumentErr: "",tabLayoutErr: "" });
+
+
+  useEffect(() => {
+    const init = async () => {
+      if (!singleConfigData) {
+        await getDashConfigData();
+      }
+      if (dashboardForDt?.length === 0) { getDashboardForDrpData(); }
+    };
+    init();
+  }, [])
 
   useEffect(() => {
     const localValues = localStorage.getItem('values');
@@ -82,12 +99,7 @@ const TabMaster = () => {
     }
   }, [dashFor])
 
-  useEffect(() => {
-    if (dashboardForDt?.length === 0) { getDashboardForDrpData(); }
-    if (!singleConfigData) {
-      getDashConfigData()
-    }
-  }, [])
+
 
   useEffect(() => {
     if (values?.tabFor) {
@@ -175,6 +187,24 @@ const TabMaster = () => {
 
   ]);
 
+  useEffect(() => {
+    if (radioValues?.isLayout === "Yes") {
+      // Remove Parameter tab
+      setTabNavMenus(prevTabs => prevTabs.filter(tab => tab.value !== 4));
+    } else {
+      // Reset to original tab list (if needed)
+      setTabNavMenus([
+        { value: 1, label: "About Tab" },
+        { value: 2, label: "Configuration" },
+        { value: 3, label: "Widget Mapping" },
+        { value: 4, label: "Parameter Detail" },
+        { value: 5, label: "JNDI Details" },
+        { value: 6, label: "Footer Details" },
+        { value: 7, label: "Help Docs" },
+      ]);
+    }
+  }, [radioValues?.isLayout]);
+
   const saveMenuTabsData = () => {
     let nextTab = tabIndex + 1;
     if (tabNavMenus?.length >= nextTab) {
@@ -236,7 +266,7 @@ const TabMaster = () => {
         iconName: jsonData?.iconName,//
         // tab details:
         tabNameFontWeight: jsonData?.tabnameFontWeight,//
-        tabDetailBgColor: jsonData?.tabBackgroundColor,
+        tabDetailBgColor: jsonData?.tabBackgroundColor || "#ffffff",
         tabTopPadding: jsonData?.tabTopPadding,//
         buttonMarginHeading: jsonData?.marginBottom,//
         tabNameFontSize: jsonData?.tabnameFontSize,//
@@ -277,8 +307,13 @@ const TabMaster = () => {
         isLegendCollapes: jsonData?.isLegendCollapes,//
         isMarqueeReq: jsonData?.isMarqueeRequired,//
         isLegendBorderReq: jsonData?.isLegendBorderRequired,//
+        isLayout: jsonData?.isLayoutWithPreview || 'No'
 
       })
+      setTablayout(jsonData.tabLayout ? (jsonData?.tabLayout) : []);
+      if (droppedComponents?.length === 0) {
+        dispatch(setPopupData(jsonData?.droppedComponents ? jsonData?.droppedComponents : []));
+      }
       setLoading(false)
     }
   }, [singleData]);
@@ -304,7 +339,7 @@ const TabMaster = () => {
     const {
       isTabUsedForDrill, isTabNameInReportReq, isCssTabIconReq,
       showTabNameInDetail, widgetMaxMin, isLegendCollapes,
-      isMarqueeReq, isLegendBorderReq, } = radioValues;
+      isMarqueeReq, isLegendBorderReq, isLayout } = radioValues;
 
     const selectedIdParams = selectedOptions?.length > 0 ? selectedOptions?.map(option => option?.value).join(",") : '';
 
@@ -336,6 +371,9 @@ const TabMaster = () => {
         isMarqueeRequired: isMarqueeReq,
         isLegendBorderRequired: isLegendBorderReq,
 
+        tabLayout: isLayout === 'Yes' ? tabLayout : [],
+        isLayoutWithPreview: isLayout,
+        droppedComponents: droppedComponents
       }
     };
 
@@ -375,7 +413,7 @@ const TabMaster = () => {
     const {
       isTabUsedForDrill, isTabNameInReportReq, isCssTabIconReq,
       showTabNameInDetail, widgetMaxMin, isLegendCollapes,
-      isMarqueeReq, isLegendBorderReq, } = radioValues;
+      isMarqueeReq, isLegendBorderReq, isLayout } = radioValues;
     const selectedIdParams = selectedOptions?.length > 0 ? selectedOptions?.map(option => option?.value).join(",") : '';
 
     const val = {
@@ -406,6 +444,9 @@ const TabMaster = () => {
         isMarqueeRequired: isMarqueeReq,
         isLegendBorderRequired: isLegendBorderReq,
 
+        tabLayout: isLayout === 'Yes' ? tabLayout : [],
+        isLayoutWithPreview: isLayout,
+        droppedComponents: droppedComponents
       }
     };
 
@@ -480,15 +521,26 @@ const TabMaster = () => {
       newErrors.showTabNameInDetailErr = "tab name in detail is required";
       isValid = false;
     }
-    if (rows?.length > 0 && !rows[rows?.length - 1]?.displayOrder) {
+  if (radioValues?.isLayout === 'Yes' && droppedComponents?.length === 0) {
+      newErrors.tabLayoutErr = "Can not save empty tab";
+      isValid = false;
+    } else if (radioValues?.isLayout === 'Yes' && droppedComponents?.length > 0) {
+      const widgitsSelected = droppedComponents.filter((data) => data?.type === 'Widgit');
+      if (widgitsSelected?.length === 0) {
+        newErrors.tabLayoutErr = "Can not save tab without widgets";
+        isValid = false;
+      }
+    }
+
+    if (radioValues?.isLayout !== 'Yes' && rows?.length > 0 && !rows[rows?.length - 1]?.displayOrder) {
       newErrors.displayOrderErr = "required";
       isValid = false;
     }
-    if (rows?.length > 0 && !rows[rows?.length - 1]?.widgetWidth) {
+    if (radioValues?.isLayout !== 'Yes' && rows?.length > 0 && !rows[rows?.length - 1]?.widgetWidth) {
       newErrors.widgetWidthErr = "required";
       isValid = false;
     }
-    if (rows?.length > 0 && !rows[rows?.length - 1]?.widgetHeight) {
+    if (radioValues?.isLayout !== 'Yes' && rows?.length > 0 && !rows[rows?.length - 1]?.widgetHeight) {
       newErrors.widgetHeightErr = "required";
       isValid = false;
     }
@@ -525,10 +577,10 @@ const TabMaster = () => {
 
   const reset = () => {
     setValues({
-      "tabFor": "", "tabNameDisplay": "", "tabNameInternal": "", "parentTab": "", "ellipseInDisplay": "",
+      "tabFor": dashFor, "tabNameDisplay": "", "tabNameInternal": "", "parentTab": "", "ellipseInDisplay": "",
       "tabIconImage": "", "iconName": "",
       //tab details
-      "tabNameFontWeight": "", "tabDetailBgColor": "", "tabTopPadding": "", "buttonMarginHeading": "",
+      "tabNameFontWeight": "", "tabDetailBgColor": "#ffffff", "tabTopPadding": "", "buttonMarginHeading": "",
       "tabNameFontSize": "", "tabNameTxtDecorat": "", "tabDetailTitleColor": "",
       //parameter detail
       "parameterOption": "1", "loadOption": "ONWINDOWLOAD", "paraComboBgColor": "", "paraComboFontColor": "", "paraLabelFontColor": "", "paraRemark": "",
@@ -546,7 +598,7 @@ const TabMaster = () => {
       //tab details
       "showTabNameInDetail": "Yes", "widgetMaxMin": "",
       //footer detail
-      "isLegendCollapes": "Yes", "isMarqueeReq": "No", "isLegendBorderReq": "Yes",
+      "isLegendCollapes": "Yes", "isMarqueeReq": "No", "isLegendBorderReq": "Yes","isLayout":"No"
     })
     setActionMode('home');
     setShowTabsTable(false);
@@ -554,12 +606,14 @@ const TabMaster = () => {
     setTabIndex(1);
     // setTabName({ value: 1, label: "About Widget" })
     setTabName({ value: 1, label: "About Tab" });
-    setErrors({ tabForErr: "", tabNameDisplayErr: "", tabNameInternalErr: "", tabNameFontWeightErr: "", tabNameFontSizeErr: "", tabNameTxtDecoratErr: "", showTabNameInDetailErr: "" });
+    setErrors({ tabForErr: "", tabNameDisplayErr: "", tabNameInternalErr: "", tabNameFontWeightErr: "", tabNameFontSizeErr: "", tabNameTxtDecoratErr: "", showTabNameInDetailErr: "",tabLayoutErr:"" });
     localStorage.removeItem('values');
     localStorage.removeItem('radio');
     setLoading(false)
     setRows([{ rptId: "", displayOrder: "", widgetWidth: "", widgetHeight: "0", widgetColor: "", widgetDisplay: "", sectionId: "1", animation: "" }])
     // setIsInputChanged(false)
+        setTablayout([]);
+    dispatch(setPopupData([]));
   }
 
   const column = [
@@ -633,7 +687,7 @@ const TabMaster = () => {
               <TabDetails handleValueChange={handleValueChange} handleRadioChange={handleRadioChange} radioValues={radioValues} values={values} errors={errors} dt={dt} />
             }
             {tabName?.value === 3 &&
-              <WidgetMapping handleValueChange={handleValueChange} handleRadioChange={handleRadioChange} radioValues={radioValues} values={values} widgetDrpData={widgetDrpData} setValues={setValues} rows={rows} setRows={setRows} errors={errors} setErrors={setErrors} dt={dt} />
+              <WidgetMapping handleValueChange={handleValueChange} handleRadioChange={handleRadioChange} radioValues={radioValues} values={values} widgetDrpData={widgetDrpData} setValues={setValues} rows={rows} setRows={setRows} errors={errors} setErrors={setErrors} dt={dt} setTablayout={setTablayout} tabLayout={tabLayout}/>
             }
             {tabName?.value === 4 &&
               <ParamsDetail handleValueChange={handleValueChange} values={values} parameterDrpData={parameterDrpData} pageName={'tab'} availableOptions={availableOptions} setAvailableOptions={setAvailableOptions} selectedOptions={selectedOptions} setSelectedOptions={setSelectedOptions} dt={dt} />

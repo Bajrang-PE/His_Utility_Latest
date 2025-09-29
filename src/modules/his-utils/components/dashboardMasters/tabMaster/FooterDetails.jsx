@@ -2,6 +2,7 @@ import React from 'react'
 import InputField from '../../commons/InputField'
 import InputSelect from '../../commons/InputSelect'
 import { parameterAlignment } from '../../../localData/DropDownData';
+import { sanitizeInput } from '../../../utils/commonFunction';
 
 const FooterDetails = (props) => {
     const { handleValueChange, handleRadioChange, radioValues, values,dt } = props;
@@ -74,6 +75,7 @@ const FooterDetails = (props) => {
                                 rows="2"
                                 onChange={handleValueChange}
                                 value={values?.footerQuery}
+                                //  value={sanitizeInput(values?.footerQuery, true)}
                             ></textarea>
                         </div>
                     </div>
@@ -161,6 +163,7 @@ const FooterDetails = (props) => {
                                 rows="2"
                                 onChange={handleValueChange}
                                 value={values?.footerText}
+                                // value={sanitizeInput(values?.footerText, true)}
                             ></textarea>
                         </div>
                     </div>

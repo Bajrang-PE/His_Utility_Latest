@@ -1080,3 +1080,22 @@ label {
   /* border-bottom: 1px solid #474646; */
   text-align: center;
 }
+
+
+/* ------------------------------------------islayout preview------------------------------------- */
+
+.layout-help-docs {
+  position: absolute;
+  right: 2%;
+  top: 15%;
+}
+
+.layouthw {
+  height: 100%;
+  width: 100%;
+}
+
+.Wrapper__select {
+  padding: .5rem 1rem !important;
+  border-radius: 1rem !important;
+}

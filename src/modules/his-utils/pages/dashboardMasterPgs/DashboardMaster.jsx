@@ -61,10 +61,12 @@ const DashboardMaster = () => {
   ]);
 
   useEffect(() => {
-    if (dashboardForDt?.length === 0) { getDashboardForDrpData(); }
-    if (!singleConfigData) {
-      getDashConfigData()
-    }
+    const init = async () => {
+      await getDashConfigData();
+      if (dashboardForDt?.length === 0) { getDashboardForDrpData(); }
+    };
+
+    init();
   }, [])
 
 
@@ -181,7 +183,6 @@ const DashboardMaster = () => {
     }
     // setIsInputChanged(true)
   }
-
   useEffect(() => {
     if (singleData?.length > 0) {
       setLoading(true)
@@ -222,7 +223,7 @@ const DashboardMaster = () => {
 
       setRadioValues({
         ...radioValues,
-        isPrintBtnReq: jsonData?.printButton, // 
+        isPrintBtnReq: jsonData?.printButton || 'Yes', // 
         dashboardTheme: jsonData?.dashboardTheme,  //
 
         //tab  
@@ -231,7 +232,7 @@ const DashboardMaster = () => {
         isSidebarCollapse: jsonData?.isSidebarCollapse,  //
 
         //header  
-        isHeaderReq: jsonData?.isHeaderRequired,  //
+        isHeaderReq: jsonData?.isHeaderRequired && jsonData?.isHeaderRequired !== '0' ? jsonData?.isHeaderRequired : 'No',  //
         showHeader: jsonData?.showHeader,  //
         showHeaderInGlobalDash: jsonData?.showHeaderGlobalDashboardOnly,  //
         rptHeaderTypePdfExl: jsonData?.isStaticHeaderRequired, // 

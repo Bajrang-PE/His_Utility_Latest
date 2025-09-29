@@ -12,24 +12,27 @@ const PopUpWidget = (props) => {
 
     const [widgetData, setWidgetData] = useState([]);
     const [searchParams] = useSearchParams();
-    //    const dashboardFor = atob(searchParams.get("dashboardFor"));
-    // const encIFUrl = searchParams.get("dbfhttf");
-    // const groupId = encIFUrl ? atob(getEncryptedParamValue(encIFUrl, "groupId")) : '';
-    // const dashboardFor = encIFUrl ? atob(getEncryptedParamValue(encIFUrl, "dashboardFor")) : '';
+    const groupId = atob(searchParams.get("groupId"));
+    const dashboardFor = atob(searchParams.get("dashboardFor"));
 
-    let groupId = ''
-    let dashboardFor = ''
+    // const [groupId, setGroupId] = useState('');
+    // const [dashboardFor, setDashboardFor] = useState('');
 
-    useEffect(() => {
-        if (searchParams.get("groupId") && searchParams.get("dashboardFor")) {
-            groupId = atob(searchParams.get("groupId"));
-            dashboardFor = atob(searchParams.get("dashboardFor"));
-        } else if (searchParams.get("dbfhttf")) {
-            const encIFUrl = searchParams.get("dbfhttf");
-            groupId = encIFUrl ? atob(getEncryptedParamValue(encIFUrl, "groupId")) : '';
-            dashboardFor = encIFUrl ? atob(getEncryptedParamValue(encIFUrl, "dashboardFor")) : '';
-        }
-    }, [])
+    // useEffect(() => {
+    //     if (searchParams.get("groupId") && searchParams.get("dashboardFor")) {
+    //         const gId = atob(searchParams.get("groupId"));
+    //         const dFor = atob(searchParams.get("dashboardFor"));
+    //         setGroupId(gId);
+    //         setDashboardFor(dFor);
+
+    //     } else if (searchParams.get("dbfhttf")) {
+    //         const encIFUrl = searchParams.get("dbfhttf");
+    //         const gId = encIFUrl ? atob(getEncryptedParamValue(encIFUrl, "groupId")) : '';
+    //         const dFor = encIFUrl ? atob(getEncryptedParamValue(encIFUrl, "dashboardFor")) : '';
+    //         setGroupId(gId);
+    //         setDashboardFor(dFor);
+    //     }
+    // }, [searchParams])
 
     const getWidgetData = (widid) => {
         fetchData(`/hisutils/getWdgtSnglData?id=${widid}&dashboardFor=${dashboardFor}&masterName=DashboardWidgetMst`).then(data => {
@@ -42,10 +45,10 @@ const PopUpWidget = (props) => {
     }
 
     useEffect(() => {
-        if (popupConfig && popupConfig?.widgetId) {
+        if (popupConfig && popupConfig?.widgetId && dashboardFor) {
             getWidgetData(popupConfig?.widgetId)
         }
-    }, [popupConfig])
+    }, [popupConfig, dashboardFor])
 
 
     return (

@@ -1,4 +1,4 @@
-import React, { lazy, Suspense, useCallback, useContext, useEffect, useState } from 'react';
+import React, { lazy, Suspense, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import WidgetDash from './WidgetDash';
 import { HISContext } from '../../contextApi/HISContext';
 import FooterText from '../commons/FooterText';
@@ -8,6 +8,9 @@ import { useSearchParams } from 'react-router-dom';
 import { fetchPostData } from '../../../../utils/HisApiHooks';
 import { decryptData } from '../../../../utils/SecurityConfig';
 import { getEncryptedParamValue } from '../../../../utils/Security';
+import { useDispatch } from 'react-redux';
+import { setWidgitStyle } from '../../Features/WidgitEngine/WidgitViewerSlice';
+import { themeClasses } from '../dragdrop/dashboardSettings';
 
 const PdfDownload = lazy(() => import('../commons/PdfDownload'));
 const Parameters = lazy(() => import('./Parameters'));
@@ -18,28 +21,31 @@ const TabDash = React.memo(() => {
     const [widWithoutLinked, setWidWithoutLinked] = useState([]);
     const [allWidgetData, setAllWidgetData] = useState([]);
     const [tabLoading, setTabloading] = useState(false);
+    const [paramsForPreview, setParamsForPriview] = useState('');
 
     const [searchParams] = useSearchParams();
 
-    //    const groupId = atob(searchParams.get("groupId"));
-    // const dashboardFor = atob(searchParams.get("dashboardFor"));
-    // const encIFUrl = searchParams.get("dbfhttf");
-    // const groupId = encIFUrl ? atob(getEncryptedParamValue(encIFUrl, "groupId")) : '';
-    // const dashboardFor = encIFUrl ? atob(getEncryptedParamValue(encIFUrl, "dashboardFor")) : '';
+    const groupId = atob(searchParams.get("groupId"));
+    const dashboardFor = atob(searchParams.get("dashboardFor"));
 
-    let groupId = ''
-    let dashboardFor = ''
+    // const [groupId, setGroupId] = useState('');
+    // const [dashboardFor, setDashboardFor] = useState('');
 
-    useEffect(() => {
-        if (searchParams.get("groupId") && searchParams.get("dashboardFor")) {
-            groupId = atob(searchParams.get("groupId"));
-            dashboardFor = atob(searchParams.get("dashboardFor"));
-        } else if (searchParams.get("dbfhttf")) {
-            const encIFUrl = searchParams.get("dbfhttf");
-            groupId = encIFUrl ? atob(getEncryptedParamValue(encIFUrl, "groupId")) : '';
-            dashboardFor = encIFUrl ? atob(getEncryptedParamValue(encIFUrl, "dashboardFor")) : '';
-        }
-    }, [])
+    // useEffect(() => {
+    //     if (searchParams.get("groupId") && searchParams.get("dashboardFor")) {
+    //         const gId = atob(searchParams.get("groupId"));
+    //         const dFor = atob(searchParams.get("dashboardFor"));
+    //         setGroupId(gId);
+    //         setDashboardFor(dFor);
+
+    //     } else if (searchParams.get("dbfhttf")) {
+    //         const encIFUrl = searchParams.get("dbfhttf");
+    //         const gId = encIFUrl ? atob(getEncryptedParamValue(encIFUrl, "groupId")) : '';
+    //         const dFor = encIFUrl ? atob(getEncryptedParamValue(encIFUrl, "dashboardFor")) : '';
+    //         setGroupId(gId);
+    //         setDashboardFor(dFor);
+    //     }
+    // }, [searchParams])
 
     const footerText = activeTab?.jsonData?.footerText || "";
 
@@ -51,9 +57,7 @@ const TabDash = React.memo(() => {
                 dashboardFor: dashFor || 'CENTRAL DASHBOARD',
                 masterName: "DashboardWidgetMst"
             };
-
             const data = await fetchPostData("/hisutils/getWdgtMultipleData", val);
-
 
             if (data?.status === 1) {
                 setAllWidgetData(data?.data);
@@ -72,7 +76,7 @@ const TabDash = React.memo(() => {
     useEffect(() => {
         const loadWidgets = async () => {
             setTabloading(true)
-            if (activeTab?.jsonData?.lstDashboardWidgetMapping?.length > 0) {
+            if (activeTab?.jsonData?.lstDashboardWidgetMapping?.length > 0 || (activeTab?.jsonData?.isLayoutWithPreview === "Yes" && activeTab?.jsonData?.droppedComponents?.length > 0)) {
                 setParamsValues({
                     tabParams: {},
                     widgetParams: {},
@@ -81,12 +85,29 @@ const TabDash = React.memo(() => {
                     tabParams: {},
                     widgetParams: {},
                 })
-                const widgetIds = activeTab?.jsonData?.lstDashboardWidgetMapping;
 
-                const sortedWidgets = [...widgetIds].sort((a, b) => parseInt(a.displayOrder) - parseInt(b.displayOrder));
-                // const availableWidgets = sortedWidgets
-                //     ?.map(wid => allWidgetData?.find(widget => widget?.rptId == wid?.rptId))
-                //     ?.filter(widget => widget);
+                let widgetIds = [];
+                let sortedWidgets = [];
+
+                if (activeTab?.jsonData?.isLayoutWithPreview !== "Yes") {
+                    widgetIds = activeTab?.jsonData?.lstDashboardWidgetMapping;
+                    sortedWidgets = [...widgetIds].sort((a, b) => parseInt(a.displayOrder) - parseInt(b.displayOrder));
+                } else {
+                    const idw = activeTab?.jsonData?.droppedComponents?.length > 0 && activeTab?.jsonData?.droppedComponents?.filter(dt => dt?.type === "Widgit")
+                        .map(item => item.id);
+
+                    const idp = activeTab?.jsonData?.droppedComponents?.length > 0
+                        ? activeTab.jsonData.droppedComponents
+                            .filter(dt => dt?.type === "Parameter")
+                            .map(item => item.id)
+                        // .join(",")
+                        : [];
+                    widgetIds = idw;
+                    sortedWidgets = widgetIds?.map((dt) => ({
+                        rptId: dt
+                    }));
+                    setParamsForPriview(idp);
+                }
 
                 const availableWidgets = await getAllAvailableWidgets(sortedWidgets?.map(dt => dt?.rptId), dashboardFor);
 
@@ -162,18 +183,91 @@ const TabDash = React.memo(() => {
         };
 
         loadWidgets();
-    }, [activeTab]);
+    }, [activeTab, dashboardFor]);
 
     const onPrevClick = () => {
         setActiveTab(prevKpiTab[0])
         setPrevKpiTab([])
     }
 
+    const dispatch = useDispatch();
+    const gridStyles = useRef(themeClasses.minimalistic);
+    const selectedStyle = 'minimalistic';
+    let theme = [];
+
+    switch (selectedStyle) {
+        case 'minimalistic':
+            theme = [
+                'minimalistic__grid-item',
+                'minimalistic__background',
+                'minimalistic__grid',
+            ];
+            dispatch(
+                setWidgitStyle([
+                    'minimalistic__grid-widgit-wrapper',
+                    'minimalistic__grid-widgit-wrapper--table',
+                ])
+            );
+            gridStyles.current = themeClasses.minimalistic;
+            break;
+        case 'frostWhite':
+            theme = [
+                'frostWhite__grid-item',
+                'frostWhite__background',
+                'frostWhite__grid',
+            ];
+            dispatch(
+                setWidgitStyle([
+                    'frostWhite__grid-widgit-wrapper',
+                    'frostWhite__grid-widgit-wrapper--table',
+                ])
+            );
+            gridStyles.current = themeClasses.frostWhite;
+            break;
+        case 'blackGold':
+            theme = [
+                'blackGold__grid-item',
+                'blackGold__background',
+                'blackGold__grid',
+            ];
+            dispatch(
+                setWidgitStyle([
+                    'blackGold__grid-widgit-wrapper',
+                    'blackGold__grid-widgit-wrapper--table',
+                ])
+            );
+            gridStyles.current = themeClasses.blackGold;
+            break;
+        case 'emeraldGreen':
+            theme = [
+                'emeraldGreen__grid-item',
+                'emeraldGreen__background',
+                'emeraldGreen__grid',
+            ];
+            dispatch(
+                setWidgitStyle([
+                    'emeraldGreen__grid-widgit-wrapper',
+                    'emeraldGreen__grid-widgit-wrapper--table',
+                ])
+            );
+            gridStyles.current = themeClasses.emeraldGreen;
+            break;
+    }
+
+
+    const bgclr = activeTab?.jsonData?.tabBackgroundColor || "#ffffff";
+    const titleclr = activeTab?.jsonData?.tabTitleFontColor || "#000000";
 
     return (
         <>
             {tabLoading ? <h1>Loading...</h1> : (
-                <div>
+                <div
+                    style={{
+                        height: "100%",
+                        background: bgclr,
+                        padding: "10px 20px"
+                    }}
+                >
                     {prevKpiTab?.length > 0 &&
                         <div className=''>
                             <button className='btn btn-sm me-1 back-button-kpi' onClick={onPrevClick}>
@@ -198,27 +292,18 @@ const TabDash = React.memo(() => {
                         </>
                     )}
 
-                    <h4 className='text-center'>{dt(activeTab?.jsonData?.dashboardName)}</h4>
+                    <h4 className='text-center' style={{ color: titleclr }}>{dt(activeTab?.jsonData?.dashboardName)}</h4>
 
-                    {activeTab?.jsonData?.allParameters && (
-                        <div className='parameter-box'>
-                            <Suspense
-                                fallback={
-                                    <div className="pt-3 text-center">
-                                        {dt('Loading')}...
-                                    </div>
-                                }
+                    {activeTab?.jsonData?.isLayoutWithPreview && activeTab?.jsonData?.isLayoutWithPreview === "Yes" ?
+                        <>
+                            <CustomGrid
+                                layout={activeTab?.jsonData?.tabLayout}
+                                // layout={activeTab?.jsonData?.droppedComponents?.map((dt)=>dt?.layout)}
+                                cssClass={[theme?.at(1), theme?.at(2)]}
+
                             >
-                                <Parameters params={activeTab?.jsonData?.allParameters} dashFor={activeTab?.dashboardFor} scope={'tabParams'} />
-                            </Suspense>
-                        </div>
-                    )}
-
-                    <div className='row mt-4'>
-                        {widWithoutLinked?.length > 0 && widWithoutLinked.map((widget, index) => (
-                            <React.Fragment key={index}>
-                                {widget &&
-                                    <>
+                                {paramsForPreview?.length > 0 && paramsForPreview?.map((param) => (
+                                    <div className='parameter-box' gridKey={param} key={param}>
                                         <Suspense
                                             fallback={
                                                 <div className="pt-3 text-center">
@@ -226,20 +311,128 @@ const TabDash = React.memo(() => {
                                                 </div>
                                             }
                                         >
-                                            <WidgetDash widgetDetail={widget} presentWidgets={presentWidgets} presentTabs={presentTabs} />
+                                            <Parameters params={param} dashFor={activeTab?.dashboardFor} scope={'tabParams'} isLayoutWithPreview={true} />
                                         </Suspense>
-                                    </>
+                                    </div>
+                                ))
                                 }
-                            </React.Fragment>
-                        ))
-                        }
-                    </div>
+                                {/* <div className='row mt-4'> */}
+
+                                {widWithoutLinked?.length > 0 && widWithoutLinked.map((widget, index) => (
+                                    <div gridKey={String(widget.rptId)} key={widget.rptId} style={{ height: "100%", width: "100%" }}>
+                                        {widget &&
+                                            <>
+                                                <Suspense
+                                                    fallback={
+                                                        <div className="pt-3 text-center">
+                                                            {dt('Loading')}...
+                                                        </div>
+                                                    }
+                                                >
+                                                    <WidgetDash widgetDetail={widget} presentWidgets={presentWidgets} presentTabs={presentTabs} isLayoutWithPreview={true} />
+                                                </Suspense>
+                                            </>
+                                        }
+                                    </div>
+                                ))
+                                }
+                                {/* </div> */}
+                            </CustomGrid>
+                        </>
+                        :
+                        <>
+                            {activeTab?.jsonData?.allParameters && (
+                                <div className='parameter-box'>
+                                    <Suspense
+                                        fallback={
+                                            <div className="pt-3 text-center">
+                                                {dt('Loading')}...
+                                            </div>
+                                        }
+                                    >
+                                        <Parameters params={activeTab?.jsonData?.allParameters} dashFor={activeTab?.dashboardFor} scope={'tabParams'} isLayoutWithPreview={false} />
+                                    </Suspense>
+                                </div>
+                            )}
+
+                            <div className='row mt-4'>
+                                {widWithoutLinked?.length > 0 && widWithoutLinked.map((widget, index) => (
+                                    <React.Fragment key={index}>
+                                        {widget &&
+                                            <>
+                                                <Suspense
+                                                    fallback={
+                                                        <div className="pt-3 text-center">
+                                                            {dt('Loading')}...
+                                                        </div>
+                                                    }
+                                                >
+                                                    <WidgetDash widgetDetail={widget} presentWidgets={presentWidgets} presentTabs={presentTabs} isLayoutWithPreview={false} />
+                                                </Suspense>
+                                            </>
+                                        }
+                                    </React.Fragment>
+                                ))
+                                }
+                            </div>
+                        </>
+                    }
+
                     <FooterText footerText={footerText} />
                 </div>
             )}
-
         </>
     );
 });
+
+export function CustomGrid({ layout, children, cssClass }) {
+    const GRID_COLS = 10;
+    const GRID_ROW_HEIGHT = 40;
+
+    const maxRow = layout.reduce(
+        (max, item) => Math.max(max, item.y + item.h),
+        0
+    );
+
+    const gridStyle = {
+        display: 'grid',
+        gridTemplateColumns: `repeat(${GRID_COLS}, 1fr)`,
+        gridTemplateRows: `repeat(${maxRow}, ${GRID_ROW_HEIGHT}px)`,
+        gap: '8px',
+        width: '100%',
+        height: '100%',
+    };
+
+    // Create a map from child keys to child elements for quick lookup
+    const childrenMap = {};
+    React.Children.forEach(children, (child) => {
+        if (child?.props?.gridKey) {
+            childrenMap[String(child.props.gridKey)] = child;
+        }
+    });
+
+    return (
+        <div style={gridStyle} className={cssClass?.at(0)}>
+            {layout.map(({ i, x, y, w, h }) => {
+                const cleanKey = i;
+
+                return (
+                    <div
+                        key={cleanKey}
+                        style={{
+                            gridColumnStart: x + 1,
+                            gridColumnEnd: x + 1 + w,
+                            gridRowStart: y + 1,
+                            gridRowEnd: y + 1 + h,
+                        }}
+                        className={cssClass?.at(1)}
+                    >
+                        {childrenMap[cleanKey] || <div>Missing component for {i}</div>}
+                    </div>
+                );
+            })}
+        </div>
+    );
+}
 
 export default TabDash;

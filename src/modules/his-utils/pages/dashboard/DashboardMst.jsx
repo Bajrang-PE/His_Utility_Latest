@@ -16,20 +16,28 @@ const DashboardMst = () => {
     const [searchParams] = useSearchParams();
     const [presentTabs, setPresentTabs] = useState([]);
 
-    let groupId = ''
-    let dashboardFor = ''
+    const groupId = atob(searchParams.get("groupId"));
+    const dashboardFor = atob(searchParams.get("dashboardFor"));
 
-    useEffect(() => {
-        if (searchParams.get("groupId") && searchParams.get("dashboardFor")) {
-            groupId = atob(searchParams.get("groupId"));
-            dashboardFor = atob(searchParams.get("dashboardFor"));
-        } else if (searchParams.get("dbfhttf")) {
-            const encIFUrl = searchParams.get("dbfhttf");
-            groupId = encIFUrl ? atob(getEncryptedParamValue(encIFUrl, "groupId")) : '';
-            dashboardFor = encIFUrl ? atob(getEncryptedParamValue(encIFUrl, "dashboardFor")) : '';
-        }
-    }, [searchParams])
-    
+    // const [groupId, setGroupId] = useState('');
+    // const [dashboardFor, setDashboardFor] = useState('');
+
+    // useEffect(() => {
+    //     if (searchParams.get("groupId") && searchParams.get("dashboardFor")) {
+    //         const gId = atob(searchParams.get("groupId"));
+    //         const dFor = atob(searchParams.get("dashboardFor"));
+    //         setGroupId(gId);
+    //         setDashboardFor(dFor);
+
+    //     } else if (searchParams.get("dbfhttf")) {
+    //         const encIFUrl = searchParams.get("dbfhttf");
+    //         const gId = encIFUrl ? atob(getEncryptedParamValue(encIFUrl, "groupId")) : '';
+    //         const dFor = encIFUrl ? atob(getEncryptedParamValue(encIFUrl, "dashboardFor")) : '';
+    //         setGroupId(gId);
+    //         setDashboardFor(dFor);
+    //     }
+    // }, [searchParams])
+
 
     useEffect(() => {
         if (!singleConfigData) {
@@ -46,12 +54,12 @@ const DashboardMst = () => {
 
     const getAllAvailableTabs = useCallback(async (idArr, dashFor) => {
         try {
+
             const val = {
-                ids: idArr || [],
-                dashboardFor: dashFor || 'CENTRAL DASHBOARD',
-                masterName: "DashboardMst"
+                "ids": idArr || [],
+                "dashboardFor": dashFor,
+                "masterName": "DashboardMst"
             };
-            console.log(val,'valtabmulti')
             const data = await fetchPostData("/hisutils/gettabsMultipleData", val);
             if (data?.status === 1) {
                 setPresentTabs(data?.data);
@@ -72,7 +80,7 @@ const DashboardMst = () => {
             getDashboardData(groupId, dashboardFor);
             // getAllWidgetData(dashboardFor);
         }
-    }, [searchParams]);
+    }, [dashboardFor, groupId]);
 
 
     useEffect(() => {
@@ -138,7 +146,7 @@ const DashboardMst = () => {
                         )}
                     </Suspense>
 
-                    <main style={{ padding: "10px 20px", flex: 1, width: isTopBarLayout ? "" : "80%" }} >
+                    <main style={{  flex: 1, width: isTopBarLayout ? "" : "80%" }} >
                         {parameters &&
                             <div className='parameter-box'>
                                 <Suspense

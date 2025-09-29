@@ -1,0 +1,41 @@
+@use '../Util/variables' as *;
+@use 'sass:color';
+
+.tab__container {
+  border-radius: 2rem;
+  overflow: hidden;
+  width: 90%;
+  margin-bottom: 3rem;
+
+  &-header {
+    display: flex;
+    background-color: $Light-Teal;
+    transition: all 0.3s ease;
+  }
+
+  &-button {
+    padding: 1rem 2rem;
+    flex: 1;
+    font-family: $secondary-font;
+    cursor: pointer;
+    background: none;
+    letter-spacing: 2px;
+    font-size: 1.4rem;
+    border: none;
+
+    outline: none;
+    font-weight: 500;
+    border-bottom: 2px solid transparent;
+    transition: all 0.3s ease;
+
+    &:hover {
+      background-color: color.adjust($Light-Teal, $lightness: -10%);
+    }
+
+    &.active {
+      background-color: $Dark-Teal;
+      color: $pure-white;
+      font-weight: 600;
+    }
+  }
+}

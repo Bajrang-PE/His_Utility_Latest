@@ -2,11 +2,14 @@ import React, { createContext, useState } from 'react'
 import { DrpDataValLab, ToastAlert } from '../utils/commonFunction';
 import { fetchData, fetchPostData } from '../../../utils/HisApiHooks';
 import axios from 'axios';
+import { useSearchParams } from 'react-router-dom';
+import { getEncryptedParamValue } from '../../../utils/Security';
 
 export const HISContext = createContext();
 
 const HISContextData = ({ children }) => {
   //GLOBALS
+  const [searchParams] = useSearchParams();
   const [showDataTable, setShowDataTable] = useState(false);
   const [selectedOption, setSelectedOption] = useState([]);
   const [actionMode, setActionMode] = useState('home');
@@ -67,10 +70,10 @@ const HISContextData = ({ children }) => {
 
   const fetchTranslations = async (lang) => {
     try {
-      const response = await axios.get(`/usm/translations/getAllTranslatedData`);
-      const data = await response?.data?.data;
+      // const response = await axios.get(`/usm/translations/getAllTranslatedData`);
+      // const data = await response?.data?.data;
       // setTranslations(prev => ({ ...prev, [lang]: data }));
-      setTranslations(data);
+      setTranslations([]);
     } catch (error) {
       console.error('Error fetching translations:', error);
     }
@@ -194,10 +197,26 @@ const HISContextData = ({ children }) => {
     })
   }
 
-  const getDashConfigData = () => {
-    fetchData("/hisutils/dashboard-configurations").then((data) => {
+  const getDashConfigData = async () => {
+    try {
+      const isToken = localStorage.getItem('accessToken');
+
+      let userName = "";
+
+      // Extract params from URL
+      if (searchParams.get("userName")) {
+        userName = searchParams.get("userName");
+      } else if (searchParams.get("dbfhttf")) {
+        const encIFUrl = searchParams.get("dbfhttf");
+        userName = encIFUrl ? atob(getEncryptedParamValue(encIFUrl, "userName")) : "";
+      }
+
+      const data = await fetchData("/hisutils/dashboard-configurations",
+        !isToken ? { 'userName': userName } : null
+      );
+
       if (data?.status === 1) {
-        setSingleConfigData(data?.data)
+        setSingleConfigData(data?.data);
 
         const config = data?.data?.databaseConfigVO;
         const jndiKeys = [
@@ -215,14 +234,26 @@ const HISContextData = ({ children }) => {
               : null;
           })
           .filter(Boolean);
-
-        setJndiServerDrpData(jndiServerOptions)
-
+        setJndiServerDrpData(jndiServerOptions);
       } else {
-        setSingleConfigData(null)
+        setSingleConfigData(null);
       }
-    })
-  }
+
+      if (data?.headers && !isToken) {
+        const token = data?.headers?.authorization;
+        if (token) {
+          localStorage.setItem("accessToken", token);
+        }
+        return token;
+      } else {
+        return null;
+      }
+    } catch (error) {
+      console.error("Error in getDashConfigData:", error);
+      return null;
+    }
+  };
+
 
   const clearAllCache = () => {
     fetchPostData('/hisutils/clearCache').then((data) => {
@@ -278,7 +309,7 @@ const HISContextData = ({ children }) => {
       //dashboard submenu
       dashboardSubmenuData, getDashboardSubmenuData,
 
-      presentWidgets, setPresentWidgets,presentTabsDash, setPresentTabsDash,
+      presentWidgets, setPresentWidgets, presentTabsDash, setPresentTabsDash,
 
       //language provider
       language,

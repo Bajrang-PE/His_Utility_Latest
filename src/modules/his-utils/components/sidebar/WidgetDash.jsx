@@ -8,7 +8,7 @@ const GraphDash = lazy(() => import('./GraphDash'));
 const MapDash = lazy(() => import('./MapDash'));
 const IframeDash = lazy(() => import('./IframeDash'));
 
-const WidgetDash = React.memo(({ widgetDetail, presentWidgets, presentTabs, pk }) => {
+const WidgetDash = React.memo(({ widgetDetail, presentWidgets, presentTabs, pk ,isLayoutWithPreview}) => {
 
     const [widgetData, setWidgetData] = useState({});
     const [linkedWidget, setLinkedWidget] = useState();
@@ -47,12 +47,18 @@ const WidgetDash = React.memo(({ widgetDetail, presentWidgets, presentTabs, pk }
 
     const renderWidget = (data) => {
         switch (data?.reportViewed) {
-            case 'KPI': return <KpiDash widgetData={data} presentTabs={presentTabs} />;
-            case 'Tabular': return <TabularDash widgetData={data} setWidgetData={setWidgetData} levelData={levelData} setLevelData={setLevelData} pkColumn={pkColumn} setPkColumn={handleSetPkColumn} />;
-            case 'Graph': return <GraphDash widgetData={data} setWidgetData={setWidgetData} pkColumn={pkColumn} setPkColumn={handleSetPkColumn} />;
+            case 'KPI': return <KpiDash widgetData={data} presentTabs={presentTabs} isLayoutWithPreview={isLayoutWithPreview}/>;
+
+            case 'Tabular': return <TabularDash widgetData={data} setWidgetData={setWidgetData} levelData={levelData} setLevelData={setLevelData} pkColumn={pkColumn} setPkColumn={handleSetPkColumn} isLayoutWithPreview={isLayoutWithPreview} presentTabs={presentTabs}/>;
+
+            case 'Graph': return <GraphDash widgetData={data} setWidgetData={setWidgetData} pkColumn={pkColumn} setPkColumn={handleSetPkColumn} isLayoutWithPreview={isLayoutWithPreview}/>;
+
             case 'Iframe': return <IframeDash widgetData={data} />;
+
             case 'Other_Link': return <OtherLinkDash widgetData={data} />;
+
             case 'News_Ticker': return <NewsTickerDash widgetData={data} />;
+
             case 'Criteria_Map': return (
                 <div style={{ position: 'relative', zIndex: 1 }}>
                     <MapDash widgetData={data} setWidgetData={setWidgetData} pkColumn={pkColumn} setPkColumn={handleSetPkColumn} levelData={levelData} setLevelData={setLevelData} />
@@ -99,7 +105,7 @@ const WidgetDash = React.memo(({ widgetDetail, presentWidgets, presentTabs, pk }
                                                 return (
                                                     <div
                                                         key={childWidgetId}
-                                                        className={`col-sm-${widgetWidth}`}
+                                                        className={`${isLayoutWithPreview ? 'layouthw' : `col-sm-${widgetWidth}`}`}
                                                         style={{ padding: "5px 3px" }}
                                                     >
                                                         {renderWidget(modifiedWidget)}
@@ -116,11 +122,12 @@ const WidgetDash = React.memo(({ widgetDetail, presentWidgets, presentTabs, pk }
                             </>
                         ) : (
                             // Normal widget rendering with col class
-                            <div
-                                className={`col-sm-${presentTabs?.find(dt => dt?.rptId == widgetData?.rptId)?.widgetWidth || 12}`}
-                                style={{ padding: "5px 3px"
-                                    
-                                 }}
+                             <div
+                                className={`${isLayoutWithPreview ? 'layouthw' : `col-sm-${presentTabs?.find(dt => dt?.rptId == widgetData?.rptId)?.widgetWidth || 12}`} `}
+                                style={{
+                                    padding: "5px 3px"
+
+                                }}
                             >
                                 {renderWidget(widgetData)}
                             </div>
@@ -134,7 +141,7 @@ const WidgetDash = React.memo(({ widgetDetail, presentWidgets, presentTabs, pk }
                     const linked = presentWidgets?.find(w => w.rptId === id);
                     return linked ?
 
-                        <div className={`col-sm-${presentTabs?.filter(dt => dt?.rptId == linkedWidget[0])[0]?.widgetWidth}`}
+                        <div key={id} className={`${isLayoutWithPreview ? 'layouthw' : `col-sm-${presentTabs?.filter(dt => dt?.rptId == linkedWidget[0])[0]?.widgetWidth}`}`}
                             style={{
                                 padding: "5px 3px"
                             }}

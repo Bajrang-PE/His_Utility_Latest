@@ -1,6 +1,5 @@
 function DatabaseSelector({ dispatcher }) {
   function handleDBForm(dbType) {
-    console.log("working..." + dbType);
     dispatcher({ type: dbType });
   }
 

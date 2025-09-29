@@ -27,9 +27,9 @@ const OtherLinkDash = ({ widgetData }) => {
 
             </div>
 
-            <ul class="list-group m-1">
+            <ul className="list-group m-1">
                 {linkData?.map((link, index) =>
-                    <li class="list-group-item list-group-item-primary list-group-item-action p-1 pointer" key={index} onClick={() => onLinkClicked(link)}>{dt(link?.otherLinkName)}</li>
+                    <li className="list-group-item list-group-item-primary list-group-item-action p-1 pointer" key={index} onClick={() => onLinkClicked(link)}>{dt(link?.otherLinkName)}</li>
                 )}
             </ul>
             <b><h6 className='header-devider mt-2'></h6></b>

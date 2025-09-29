@@ -3,6 +3,7 @@ import './HisUtils.css'
 import { lazy } from "react";
 import DashboardMst from "./pages/dashboard/DashboardMst";
 import Tabular from "./components/sidebar/Tabular";
+import Auth from "../../Auth";
 
 const DbConfigMaster = lazy(() => import('./pages/dashboardMasterPgs/DbConfigMaster'));
 const ParameterMaster = lazy(() => import('./pages/dashboardMasterPgs/ParameterMaster'));
@@ -17,6 +18,20 @@ const HisRoutes = () => {
 
     return (
         <Routes>
+            {/* <Route exact path="/dashboard-configuration-master" name="Register Page" element={<Auth comp={DbConfigMaster} />} />
+            <Route exact path="/" name="login" element={<Auth comp={DbConfigMaster} />} />
+            <Route exact path="/parameter-master" name="login" element={<Auth comp={ParameterMaster} />} />
+            <Route exact path="/dashboard-submenu-master" name="login" element={<Auth comp={DbSubmenuMaster} />} />
+            <Route exact path="/service-user-master" name="login" element={<Auth comp={ServiceUserMaster} />} />
+            <Route exact path="/data-service-master" name="login" element={<Auth comp={DataServiceMaster} />} />
+            <Route exact path="/widget-master" name="login" element={<Auth comp={WidgetMaster} />} />
+            <Route exact path="/tab-master" name="Tab Master" element={<Auth comp={TabMaster} />} />
+            <Route exact path="/dashboard-master" name="Dashboard Master" element={<Auth comp={DashboardMaster} />} />
+            <Route exact path="/dashboard" name="Dashboard Master" element={<Auth comp={DashboardMst} />} />
+            <Route exact path="/widget" name="Dashboard Master" element={<Auth comp={Tabular} />} /> */}
+
+
+
             <Route exact path="/dashboard-configuration-master" name="Register Page" element={<DbConfigMaster />} />
             <Route exact path="/" name="login" element={<DbConfigMaster />} />
             <Route exact path="/parameter-master" name="login" element={<ParameterMaster />} />
@@ -29,6 +44,7 @@ const HisRoutes = () => {
             <Route exact path="/dashboard" name="Dashboard Master" element={<DashboardMst />} />
             <Route exact path="/widget" name="Dashboard Master" element={<Tabular />} />
         </Routes>
+
     )
 }
 

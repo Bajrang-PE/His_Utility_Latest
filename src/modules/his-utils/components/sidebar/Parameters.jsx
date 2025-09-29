@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useEffect, useState } from "react";
+import React, { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { HISContext } from "../../contextApi/HISContext";
 import InputField from "../commons/InputField";
 import Select from "react-select";
@@ -10,36 +10,35 @@ import { fetchPostData } from "../../../../utils/HisApiHooks";
 import { decryptData } from "../../../../utils/SecurityConfig";
 import { getEncryptedParamValue } from "../../../../utils/Security";
 
-const Parameters = ({ params, scope, widgetId = null }) => {
+const usePrevious = (value) => {
+    const ref = useRef();
+    useEffect(() => {
+        ref.current = value;
+    }, [value]);
+    return ref.current;
+};
+
+const Parameters = ({ params, scope, widgetId = null, isLayoutWithPreview, setWidgetParams,widgetParams }) => {
     const { theme, setParamsValues, paramsValuesPro, setParamsValuesPro, setIsSearchQuery, activeTab, isSearchQuery, searchScope, setSearchScope, dt } = useContext(HISContext);
     const [presentParams, setPresentParams] = useState([]);
     const [selectedValues, setSelectedValues] = useState({});
     const [dropdownData, setDropdownData] = useState({});
-    const [hideParams, setHideParams] = useState(false)
+    const [hideParams, setHideParams] = useState(false);
     const [defaultValueIfEmpty, setDefaultValueIfEmpty] = useState('');
     const [queryParams] = useSearchParams();
 
-    // const dashFor = atob(queryParams.get('dashboardFor'));
-    // const encIFUrl = queryParams.get("dbfhttf");
-    // const groupId = encIFUrl ? atob(getEncryptedParamValue(encIFUrl, "groupId")) : '';
-    // const dashFor = encIFUrl ? atob(getEncryptedParamValue(encIFUrl, "dashboardFor")) : '';
+    const groupId = atob(queryParams.get("groupId"));
+    const dashFor = atob(queryParams.get("dashboardFor"));
 
-    let groupId = ''
-    let dashFor = ''
-
-    useEffect(() => {
-        if (queryParams.get("groupId") && queryParams.get("dashboardFor")) {
-            groupId = atob(queryParams.get("groupId"));
-            dashFor = atob(queryParams.get("dashboardFor"));
-        } else if (queryParams.get("dbfhttf")) {
-            const encIFUrl = queryParams.get("dbfhttf");
-            groupId = encIFUrl ? atob(getEncryptedParamValue(encIFUrl, "groupId")) : '';
-            dashFor = encIFUrl ? atob(getEncryptedParamValue(encIFUrl, "dashboardFor")) : '';
-        }
-    }, [])
+    const [parentId, setParentId] = useState([]);
+    const prevParams = usePrevious(paramsValuesPro);
 
     const [errors, setErrors] = useState({
     })
+
+    // console.log('paramsValuesPro', paramsValuesPro)
+    // console.log('presentParams', presentParams)
+    // console.log('dropdownData', dropdownData)
 
     const handleSetParamsValues = useCallback((values, type, widgetId = null) => {
         if (type === 'tabParams') {
@@ -61,6 +60,17 @@ const Parameters = ({ params, scope, widgetId = null }) => {
                     },
                 },
             }));
+
+            // setWidgetParams((prev) => ({
+            //     ...prev,
+            //     widgetParams: {
+            //         ...prev.widgetParams,
+            //         [widgetId]: {
+            //             ...(prev.widgetParams?.[widgetId] || {}),
+            //             ...values,
+            //         },
+            //     },
+            // }));
         }
     }, []);
 
@@ -97,6 +107,7 @@ const Parameters = ({ params, scope, widgetId = null }) => {
             const data = await fetchPostData("/hisutils/getparametertMultipleData", val);
             if (data?.status === 1) {
                 setPresentParams(data?.data);
+                setWidgetParams(data?.data?.map((dt) => ({ id: dt?.id, paraName: dt?.jsonData?.parameterDisplayName })))
             } else {
                 setPresentParams([]);
             }
@@ -155,6 +166,8 @@ const Parameters = ({ params, scope, widgetId = null }) => {
         setErrors(prev => ({ ...prev, [id]: "" }))
     };
 
+
+
     const getDateConstraint = (fieldId) => {
         if (!fieldId) return "";
         const field = document.getElementById(fieldId);
@@ -164,12 +177,42 @@ const Parameters = ({ params, scope, widgetId = null }) => {
         return "";
     };
 
-
-    const fetchDropdownData = async (query, parameterName, jndiS) => {
+    const fetchDropdownData = async (query, parameterName, jndiS, paraValue) => {
         if (!query) return;
         try {
-            const val = { query, params: {}, jndi: jndiS };
+            const regex = /#PARA#(\d+)#PARA#/g;
+            const match = regex.exec(query);
+            const paraId = match ? match[1] : null;
+
+            if (paraId) {
+                setParentId((prev) => {
+                    // if paraId already exists, return previous state
+                    if (prev.includes(paraId)) {
+                        return prev;
+                    }
+                    // else push new one
+                    return [...prev, paraId];
+                });
+            }
+
+            const val = {
+                query,
+                params: {},
+                jndi: jndiS,
+                strGroupParaId: paraId,
+                strGroupParaValue: paraValue ?? null
+                // strGroupParaValue:
+                //     scope === 'tabParams'
+                //         ? paramsValuesPro?.tabParams?.[paraId] ?? null
+                //         : scope === 'widgetParams'
+                //             ? paramsValuesPro?.widgetParams?.[paraId] ?? null
+                //             : null,
+            };
+            console.log('val', val)
             const response = await fetchPostData('/hisutils/GenericApiQry', val);
+
+            console.log(parameterName, response)
+
             const rawData = response?.data || [];
 
             const formattedData = rawData.map(item => {
@@ -202,10 +245,141 @@ const Parameters = ({ params, scope, widgetId = null }) => {
         });
     }, [presentParams]);
 
+    useEffect(() => {
+        if (!presentParams?.length || !prevParams) return;
+
+        const changedKeys = [];
+
+        // 🔹 1. check tabParams
+        for (const key in paramsValuesPro?.tabParams) {
+            if (paramsValuesPro.tabParams[key] !== prevParams.tabParams?.[key]) {
+                changedKeys.push({ scope: "tabParams", key, value: paramsValuesPro.tabParams[key] });
+            }
+        }
+
+        // 🔹 2. check widgetParams (nested)
+        for (const widgetId in paramsValuesPro?.widgetParams) {
+            const currentWidget = paramsValuesPro.widgetParams[widgetId] || {};
+            const prevWidget = prevParams.widgetParams?.[widgetId] || {};
+
+            for (const key in currentWidget) {
+                if (currentWidget[key] !== prevWidget[key]) {
+                    changedKeys.push({
+                        scope: "widgetParams",
+                        key,
+                        value: currentWidget[key],
+                        widgetId, // optional, if you need to know which widget it belongs to
+                    });
+                }
+            }
+        }
+
+        if (!changedKeys.length) return;
+
+        // 🔹 3. Run dropdown fetch only for changed params
+        presentParams.forEach((param) => {
+            const query = param?.jsonData?.parameterQuery;
+            if (!query) return;
+
+            const regex = /#PARA#(\d+)#PARA#/g;
+            const match = regex.exec(query);
+            const paraId = match ? match[1] : null;
+
+            if (paraId) {
+                const changed = changedKeys.find((c) => c.key === paraId);
+                if (changed) {
+                    fetchDropdownData(
+                        query,
+                        param.jsonData.parameterName,
+                        param?.jndiIdForGettingData,
+                        changed.value
+                    );
+                }
+            }
+        });
+    }, [paramsValuesPro, presentParams]);
+
+
+
+
+    // useEffect(() => {
+    //     if (!presentParams?.length || !prevParams) return;
+
+    //     const changedKeys = [];
+
+    //     // check tabParams
+    //     for (const key in paramsValuesPro?.tabParams) {
+    //         if (paramsValuesPro.tabParams[key] !== prevParams.tabParams?.[key]) {
+    //             changedKeys.push(key);
+    //         }
+    //     }
+
+    //     for (const widgetId in paramsValuesPro?.widgetParams) {
+    //         const currentWidget = paramsValuesPro.widgetParams[widgetId] || {};
+    //         const prevWidget = prevParams.widgetParams?.[widgetId] || {};
+
+    //         for (const key in currentWidget) {
+    //             if (currentWidget[key] !== prevWidget[key]) {
+    //                 changedKeys.push(key); 
+    //             }
+    //         }
+    //     }
+
+    //     if (!changedKeys.length) return;
+
+    //     presentParams.forEach((param) => {
+    //         const query = param?.jsonData?.parameterQuery;
+    //         if (!query) return;
+
+    //         const regex = /#PARA#(\d+)#PARA#/g;
+    //         const match = regex.exec(query);
+    //         const paraId = match ? match[1] : null;
+
+    //         if (paraId && changedKeys.includes(paraId)) {
+    //             fetchDropdownData(
+    //                 query,
+    //                 param.jsonData.parameterName,
+    //                 param?.jndiIdForGettingData
+    //             );
+    //         }
+    //     });
+    // }, [paramsValuesPro, presentParams]);
+
+    // useEffect(() => {
+    //     if (!presentParams?.length) return;
+
+    //     presentParams.forEach((param) => {
+    //         const query = param?.jsonData?.parameterQuery;
+    //         if (!query) return;
+
+    //         const regex = /#PARA#(\d+)#PARA#/g;
+    //         const match = regex.exec(query);
+    //         const paraId = match ? match[1] : null;
+
+    //         if (paraId && parentId.includes(paraId)) {
+    //             const newValue =
+    //                 scope === "tabParams"
+    //                     ? paramsValuesPro?.tabParams?.[paraId]
+    //                     : paramsValuesPro?.widgetParams?.[paraId];
+
+    //             // Run only if value is defined (or you can add extra checks here)
+    //             if (newValue !== undefined) {
+    //                 fetchDropdownData(
+    //                     query,
+    //                     param.jsonData.parameterName,
+    //                     param?.jndiIdForGettingData
+    //                 );
+    //             }
+    //         }
+    //     });
+    // }, [paramsValuesPro, parentId, presentParams, scope]);
+
+
 
     const resetParams = () => {
         setSelectedValues({});
     }
+
 
     const searchParams = () => {
         let isValid = true;
@@ -241,7 +415,7 @@ const Parameters = ({ params, scope, widgetId = null }) => {
         });
 
         if (isValid) {
-            setParamsValues(paramsValuesPro, scope, widgetId);
+            setParamsValues(paramsValuesPro);
             setIsSearchQuery(true)
             setSearchScope({
                 scope: scope, id: widgetId
@@ -278,7 +452,6 @@ const Parameters = ({ params, scope, widgetId = null }) => {
                         try {
                             const response = await fetchPostData('/hisutils/GenericApiQry', val);
                             const rawData = response?.data || [];
-
                             const formattedData = rawData.map(item => {
                                 const keys = Object.keys(item);
                                 const valueKey = keys[0];
@@ -319,6 +492,7 @@ const Parameters = ({ params, scope, widgetId = null }) => {
         initializeParams();
     }, [presentParams, widgetId]);
 
+
     const renderInputField = (param) => {
         const {
             parameterType, parameterDisplayName, parameterName, lstOption, isMandatory, defaultOption,
@@ -330,7 +504,7 @@ const Parameters = ({ params, scope, widgetId = null }) => {
 
         return (
             <div
-                className={`col-md-${parameterParentWidth || 6} d-flex mb-1 align-items-center justify-content-${parentAlignment?.toLowerCase() || 'start'}`}
+                className={`${isLayoutWithPreview ? '' : `col-md-${parameterParentWidth || 6}`} d-flex mb-1 align-items-center justify-content-${parentAlignment?.toLowerCase() || 'start'}`}
                 key={parameterName}
             >
                 <label
@@ -375,7 +549,7 @@ const Parameters = ({ params, scope, widgetId = null }) => {
                                     id={parameterId}
                                     name={parameterName}
                                     className={`${theme === 'Dark' ? 'backcolorinput-dark' : 'backcolorinput'} form-select form-select-sm`}
-                                    value={selectedValues[parameterName] || defaultValueIfEmpty}
+                                    value={selectedValues[parameterName] || defaultValueIfEmpty || ''}
                                     onChange={(e) => handleInputChange(parameterName, e, parameterId)}
                                 >
                                     {placeHolder ?
@@ -517,7 +691,7 @@ const Parameters = ({ params, scope, widgetId = null }) => {
 
     return (
         <>
-            <div className='help-docs'>
+            <div className={`help-docs ${isLayoutWithPreview ? 'layout-help-docs' : ''}`}>
                 <button type="button" className="small-box-btn-dwn m-1" onClick={() => searchParams()}>
                     <FontAwesomeIcon icon={faSearch} size="xs" className="dropdown-gear-icon" />
                 </button>
@@ -529,7 +703,7 @@ const Parameters = ({ params, scope, widgetId = null }) => {
                 </button>
             </div>
             {/* {!hideParams && */}
-            <div className="row">
+            <div className={`${isLayoutWithPreview ? 'layouthw' : 'row'}`}>
                 {presentParams?.length > 0 && presentParams?.map((param, index) =>
                     renderInputField(param))
                 }

@@ -127,7 +127,6 @@ export const generatePDFff = async (widgetData, data, config, visibleColumns, is
 
   let tableData = [];
 
-  console.log(data, 'data')
 
   if (isH2 === 'Yes') {
     // Extract column definitions and names from visibleColumns
@@ -461,11 +460,12 @@ export const generatePDF = async (widgetData, multipleTables, config, visibleCol
     doc.setFont('helvetica', 'bold');
     let currentY = headerYStart;
     if (reportHeader1) { doc.text(reportHeader1, headerX, currentY, { align: alignment }); currentY += 5; }
-    if (reportHeader2) { doc.text(reportHeader2, headerX, currentY, { align: alignment }); currentY += 5; }
-    if (reportHeader3) { doc.text(reportHeader3, headerX, currentY, { align: alignment }); currentY += 5; }
-    doc.setFontSize(11);
-    doc.text(rptDisplayName || 'Report', headerX, currentY + 1, { align: alignment });
+    if (reportHeader2) { doc.text(reportHeader2, headerX, currentY, { align: alignment }); currentY += 6; }
+    if (reportHeader3) { doc.text(reportHeader3, headerX, currentY, { align: alignment }); currentY += 6; }
     currentY += 5;
+    doc.setFontSize(11);
+    doc.text(rptDisplayName || 'Report', headerX, currentY, { align: alignment });
+    currentY += 8;
     return currentY;
   };
 
@@ -513,88 +513,112 @@ export const generatePDF = async (widgetData, multipleTables, config, visibleCol
       .filter(key => !unwantedKeys.includes(key))
       .map(key => ({ header: key.toString().toUpperCase(), dataKey: key }));
 
+
     const columnCount = headers.length;
     const availableWidth = pdf.internal.pageSize.getWidth() - 10;
     const avgColumnWidth = availableWidth / columnCount;
-    if (headers.length < maxColsPerPage) {
-      headers.forEach(header => { header.width = Math.min(avgColumnWidth); });
-    }
 
-    for (let start = 0; start < headers.length; start += maxColsPerPage) {
-      const chunkHeaders = headers.slice(start, start + maxColsPerPage);
-      const chunkData = tableData.map(row =>
-        chunkHeaders.map(header => {
-          const content = row[header.dataKey];
-          if (content === null || content === undefined) return '';
-          if (typeof content === 'object') return JSON.stringify(content);
-          if (typeof content === 'string' && content.includes('##')) {
-            return content.split('##')[0];
-          }
-          return content.toString();
-        })
-      );
+    //FOR PAGE BREAK
+    // if (headers.length < maxColsPerPage) {
+    //   headers.forEach(header => { header.width = Math.min(avgColumnWidth); });
+    // }
 
-      pdf.autoTable({
-        startY: yPosition,
-        head: [chunkHeaders.map(h => h.header)],
-        body: chunkData,
-        theme: ['grid', 'striped', 'plain'].includes(pdfTheme) ? pdfTheme : 'striped',
-        headStyles: {
-          fillColor: pdfTableheaderBarColor || "#000000",
-          textColor: pdfTableheadingFontColour || '#ffffff',
-          fontSize: parseInt(pdfTableFontSize) || 10,
-          fontStyle: 'bold',
-          halign: headingAlignment?.toLowerCase() || 'center',
-          lineWidth: 0.1,
-          lineColor: '#8c8f92',
-        },
-        bodyStyles: {
-          fontSize: parseInt(pdfTableFontSize) || 10,
-          overflow: 'linebreak',
-          cellPadding: 2,
-          minCellHeight: 8,
-          valign: 'top'
-        },
-        columnStyles: headers.reduce((styles, header, idx) => {
-          styles[idx] = { cellWidth: header.width, halign: 'left' };
-          return styles;
-        }, {}),
-        styles: { overflow: 'linebreak', fontSize: parseInt(pdfTableFontSize), cellPadding: 2 },
-        tableWidth: 'auto',
-        showHead: isPdfHeaderReqInAllPages === 'Yes' ? 'everyPage' : 'firstPage',
-        pageBreak: 'auto',
-        margin: { top: isPdfHeaderReqInAllPages === 'Yes' ? 50 : 10, left: 5, right: 10 },
-        didDrawPage: (data) => {
-          const pageNumber = data.pageNumber;
-          if (pageNumber === 1 && tableIndex === 0 && start === 0) {
-            drawHeader(pdf);
-          }
-          if (isReportPrintDateRequired === 'Yes') {
-            pdf.setFontSize(9);
-            const reportDate = `Print Date: ${new Date().toLocaleDateString()}`;
-            const textWidth = pdf.getTextWidth(reportDate);
-            pdf.text(reportDate, pageWidth - textWidth - 10, pdf.internal.pageSize.getHeight() - 10);
-          }
+    //FOR NOT PAGE BREAK
+    headers.forEach(header => { header.width = Math.min(avgColumnWidth); });
+
+    //FOR LOOP FOR PAGE BREAK
+    // for (let start = 0; start < headers.length; start += maxColsPerPage) {
+    //   const chunkHeaders = headers.slice(start, start + maxColsPerPage);
+    //   const chunkData = tableData.map(row =>
+    //     chunkHeaders.map(header => {
+    //       const content = row[header.dataKey];
+    //       if (content === null || content === undefined) return '';
+    //       if (typeof content === 'object') return JSON.stringify(content);
+    //       if (typeof content === 'string' && content.includes('##')) {
+    //         return content.split('##')[0];
+    //       }
+    //       return content.toString();
+    //     })
+    //   );
+
+    //OT FOR PAGE BREAK
+    const chunkData = tableData.map(row =>
+      headers.map(header => {
+        const content = row[header.dataKey];
+        if (content === null || content === undefined) return '';
+        if (typeof content === 'object') return JSON.stringify(content);
+        if (typeof content === 'string' && content.includes('##')) {
+          return content.split('##')[0];
         }
-      });
+        return content.toString();
+      })
+    );
 
-      yPosition = pdf.lastAutoTable.finalY + 10; // spacing between tables
-      if (start + maxColsPerPage < headers.length) {
-        pdf.addPage();
-        yPosition = isPdfHeaderReqInAllPages === 'Yes' ? 50 : 10;
+    pdf.autoTable({
+      startY: yPosition,
+      // head: [chunkHeaders.map(h => h.header)],//FOR PAGE BREAK
+      head: [headers.map(h => h.header)],
+      body: chunkData,
+      theme: ['grid', 'striped', 'plain'].includes(pdfTheme) ? pdfTheme : 'striped',
+      headStyles: {
+        fillColor: pdfTableheaderBarColor || "#000000",
+        textColor: pdfTableheadingFontColour || '#ffffff',
+        fontSize: parseInt(pdfTableFontSize) || 10,
+        fontStyle: 'bold',
+        halign: headingAlignment?.toLowerCase() || 'center',
+        lineWidth: 0.1,
+        lineColor: '#8c8f92',
+      },
+      bodyStyles: {
+        fontSize: parseInt(pdfTableFontSize) || 10,
+        overflow: 'linebreak',
+        cellPadding: 2,
+        minCellHeight: 8,
+        valign: 'top',
+        textColor: '#000000'
+      },
+      columnStyles: headers.reduce((styles, header, idx) => {
+        styles[idx] = { cellWidth: header.width, halign: 'left', overflow: 'linebreak', };
+        return styles;
+      }, {}),
+      styles: { overflow: 'linebreak', fontSize: parseInt(pdfTableFontSize), cellPadding: 2 },
+      tableWidth: 'auto',
+      showHead: isPdfHeaderReqInAllPages === 'Yes' ? 'everyPage' : 'firstPage',
+      pageBreak: 'auto',
+      margin: { top: isPdfHeaderReqInAllPages === 'Yes' ? 50 : 10, left: 5, right: 10 },
+      didDrawPage: (data) => {
+        const pageNumber = data.pageNumber;
+        if (pageNumber === 1 && tableIndex === 0 ) { //FOR PAGE BREAK   && start === 0
+          drawHeader(pdf);
+        }
+        if (isReportPrintDateRequired === 'Yes') {
+          pdf.setFontSize(9);
+          const reportDate = `Print Date: ${new Date().toLocaleDateString()}`;
+          const textWidth = pdf.getTextWidth(reportDate);
+          pdf.text(reportDate, pageWidth - textWidth - 10, pdf.internal.pageSize.getHeight() - 10);
+        }
       }
-    }
-  });
-  // CHANGE END
+    });
 
-  if (isDirectDownloadRequired === 'Yes') {
-    pdf.save(`${rptDisplayName || 'report'}.pdf`);
-  } else {
-    const pdfBlob = pdf.output('blob');
-    const pdfUrl = URL.createObjectURL(pdfBlob);
-    window.open(pdfUrl, '_blank');
-    setTimeout(() => URL.revokeObjectURL(pdfUrl), 10000);
-  }
+    yPosition = pdf.lastAutoTable.finalY + 10; // spacing between tables
+    //NOT FOR PAGE BREAK
+    // if (start + maxColsPerPage < headers.length) {
+    //   pdf.addPage();
+    //   yPosition = isPdfHeaderReqInAllPages === 'Yes' ? 50 : 10;
+    // }
+  // }
+  });
+// CHANGE END
+
+
+// if (isDirectDownloadRequired === 'Yes') {
+pdf.save(`${rptDisplayName || 'report'}.pdf`);
+  // } else {
+  //   const pdfBlob = pdf.output('blob');
+  //   const pdfUrl = URL.createObjectURL(pdfBlob);
+  //   window.open(pdfUrl, '_blank');
+  //   setTimeout(() => URL.revokeObjectURL(pdfUrl), 10000);
+  // }
 };
 
 
@@ -775,7 +799,7 @@ export const generatePDFbg = async (widgetData, tableData, config, filters = [])
 export const generateGraphPDF = async (widgetData, tableData, config, visibleColumns, sortConfig, filters = []) => {
   if (!widgetData) return;
 
-  if (!Array.isArray(tableData?.seriesData) || tableData.seriesData === 0) {
+  if (!Array.isArray(tableData[0]?.seriesData) || tableData[0].seriesData === 0) {
     ToastAlert('No data available to download.', 'warning');
     return;
   }
@@ -913,17 +937,17 @@ export const generateGraphPDF = async (widgetData, tableData, config, visibleCol
   //  Pick only visible columns, in same order
   const selectedHeaders = (visibleColumns?.length > 0
     ? visibleColumns.map(c => c.name)
-    : [xAxisLabel, ...tableData.seriesData.map(s => s.name)]
+    : [xAxisLabel, ...tableData[0].seriesData.map(s => s.name)]
   );
 
   //  Build row objects first (so we can sort easily)
-  let rows = tableData.categories.map((category, index) => {
+  let rows = tableData[0].categories.map((category, index) => {
     const rowObj = {};
     selectedHeaders.forEach(h => {
       if (h === xAxisLabel) {
         rowObj[h] = category;
       } else {
-        const series = tableData.seriesData.find(s => s.name === h);
+        const series = tableData[0].seriesData.find(s => s.name === h);
         rowObj[h] = series ? (series.data[index] || 0) : '';
       }
     });
@@ -1128,7 +1152,7 @@ export const generateCSV = (widgetData, multipleTables, config, visibleColumns, 
     // Get columns
     let columnNames;
     if (isH2 === 'Yes') {
-      columnNames = visibleColumns?.map(col => 
+      columnNames = visibleColumns?.map(col =>
         col.name?.trim() ? `${col?.mainHeader}_${col?.name}` : col?.mainHeader
       );
     } else {
@@ -1180,6 +1204,7 @@ export const generateGraphCSV = (widgetData, data, config, visibleColumns, sortC
   const { reportHeader1, reportHeader2, reportHeader3 } = config || {};
   const currentDate = new Date().toLocaleDateString('en-GB') + ' ' + new Date().toLocaleTimeString('en-GB');
 
+
   // Prepare heading
   const heading = [
     [reportHeader1],
@@ -1195,45 +1220,31 @@ export const generateGraphCSV = (widgetData, data, config, visibleColumns, sortC
   let csvContent;
 
   // Handle graph data (state-wise facilities)
-  if (!data.categories || data.categories.length === 0 ||
-    !data.seriesData || data.seriesData.length === 0 ||
-    !data.seriesData[0].data) {
+  if (!data[0].categories || data[0].categories.length === 0 ||
+    !data[0].seriesData || data[0].seriesData.length === 0 ||
+    !data[0].seriesData[0].data) {
     ToastAlert('No graph data available to download.', 'warning');
     return;
   }
 
-  // Simplified headers for state-wise data
-  // const headers = [xAxisLabel, ...data.seriesData.map(s => s.name)];
-
-  // const rows = data.categories.map((state, index) => {
-  //   const row = [state];
-  //   data.seriesData.forEach(series => {
-  //     row.push(series.data[index] || 0);
-  //   });
-  //   return row;
-  // });
-
-  // 1. Pick only visible columns (or fallback to all)
   const selectedHeaders =
     visibleColumns?.length > 0
       ? visibleColumns.map((c) => c.name)
-      : [xAxisLabel, ...data.seriesData.map((s) => s.name)];
+      : [xAxisLabel, ...data[0].seriesData.map((s) => s.name)];
 
-  // 2. Build row objects first
-  let rows = data.categories.map((category, index) => {
+  let rows = data[0].categories.map((category, index) => {
     const rowObj = {};
     selectedHeaders.forEach((h) => {
       if (h === xAxisLabel) {
         rowObj[h] = category;
       } else {
-        const series = data.seriesData.find((s) => s.name === h);
+        const series = data[0].seriesData.find((s) => s.name === h);
         rowObj[h] = series ? series.data[index] || 0 : "";
       }
     });
     return rowObj;
   });
 
-  // 3. Apply multi-column sorting if provided
   if (sortConfig?.length > 0) {
     sortConfig.forEach((sortRule) => {
       rows.sort((a, b) => {
@@ -1246,19 +1257,11 @@ export const generateGraphCSV = (widgetData, data, config, visibleColumns, sortC
     });
   }
 
-  // 4. Convert to array rows in correct header order
   const rowsArray = rows.map((rowObj) =>
     selectedHeaders.map((h) => rowObj[h])
   );
 
   const finalData = [...heading, selectedHeaders, ...rowsArray];
-
-  // Combine all data
-  // const finalData = [
-  //   ...heading,
-  //   headers,
-  //   ...rows
-  // ];
 
   csvContent = Papa.unparse(finalData, {
     skipEmptyLines: false,

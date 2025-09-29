@@ -5,11 +5,12 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faAdd, faMinus } from '@fortawesome/free-solid-svg-icons'
 import FormatColumn from '../../commons/FormatColumn'
 import { HISContext } from '../../../contextApi/HISContext'
+import { sanitizeInput } from '../../../utils/commonFunction'
 
 const QueryDetails = (props) => {
 
     const { showDataTable, setShowDataTable } = useContext(HISContext);
-    const { handleValueChange, handleRadioChange, radioValues, values, setValues, singleData, rows, setRows, procedureRows, setProcedureRows, errors, setErrors,dt } = props;
+    const { handleValueChange, handleRadioChange, radioValues, values, setValues, singleData, rows, setRows, procedureRows, setProcedureRows, errors, setErrors, dt } = props;
 
     const [showFormatModal, setShowFormatModal] = useState(false);
     const [isRightTab, setIsRightTab] = useState(true);
@@ -70,7 +71,7 @@ const QueryDetails = (props) => {
                 setErrors(prev => ({ ...prev, 'webserviceNameErr': "required" }));
             } else {
                 setProcedureRows([...procedureRows, { queryLabel: "", serviceReferenceNumber: "", webserviceName: "", isMultiRowDataTable: "", tableDataDisplay: "horizontal" }])
-                setErrors(prev => ({ ...prev, 'webserviceNameErr': "",'serviceReferenceNumberErr': "" }));
+                setErrors(prev => ({ ...prev, 'webserviceNameErr': "", 'serviceReferenceNumberErr': "" }));
             }
         }
     };
@@ -114,7 +115,7 @@ const QueryDetails = (props) => {
                                     checked={radioValues?.selectedModeQuery === "Query"}
                                 />
                                 <label className="form-check-label" htmlFor="dbYes">
-                                   {dt('By Query')} 
+                                    {dt('By Query')}
                                 </label>
                             </div>
                             <div className="form-check form-check-inline">
@@ -142,7 +143,7 @@ const QueryDetails = (props) => {
                                     checked={radioValues?.selectedModeQuery === "WebSevice"}
                                 />
                                 <label className="form-check-label" htmlFor="dbNo">
-                                   {dt('By Webservice')} 
+                                    {dt('By Webservice')}
                                 </label>
                             </div>
                             <div className="form-check form-check-inline">
@@ -182,7 +183,7 @@ const QueryDetails = (props) => {
                     <div className='col-sm-6'>
                         <div className="form-group row">
                             <label className="col-sm-5 col-form-label pe-0">
-                               {dt('Is Data Table Required')}  :
+                                {dt('Is Data Table Required')}  :
                             </label>
                             <div className="col-sm-7 ps-0 align-content-center">
                                 <div className="form-check form-check-inline">
@@ -196,7 +197,7 @@ const QueryDetails = (props) => {
                                         checked={radioValues?.isDataTblReq === 'Yes'}
                                     />
                                     <label className="form-check-label" htmlFor="dbYes">
-                                       {dt('Yes')} 
+                                        {dt('Yes')}
                                     </label>
                                 </div>
                                 <div className="form-check form-check-inline">
@@ -210,7 +211,7 @@ const QueryDetails = (props) => {
                                         checked={radioValues?.isDataTblReq === 'No'}
                                     />
                                     <label className="form-check-label" htmlFor="dbNo">
-                                       {dt('No')} 
+                                        {dt('No')}
                                     </label>
                                 </div>
                             </div>
@@ -267,6 +268,7 @@ const QueryDetails = (props) => {
                                             rows="1"
                                             value={row?.mainQuery}
                                             onChange={(e) => handleInputRowChange(index, 'mainQuery', e.target.value)}
+                                        // value={sanitizeInput(row?.mainQuery, true)}
                                         ></textarea>
                                         {(errors?.mainQueryErr && !row?.mainQuery) &&
                                             <div className="required-input">
@@ -294,6 +296,7 @@ const QueryDetails = (props) => {
                                                 id={`totalRecordCountQuery-${index}`}
                                                 value={row?.totalRecordCountQuery}
                                                 onChange={(e) => handleInputRowChange(index, 'totalRecordCountQuery', e.target.value)}
+                                            // value={sanitizeInput(row?.totalRecordCountQuery, true)}
                                             ></textarea>}
                                     </td>
                                     <td>
@@ -521,6 +524,7 @@ const QueryDetails = (props) => {
                                         rows="1"
                                         value={rows[0]?.mainQuery}
                                         onChange={(e) => handleInputRowChange(0, 'mainQuery', e.target.value)}
+                                    // value={sanitizeInput(row?.totalRecordCountQuery, true)}
                                     ></textarea>
                                     {errors?.mainQueryErr &&
                                         <div className="required-input">

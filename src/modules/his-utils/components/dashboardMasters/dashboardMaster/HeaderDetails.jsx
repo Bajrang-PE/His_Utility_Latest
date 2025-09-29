@@ -1,7 +1,9 @@
 import React from 'react'
+import { sanitizeInput } from '../../../utils/commonFunction';
 
 const HeaderDetails = (props) => {
     const { handleValueChange, handleRadioChange, radioValues, values, setValues, errors, dt } = props;
+
     return (
         <div>
             <b><h6 className='header-devider m-0'>{dt("Dashboard Master - Header Details")}</h6></b>
@@ -62,6 +64,7 @@ const HeaderDetails = (props) => {
                                     id='headerHtml'
                                     rows="2"
                                     onChange={handleValueChange}
+                                    // value={sanitizeInput(values?.headerHtml, true)}
                                     value={values?.headerHtml}
                                 ></textarea>
                             </div>
@@ -114,6 +117,7 @@ const HeaderDetails = (props) => {
                                     rows="2"
                                     onChange={handleValueChange}
                                     value={values?.headerCss}
+                                    // value={sanitizeInput(values?.headerCss, true)}
                                 ></textarea>
                             </div>
                         </div>
@@ -251,6 +255,7 @@ const HeaderDetails = (props) => {
                                     rows="2"
                                     onChange={handleValueChange}
                                     value={values?.rptHeaderbyQuery}
+                                    // value={sanitizeInput(values?.rptHeaderbyQuery, true)}
                                 ></textarea>
                                 {errors?.rptHeaderbyQueryErr &&
                                     <div className="required-input">

@@ -1,6 +1,7 @@
 import React from 'react'
 import InputSelect from '../../commons/InputSelect'
 import InputField from '../../commons/InputField'
+import { sanitizeInput } from '../../../utils/commonFunction';
 
 const FooterDetails = (props) => {
     const { handleValueChange, handleRadioChange, radioValues, values,dt } = props;
@@ -24,6 +25,7 @@ const FooterDetails = (props) => {
                                 rows="2"
                                 onChange={handleValueChange}
                                 value={values?.lastUpdatedQuery}
+                                // value={sanitizeInput(values?.lastUpdatedQuery, true)}
                             ></textarea>
                         </div>
                     </div>
@@ -55,6 +57,7 @@ const FooterDetails = (props) => {
                                 rows="2"
                                 onChange={handleValueChange}
                                 value={values?.FooterText}
+                                // value={sanitizeInput(values?.FooterText, true)}
                             ></textarea>
                         </div>
                     </div>

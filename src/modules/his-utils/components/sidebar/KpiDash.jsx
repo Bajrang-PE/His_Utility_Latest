@@ -7,7 +7,7 @@ import { HISContext } from '../../contextApi/HISContext';
 import { fetchProcedureData, fetchQueryData, formatDateFullYear, formatParams, getOrderedParamValues, ToastAlert } from '../../utils/commonFunction';
 import PopUpWidget from './PopUpWidget';
 
-const KpiDash = ({ widgetData, presentTabs }) => {
+const KpiDash = ({ widgetData, presentTabs, isLayoutWithPreview }) => {
     const { setActiveTab, setLoading, paramsValues, searchScope, isSearchQuery, setIsSearchQuery, setSearchScope, setPrevKpiTab, activeTab, dt, presentTabsDash } = useContext(HISContext);
     const [kpiData, setKpiData] = useState([]);
     const [kpiLoading, setKpiLoading] = useState(false);
@@ -171,8 +171,8 @@ const KpiDash = ({ widgetData, presentTabs }) => {
                 // borderRadius: "50%",
                 // borderStyle: 'solid',
                 boxShadow: widgetData?.isWidgetShadowRequired === 'Yes' ? '5px 5px 10px rgba(0,0,0,0.2)' : 'none',
-                height: !widheight || widheight === "0" ? 'auto' : `${widheight}px`,
-                width:"100%"
+                 height: isLayoutWithPreview ? '100%' : !widheight || widheight === "0" ? 'auto' : `${widheight}px`,
+                width: "100%"
             }} onMouseEnter={onHover} onMouseLeave={onMouseLeave}>
 
                 {/* {widgetData?.downloadDataFromKPI === 'Yes' && (

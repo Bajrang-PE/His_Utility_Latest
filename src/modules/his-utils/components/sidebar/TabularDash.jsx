@@ -17,7 +17,7 @@ const Parameters = lazy(() => import('./Parameters'));
 
 const TabularDash = (props) => {
 
-  const { widgetData, setWidgetData, levelData, setLevelData, pkColumn, setPkColumn } = props;
+  const { widgetData, setWidgetData, levelData, setLevelData, pkColumn, setPkColumn, isLayoutWithPreview, presentTabs } = props;
 
   const { theme, singleConfigData, paramsValues, setLoading, presentWidgets, isSearchQuery, setIsSearchQuery, setSearchScope, searchScope, dt } = useContext(HISContext);
 
@@ -32,6 +32,23 @@ const TabularDash = (props) => {
   const [showPopUpWidget, setShowPopUpWidget] = useState(false);
   const [MainHeaders, setMainHeaders] = useState([])
   const [multipleTables, setMultipleTables] = useState([]);
+  const [widgetParams, setWidgetParams] = useState([]);
+
+  console.log('paramsValues', paramsValues)
+  console.log('widgetParams', widgetParams)
+
+
+  const getParametersWithValues = (parameters, paramsData, widgetId) => {
+    return parameters.map(param => {
+      const value = paramsData?.widgetParams?.[widgetId]?.[param.id] || null;
+      return {
+        ...param,
+        value: value
+      };
+    });
+  }
+
+  console.log(getParametersWithValues(widgetParams,paramsValues,widgetData?.rptId),'bgbgbgbbg'+widgetData?.rptId)
 
 
   const [queryParams] = useSearchParams();
@@ -43,6 +60,7 @@ const TabularDash = (props) => {
   const isChildPresent = widgetData?.children && widgetData?.children?.length > 0;
   const childId = widgetData?.children?.length > 0 ? widgetData?.children[0] : '';
   const isFirstRowHeading = widgetData?.isFirstRowColumnName || 'No';
+  const widheight = presentTabs?.length > 0 && presentTabs?.filter(dt => dt?.rptId == widgetData?.rptId)[0]?.widgetHeight;
 
   useEffect(() => {
     setTableData([])
@@ -658,6 +676,7 @@ const TabularDash = (props) => {
         }
 
         setFetching(false);
+        setIsSearchQuery(false)
 
       } catch (error) {
         console.error("Error loading query data:", error);
@@ -708,6 +727,7 @@ const TabularDash = (props) => {
 
         setFetching(false);
         setMultipleTables(processedTables);
+        setIsSearchQuery(false)
 
       } catch (error) {
         console.error("Error loading query data:", error);
@@ -832,7 +852,7 @@ const TabularDash = (props) => {
       return displayedColumns;
     }
   }
-  
+
   const handleSearchChange = (index, value) => {
     setSearchInput(prev => ({
       ...prev,
@@ -840,13 +860,16 @@ const TabularDash = (props) => {
     }));
   };
 
+  console.log('paramsData', paramsData)
+
   return (
     <>
       {/* {currentLevel == 0 && */}
       <div className={`tabular-box ${theme === 'Dark' ? 'dark-theme' : ''} tabular-box-border ${borderReq === 'No' ? 'border-0' : ''}`} style={{
+        height: isLayoutWithPreview ? '100%' : widheight ? `${widheight}px` : '650px',
         border: `1px solid ${theme === 'Dark' ? 'white' : 'black'}`,
         marginTop: `${widgetTopMargin}px`
-      }}>
+      }} key={widgetData?.rptId}>
 
 
         <div className={`row px-1 py-1 border-bottom ${headingReq !== "Yes" ? "align-content-end" : ""}`}>
@@ -951,14 +974,14 @@ const TabularDash = (props) => {
         </div>
         {paramsData && (
           <div className='parameter-box py-1'>
-            <Parameters params={paramsData} scope={'widgetParams'} widgetId={widgetData?.rptId} />
+            <Parameters params={paramsData} scope={'widgetParams'} widgetId={widgetData?.rptId} setWidgetParams={setWidgetParams} widgetParams={widgetParams}/>
           </div>
         )}
 
         {fetching ? (
           <h6 className="text-center">{dt('Data Fetching')}...</h6>
         ) : (
-          multipleTables.map((table, index) => {
+          multipleTables?.map((table, index) => {
             const lowercasedText = searchInput[index]?.toLowerCase() || "";
 
             const filteredData = lowercasedText
@@ -972,7 +995,7 @@ const TabularDash = (props) => {
             return (
               <>
                 <div className="px-2 py-2" >
-                  <h4 style={{ fontWeight: "500", fontSize: "20px" }}>{dt('Query')} : {widgetData?.rptId}</h4>
+                  <h4 style={{ fontWeight: "500", fontSize: "20px" }}>{dt('Query')} :</h4>
                   {(widgetData?.modeOfQuery === 'Query' && isPrev == 1) &&
                     <span>{table?.queryObj?.mainQuery}</span>
                   }
@@ -1000,7 +1023,7 @@ const TabularDash = (props) => {
                   key={index}
                   columns={filterColumns(table?.columns, visibleColumns, isFirstRowHeading)}
                   // data={widgetLimit ? filterData?.slice(0, parseInt(widgetLimit)) : safeLimit ? filterData?.slice(0, safeLimit) : filterData}
-                  data={widgetLimit ? filteredData.slice(0, parseInt(widgetLimit)) || [] : safeLimit ? filteredData.slice(0, safeLimit) || [] : filteredData || []}
+                  data={widgetLimit ? filteredData?.slice(0, parseInt(widgetLimit)) || [] : safeLimit ? filteredData?.slice(0, safeLimit) || [] : filteredData || []}
                   pagination={isPaginationReq}
                   recordsPerPage={recordPerPage}
                   fixedHeader={isHeadingFixed}
@@ -1014,7 +1037,7 @@ const TabularDash = (props) => {
                   noDataComponent={<div className="text-danger fw-bold fs-13">{dt(customMessage || "There are no records to display")}</div>}
                   mainHeaders={(() => {
                     if (visibleColumns?.length > 0) {
-                      return (table.mainHeaders || []).filter(header => visibleColumns.includes(header.name));
+                      return (table.mainHeaders || [])?.filter(header => visibleColumns?.includes(header.name));
                     } else {
                       return table.mainHeaders || [];
                     }
