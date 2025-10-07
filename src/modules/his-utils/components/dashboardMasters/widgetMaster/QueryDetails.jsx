@@ -14,6 +14,7 @@ const QueryDetails = (props) => {
 
     const [showFormatModal, setShowFormatModal] = useState(false);
     const [isRightTab, setIsRightTab] = useState(true);
+    const [tableIndex, setTableIndex] = useState(0);
 
     useEffect(() => {
         if (singleData?.length > 0) {
@@ -317,7 +318,7 @@ const QueryDetails = (props) => {
                                                 {row?.tableDataDisplay === 'horizontal' &&
                                                     <button
                                                         className="btn btn-outline-secondary btn-sm me-1"
-                                                        onClick={() => { setShowDataTable(true); setShowFormatModal(true) }}
+                                                        onClick={() => { setShowDataTable(true); setShowFormatModal(true); setTableIndex(index) }}
                                                         style={{ padding: "0 4px" }}
                                                     >
                                                         {dt('Format')}
@@ -628,7 +629,7 @@ const QueryDetails = (props) => {
                 </div>
             }
             {showFormatModal &&
-                <FormatColumn title={"Format Display columns"} onClose={closeFormatModal} />
+                <FormatColumn title={"Format Display columns"} onClose={closeFormatModal} values={values} setValues={setValues} tableIndex={tableIndex} />
             }
         </>
     )

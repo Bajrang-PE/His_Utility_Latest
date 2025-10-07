@@ -10,7 +10,7 @@ import { Provider } from 'react-redux'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <BrowserRouter>
+    <BrowserRouter basename="/db">
       <HISContextData>
         <Provider store={store}>
           <App />

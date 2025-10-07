@@ -6,6 +6,7 @@ import { faSearch } from '@fortawesome/free-solid-svg-icons/faSearch';
 import { HISContext } from '../../contextApi/HISContext';
 import { fetchProcedureData, fetchQueryData, formatDateFullYear, formatParams, getOrderedParamValues, ToastAlert } from '../../utils/commonFunction';
 import PopUpWidget from './PopUpWidget';
+import { useSearchParams } from 'react-router-dom';
 
 const KpiDash = ({ widgetData, presentTabs, isLayoutWithPreview }) => {
     const { setActiveTab, setLoading, paramsValues, searchScope, isSearchQuery, setIsSearchQuery, setSearchScope, setPrevKpiTab, activeTab, dt, presentTabsDash } = useContext(HISContext);
@@ -13,6 +14,8 @@ const KpiDash = ({ widgetData, presentTabs, isLayoutWithPreview }) => {
     const [kpiLoading, setKpiLoading] = useState(false);
     const [popupConfig, setPopupConfig] = useState(null);
     const [showPopUpWidget, setShowPopUpWidget] = useState(false);
+    const [searchParams] = useSearchParams();
+    const isGlobal = searchParams.get("isGlobal") || 0;
 
     const formatData = (rawData = []) => {
         return rawData.map((item) => {
@@ -46,7 +49,7 @@ const KpiDash = ({ widgetData, presentTabs, isLayoutWithPreview }) => {
                     formatDateFullYear(new Date()),//from values
                     formatDateFullYear(new Date()) // to values
                 ]
-                const response = await fetchProcedureData(widget?.procedureMode, params, widget?.JNDIid);
+                const response = await fetchProcedureData(widget?.procedureMode, params, widget?.JNDIid,null,isGlobal);
                 const formattedData = formatData(response.data || []);
                 // const generatedColumns = generateColumns(formattedData);
                 setKpiData(formattedData);
@@ -64,7 +67,7 @@ const KpiDash = ({ widgetData, presentTabs, isLayoutWithPreview }) => {
             const params = getOrderedParamValues(widget?.queryVO[0]?.mainQuery, paramsValues, widget?.rptId);
             try {
 
-                const data = await fetchQueryData(widget?.queryVO, widgetData?.JNDIid, params);
+                const data = await fetchQueryData(widget?.queryVO, widgetData?.JNDIid, params,null,isGlobal);
                 if (data?.length > 0) {
                     const firstItem = data[0];
                     const dynamicKey = Object.keys(firstItem)[0];
@@ -138,6 +141,7 @@ const KpiDash = ({ widgetData, presentTabs, isLayoutWithPreview }) => {
 
     }
 
+
     const onWidgetClickDetails = (id) => {
         if (id) {
             setPopupConfig({
@@ -153,7 +157,6 @@ const KpiDash = ({ widgetData, presentTabs, isLayoutWithPreview }) => {
     };
 
     const widheight = presentTabs?.length > 0 && presentTabs?.filter(dt => dt?.rptId == widgetData?.rptId)[0]?.widgetHeight;
-
 
 
     return (

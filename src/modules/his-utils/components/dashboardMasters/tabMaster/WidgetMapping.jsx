@@ -46,12 +46,12 @@ const WidgetMapping = (props) => {
 
     return (
         <>
-            <b><h6 className='header-devider my-1'>{dt('Widget layout and mapping')}</h6></b>
+            {/* <b><h6 className='header-devider my-1'>{dt('Widget layout and mapping')}</h6></b> */}
 
             {/* SECTION DEVIDER */}
             <div iv className='row role-theme user-form' style={{ paddingBottom: "1px" }}>
                 {/* //left columns */}
-                <div className='col-sm-6'>
+                {/* <div className='col-sm-6'>
 
                     <div className="form-group row">
                         <label className="col-sm-5 col-form-label pe-0">
@@ -88,7 +88,7 @@ const WidgetMapping = (props) => {
                             </div>
                         </div>
                     </div>
-                </div>
+                </div> */}
             </div>
 
             {radioValues?.isLayout === 'No' && (<>
@@ -215,7 +215,7 @@ const WidgetMapping = (props) => {
                 </div>
             </>)}
 
-            {radioValues?.isLayout === 'Yes' &&
+            {/* {radioValues?.isLayout === 'Yes' &&
                 <div className='dragdroplayout'>
                     {(errors?.tabLayoutErr) &&
                         <div className="required-input text-center">
@@ -224,7 +224,7 @@ const WidgetMapping = (props) => {
                     }
                     <DragDropTabMaster setTablayout={setTablayout} tabLayout={tabLayout} />
                 </div>
-            }
+            } */}
 
         </>
     );

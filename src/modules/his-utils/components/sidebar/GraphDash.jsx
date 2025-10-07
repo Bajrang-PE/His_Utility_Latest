@@ -20,8 +20,11 @@ const GraphDash = ({ widgetData, pkColumn, setPkColumn, isLayoutWithPreview }) =
   const [chartType, setChartType] = useState('BAR_GRAPH');
   const [graphData, setGraphData] = useState([]);
   const [allGraphData, setAllGraphData] = useState([]);
+  const [widgetParams, setWidgetParams] = useState([]);
+  const [allDrpDtParams, setAllDrpDtParams] = useState([]);
   const [queryParams] = useSearchParams();
   const isPrev = queryParams.get('isPreview');
+  const isGlobal = queryParams.get("isGlobal") || 0;
 
   const is3D = widgetData.is3d === "true" || widgetData.is3d === "Yes";
   const xAxisLabel = widgetData.xAxisLabel || "X Axis";
@@ -60,6 +63,19 @@ const GraphDash = ({ widgetData, pkColumn, setPkColumn, isLayoutWithPreview }) =
   const safeLimit = isNaN(parsedLimit) || parsedLimit <= 0 ? null : parsedLimit;
 
   const customMessage = widgetData?.customMessage || "";
+
+  const getParametersWithValues = (parameters, paramsData, widgetId, allDrpDtParams) => {
+    return parameters.map(param => {
+      const value = paramsData?.widgetParams?.[widgetId]?.[param?.id] || null;
+      const val = allDrpDtParams?.[param?.paraName] || null;
+
+      return {
+        ...param,
+        value: value,
+        val: val?.find(dt => dt?.optionValue == value)?.optionText || value
+      };
+    });
+  }
 
   useEffect(() => {
     const timeout = setTimeout(() => {
@@ -133,7 +149,6 @@ const GraphDash = ({ widgetData, pkColumn, setPkColumn, isLayoutWithPreview }) =
     }
   }, [widgetData])
 
-
   const fetchDataQry = async (widget) => {
     const queries = widget?.queryVO?.length > 0 ? widget?.queryVO : [];
     if (!queries.length) return;
@@ -142,7 +157,7 @@ const GraphDash = ({ widgetData, pkColumn, setPkColumn, isLayoutWithPreview }) =
       const results = await Promise.all(
         queries.map(async (q) => {
           const params = getOrderedParamValues(q?.mainQuery, paramsValues, widget?.rptId);
-          const data = await fetchQueryData([q], widgetData?.JNDIid, params);
+          const data = await fetchQueryData([q], widgetData?.JNDIid, params, null, isGlobal);
           let filteredData = data;
 
           if (widget?.isQuerychild && widget?.isQuerychild === "1") {
@@ -168,6 +183,7 @@ const GraphDash = ({ widgetData, pkColumn, setPkColumn, isLayoutWithPreview }) =
 
           const limitedData = filteredData.slice(0, limit);
 
+
           if (!limitedData.length) {
             return {
               limited: { queryName: q?.mainQuery || '', categories: [], seriesData: [] },
@@ -175,35 +191,59 @@ const GraphDash = ({ widgetData, pkColumn, setPkColumn, isLayoutWithPreview }) =
             };
           }
 
-          const columnNames = Object.keys(limitedData[0]);
-          if (columnNames.length < 1) {
-            console.warn(`Insufficient columns for query:`);
-            return {
-              limited: { queryName: q?.mainQuery || '', categories: [], seriesData: [] },
-              all: { queryName: q?.mainQuery || '', categories: [], seriesData: [] }
-            };
-          }
+          // NEW: Detect data structure and process accordingly
+          const processChartData = (dataToProcess) => {
+            if (!dataToProcess.length) {
+              return { categories: [], seriesData: [] };
+            }
 
-          const categoriesKey = columnNames[0];
-          const seriesKeys = columnNames.slice(1);
+            const columnNames = Object.keys(dataToProcess[0]);
 
-          const categories = limitedData.map(item => item[categoriesKey]);
-          const seriesData = seriesKeys.map(key => ({
-            name: key,
-            data: limitedData.map(item => item[key]),
-            colorByPoint: true,
-          }));
+            // Case 1: Single row with multiple metrics (your example)
+            if (dataToProcess.length === 1 && columnNames.length > 1) {
+              const singleRow = dataToProcess[0];
+              const categories = columnNames;
+              const seriesData = [{
+                name: 'Values',
+                data: columnNames.map(key => singleRow[key]),
+                colorByPoint: true,
+              }];
+              return { categories, seriesData };
+            }
+            // Case 2: Multiple rows with category-series structure
+            else if (columnNames.length >= 2) {
+              const categoriesKey = columnNames[0];
+              const seriesKeys = columnNames.slice(1);
 
-          const allcategories = data.map(item => item[categoriesKey]);
-          const allseriesData = seriesKeys.map(key => ({
-            name: key,
-            data: data.map(item => item[key]),
-            colorByPoint: true,
-          }));
+              const categories = dataToProcess.map(item => item[categoriesKey]);
+              const seriesData = seriesKeys.map(key => ({
+                name: key,
+                data: dataToProcess.map(item => item[key]),
+                colorByPoint: true,
+              }));
+              return { categories, seriesData };
+            }
+            // Case 3: Fallback for unexpected structure
+            else {
+              console.warn('Unexpected data structure:', dataToProcess);
+              return { categories: [], seriesData: [] };
+            }
+          };
+
+          const limitedProcessed = processChartData(limitedData);
+          const allProcessed = processChartData(data);
 
           return {
-            limited: { queryName: q?.mainQuery || '', categories, seriesData },
-            all: { queryName: q?.mainQuery || '', categories: allcategories, seriesData: allseriesData }
+            limited: {
+              queryName: q?.mainQuery || '',
+              categories: limitedProcessed.categories,
+              seriesData: limitedProcessed.seriesData
+            },
+            all: {
+              queryName: q?.mainQuery || '',
+              categories: allProcessed.categories,
+              seriesData: allProcessed.seriesData
+            }
           };
         })
       );
@@ -222,6 +262,98 @@ const GraphDash = ({ widgetData, pkColumn, setPkColumn, isLayoutWithPreview }) =
       setIsSearchQuery(false);
     }
   };
+
+  // const fetchDataQry = async (widget) => {
+  //   const queries = widget?.queryVO?.length > 0 ? widget?.queryVO : [];
+  //   if (!queries.length) return;
+
+  //   try {
+  //     const results = await Promise.all(
+  //       queries.map(async (q) => {
+  //         const params = getOrderedParamValues(q?.mainQuery, paramsValues, widget?.rptId);
+  //         const data = await fetchQueryData([q], widgetData?.JNDIid, params);
+  //         let filteredData = data;
+
+  //         if (widget?.isQuerychild && widget?.isQuerychild === "1") {
+  //           const columnIndexes = widget?.columnIndexesParent || [];
+  //           if (data.length > 0 && columnIndexes.length > 0) {
+  //             const keys = Object.keys(data[0]);
+  //             filteredData = data.map(row => {
+  //               const filteredRow = {};
+  //               columnIndexes.forEach(idx => {
+  //                 const key = keys[idx];
+  //                 if (key) filteredRow[key] = row[key];
+  //               });
+  //               return filteredRow;
+  //             });
+  //           }
+  //         }
+
+  //         const limit = widgetLimit
+  //           ? parseInt(widgetLimit)
+  //           : safeLimit
+  //             ? parseInt(safeLimit)
+  //             : filteredData.length;
+
+
+  //         const limitedData = filteredData.slice(0, limit);
+
+  //         console.log('limitedData', limitedData)
+
+  //         if (!limitedData.length) {
+  //           return {
+  //             limited: { queryName: q?.mainQuery || '', categories: [], seriesData: [] },
+  //             all: { queryName: q?.mainQuery || '', categories: [], seriesData: [] }
+  //           };
+  //         }
+
+  //         const columnNames = Object.keys(limitedData[0]);
+  //         if (columnNames.length < 1) {
+  //           console.warn(`Insufficient columns for query:`);
+  //           return {
+  //             limited: { queryName: q?.mainQuery || '', categories: [], seriesData: [] },
+  //             all: { queryName: q?.mainQuery || '', categories: [], seriesData: [] }
+  //           };
+  //         }
+
+  //         const categoriesKey = columnNames[0];
+  //         const seriesKeys = columnNames.slice(1);
+
+  //         const categories = limitedData.map(item => item[categoriesKey]);
+  //         const seriesData = seriesKeys.map(key => ({
+  //           name: key,
+  //           data: limitedData.map(item => item[key]),
+  //           colorByPoint: true,
+  //         }));
+
+  //         const allcategories = data.map(item => item[categoriesKey]);
+  //         const allseriesData = seriesKeys.map(key => ({
+  //           name: key,
+  //           data: data.map(item => item[key]),
+  //           colorByPoint: true,
+  //         }));
+
+  //         return {
+  //           limited: { queryName: q?.mainQuery || '', categories, seriesData },
+  //           all: { queryName: q?.mainQuery || '', categories: allcategories, seriesData: allseriesData }
+  //         };
+  //       })
+  //     );
+
+  //     const limitedResults = results.map(r => r.limited);
+  //     const allResults = results.map(r => r.all);
+
+  //     setGraphData(limitedResults);
+  //     setAllGraphData(allResults);
+
+  //     setIsSearchQuery(false);
+  //     setSearchScope({ scope: "", id: "" });
+
+  //   } catch (error) {
+  //     console.error("Error loading query data:", error);
+  //     setIsSearchQuery(false);
+  //   }
+  // };
 
   const formatProcedureDataForGraph = (data) => {
     if (!data || data.length === 0) return { categories: [], seriesData: [] };
@@ -275,7 +407,7 @@ const GraphDash = ({ widgetData, pkColumn, setPkColumn, isLayoutWithPreview }) =
           formatDateFullYear(new Date()),//from values
           formatDateFullYear(new Date()) // to values
         ]
-        const data = await fetchProcedureData(widget?.procedureMode, params, widgetData?.JNDIid);
+        const data = await fetchProcedureData(widget?.procedureMode, params, widgetData?.JNDIid, null, isGlobal);
         const limit = widgetLimit
           ? parseInt(widgetLimit)
           : safeLimit
@@ -427,11 +559,11 @@ const GraphDash = ({ widgetData, pkColumn, setPkColumn, isLayoutWithPreview }) =
               </li>
 
               <li className="p-1 dropdown-item text-primary" style={{ cursor: "pointer" }}
-                onClick={() => generateGraphPDF(widgetData, graphData, singleConfigData?.databaseConfigVO, filterColumns(visibleColumns), sortConfig)} title="pdf">
+                onClick={() => generateGraphPDF(widgetData, graphData, singleConfigData?.databaseConfigVO, filterColumns(visibleColumns), sortConfig, getParametersWithValues(widgetParams, paramsValues, widgetData?.rptId, allDrpDtParams))} title="pdf">
                 <FontAwesomeIcon icon={faFilePdf} className="dropdown-gear-icon me-2" />{dt('Download PDF')}
               </li>
 
-              <li className="p-1 dropdown-item text-primary" style={{ cursor: "pointer" }} onClick={() => generateGraphCSV(widgetData, graphData, singleConfigData?.databaseConfigVO, filterColumns(visibleColumns), sortConfig)}>
+              <li className="p-1 dropdown-item text-primary" style={{ cursor: "pointer" }} onClick={() => generateGraphCSV(widgetData, graphData, singleConfigData?.databaseConfigVO, filterColumns(visibleColumns), sortConfig, getParametersWithValues(widgetParams, paramsValues, widgetData?.rptId, allDrpDtParams))}>
                 <FontAwesomeIcon icon={faFileExcel} className="dropdown-gear-icon me-2" />{dt('Download CSV')}
               </li>
 
@@ -440,7 +572,7 @@ const GraphDash = ({ widgetData, pkColumn, setPkColumn, isLayoutWithPreview }) =
                 <FontAwesomeIcon icon={faSliders} className="dropdown-gear-icon me-2" />{dt('Advanced')}</li>
             </ul>
             <button type="button" className="small-box-btn-dwn"
-              onClick={() => generateGraphPDF(widgetData, allGraphData, singleConfigData?.databaseConfigVO, filterColumns(visibleColumns), sortConfig)}
+              onClick={() => generateGraphPDF(widgetData, allGraphData, singleConfigData?.databaseConfigVO, filterColumns(visibleColumns), sortConfig, getParametersWithValues(widgetParams, paramsValues, widgetData?.rptId, allDrpDtParams), getParametersWithValues(widgetParams, paramsValues, widgetData?.rptId, allDrpDtParams))}
               title="PDF"
             >
               <FontAwesomeIcon icon={faFilePdf} className="dropdown-gear-icon" />
@@ -457,9 +589,10 @@ const GraphDash = ({ widgetData, pkColumn, setPkColumn, isLayoutWithPreview }) =
 
       {paramsData && (
         <div className='parameter-box'>
-          <Parameters params={paramsData} setParamsValues={setWidParamsValues} scope={'widgetParams'} widgetId={widgetData?.rptId} />
+          <Parameters params={paramsData} setParamsValues={setWidParamsValues} scope={'widgetParams'} widgetId={widgetData?.rptId} setWidgetParams={setWidgetParams} setAllDrpDtParams={setAllDrpDtParams} />
         </div>
       )}
+
       {graphData?.map((gdata, index) => {
 
         const options = {
@@ -626,9 +759,11 @@ const GraphDash = ({ widgetData, pkColumn, setPkColumn, isLayoutWithPreview }) =
         return (
           <>
             <div className="px-2 py-2" style={{ marginTop: `${widgetTopMargin}px` }}>
-              <h4 style={{ fontWeight: "500", fontSize: "20px" }}>{dt('Query')} :{widgetData?.rptId}</h4>
               {(widgetData?.modeOfQuery === 'Query' && isPrev == 1) &&
-                <span>{gdata?.queryName}</span>
+                <>
+                  <h4 style={{ fontWeight: "500", fontSize: "20px" }}>{dt('Query')} :</h4>
+                  <span>{gdata?.queryName}</span>
+                </>
               }
               {(widgetData?.modeOfQuery === "Procedure" && isPrev == 1) &&
                 <span>{widgetData?.procedureMode}</span>
@@ -654,6 +789,7 @@ const GraphDash = ({ widgetData, pkColumn, setPkColumn, isLayoutWithPreview }) =
               {option.label}
             </option>
           ))}
+
         </select>
       }
       {footerText !== '' &&

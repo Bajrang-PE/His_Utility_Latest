@@ -4,6 +4,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCog, faFileExcel, faFilePdf, faRefresh } from '@fortawesome/free-solid-svg-icons';
 import { generateCSV, generatePDF } from '../commons/advancedPdf';
 import { fetchProcedureData, fetchQueryData, formatDateFullYear } from '../../utils/commonFunction';
+import { useSearchParams } from 'react-router-dom';
 
 const NewsTickerDash = ({ widgetData }) => {
     const { theme, mainDashData, singleConfigData, paramsValues, setLoading, dt } = useContext(HISContext);
@@ -11,6 +12,9 @@ const NewsTickerDash = ({ widgetData }) => {
     const [currentIndex, setCurrentIndex] = useState(0);
     const [isTransitionActive, setIsTransitionActive] = useState(true);
     const [newsData, setNewsData] = useState([]);
+
+    const [queryParams] = useSearchParams();
+    const isGlobal = queryParams.get("isGlobal") || 0;
 
     const borderReq = useMemo(() => widgetData?.isWidgetBorderRequired || '', [widgetData?.isWidgetBorderRequired]);
     const headingAlign = useMemo(() => widgetData?.widgetHeadingAlignment || '', [widgetData?.widgetHeadingAlignment]);
@@ -80,7 +84,7 @@ const NewsTickerDash = ({ widgetData }) => {
                     formatDateFullYear(new Date()),//from values
                     formatDateFullYear(new Date()) // to values
                 ]
-                const response = await fetchProcedureData(widget?.procedureMode, params, widget?.JNDIid);
+                const response = await fetchProcedureData(widget?.procedureMode, params, widget?.JNDIid,null,isGlobal);
                 const formattedData = formatData(response.data || []);
                 setNewsData(formattedData);
             } catch (error) {
@@ -89,7 +93,7 @@ const NewsTickerDash = ({ widgetData }) => {
             }
         } else if (widget?.modeOfQuery === "Query") {
             try {
-                const data = await fetchQueryData(widget?.queryVO, widget?.JNDIid);
+                const data = await fetchQueryData(widget?.queryVO, widget?.JNDIid,'','',isGlobal);
                 if (data?.length > 0) {
                     const formattedData = formatData(data);
                     setNewsData(formattedData);

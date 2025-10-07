@@ -67,6 +67,8 @@ const HISContextData = ({ children }) => {
   const [language, setLanguage] = useState('english');
   const [translations, setTranslations] = useState([]);
 
+  const [token, setToken] = useState('');
+
 
   const fetchTranslations = async (lang) => {
     try {
@@ -202,17 +204,19 @@ const HISContextData = ({ children }) => {
       const isToken = localStorage.getItem('accessToken');
 
       let userName = "";
+      const isGlobal = searchParams.get("isGlobal") || 0;
 
       // Extract params from URL
       if (searchParams.get("userName")) {
         userName = searchParams.get("userName");
-      } else if (searchParams.get("dbfhttf")) {
-        const encIFUrl = searchParams.get("dbfhttf");
-        userName = encIFUrl ? atob(getEncryptedParamValue(encIFUrl, "userName")) : "";
       }
+      //  else if (searchParams.get("dbfhttf")) {
+      //   const encIFUrl = searchParams.get("dbfhttf");
+      //   userName = encIFUrl ? atob(getEncryptedParamValue(encIFUrl, "userName")) : "";
+      // }
 
-      const data = await fetchData("/hisutils/dashboard-configurations",
-        !isToken ? { 'userName': userName } : null
+      const data = await fetchData(`/hisutils/dashboard-configurations?isGlobal=${isGlobal || 0}`,
+        !isToken && isGlobal != 1 ? { 'userName': userName } : null
       );
 
       if (data?.status === 1) {
@@ -241,6 +245,7 @@ const HISContextData = ({ children }) => {
 
       if (data?.headers && !isToken) {
         const token = data?.headers?.authorization;
+        setToken(token);
         if (token) {
           localStorage.setItem("accessToken", token);
         }
@@ -318,7 +323,7 @@ const HISContextData = ({ children }) => {
       fetchTranslations,
       setLanguage,
       showTranslateModal, setShowTranslateModal,
-      extractedTexts, setExtractedTexts
+      extractedTexts, setExtractedTexts, token, setToken
     }}>
       {children}
     </HISContext.Provider>

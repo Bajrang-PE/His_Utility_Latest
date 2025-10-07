@@ -45,6 +45,7 @@ const WidgetDash = React.memo(({ widgetDetail, presentWidgets, presentTabs, pk ,
 
     }, [widgetData])
 
+
     const renderWidget = (data) => {
         switch (data?.reportViewed) {
             case 'KPI': return <KpiDash widgetData={data} presentTabs={presentTabs} isLayoutWithPreview={isLayoutWithPreview}/>;

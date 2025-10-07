@@ -18,7 +18,7 @@ const usePrevious = (value) => {
     return ref.current;
 };
 
-const Parameters = ({ params, scope, widgetId = null, isLayoutWithPreview, setWidgetParams,widgetParams }) => {
+const Parameters = ({ params, scope, widgetId = null, isLayoutWithPreview, setWidgetParams, setAllDrpDtParams }) => {
     const { theme, setParamsValues, paramsValuesPro, setParamsValuesPro, setIsSearchQuery, activeTab, isSearchQuery, searchScope, setSearchScope, dt } = useContext(HISContext);
     const [presentParams, setPresentParams] = useState([]);
     const [selectedValues, setSelectedValues] = useState({});
@@ -29,16 +29,13 @@ const Parameters = ({ params, scope, widgetId = null, isLayoutWithPreview, setWi
 
     const groupId = atob(queryParams.get("groupId"));
     const dashFor = atob(queryParams.get("dashboardFor"));
+    const isGlobal = queryParams.get("isGlobal") || 0;
 
     const [parentId, setParentId] = useState([]);
     const prevParams = usePrevious(paramsValuesPro);
 
     const [errors, setErrors] = useState({
     })
-
-    // console.log('paramsValuesPro', paramsValuesPro)
-    // console.log('presentParams', presentParams)
-    // console.log('dropdownData', dropdownData)
 
     const handleSetParamsValues = useCallback((values, type, widgetId = null) => {
         if (type === 'tabParams') {
@@ -104,10 +101,10 @@ const Parameters = ({ params, scope, widgetId = null, isLayoutWithPreview, setWi
                 dashboardFor: dashFor || 'CENTRAL DASHBOARD',
                 masterName: "ParameterMst"
             };
-            const data = await fetchPostData("/hisutils/getparametertMultipleData", val);
+            const data = await fetchPostData(`/hisutils/getparametertMultipleData?isGlobal=${isGlobal || 0}`, val);
             if (data?.status === 1) {
                 setPresentParams(data?.data);
-                setWidgetParams(data?.data?.map((dt) => ({ id: dt?.id, paraName: dt?.jsonData?.parameterDisplayName })))
+                setWidgetParams(data?.data?.map((dt) => ({ id: dt?.id, disName: dt?.jsonData?.parameterDisplayName, paraName: dt?.jsonData?.parameterName })))
             } else {
                 setPresentParams([]);
             }
@@ -208,10 +205,8 @@ const Parameters = ({ params, scope, widgetId = null, isLayoutWithPreview, setWi
                 //             ? paramsValuesPro?.widgetParams?.[paraId] ?? null
                 //             : null,
             };
-            console.log('val', val)
-            const response = await fetchPostData('/hisutils/GenericApiQry', val);
+            const response = await fetchPostData(`/hisutils/GenericApiQry?isGlobal=${isGlobal || 0}`, val);
 
-            console.log(parameterName, response)
 
             const rawData = response?.data || [];
 
@@ -227,6 +222,10 @@ const Parameters = ({ params, scope, widgetId = null, isLayoutWithPreview, setWi
 
 
             setDropdownData(prev => ({
+                ...prev,
+                [parameterName]: formattedData,
+            }));
+            setAllDrpDtParams(prev => ({
                 ...prev,
                 [parameterName]: formattedData,
             }));
@@ -450,7 +449,7 @@ const Parameters = ({ params, scope, widgetId = null, isLayoutWithPreview, setWi
                     if (parameterType === '4' && parameterQueryForDate) {
                         const val = { query: parameterQueryForDate, params: {}, jndi: jndiIdForGettingData };
                         try {
-                            const response = await fetchPostData('/hisutils/GenericApiQry', val);
+                            const response = await fetchPostData(`/hisutils/GenericApiQry?isGlobal=${isGlobal || 0}`, val);
                             const rawData = response?.data || [];
                             const formattedData = rawData.map(item => {
                                 const keys = Object.keys(item);
@@ -582,6 +581,9 @@ const Parameters = ({ params, scope, widgetId = null, isLayoutWithPreview, setWi
                             }
                         </>
                     }
+
+
+                    
 
                     {parameterType === "2" && (
                         <>

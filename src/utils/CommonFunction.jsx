@@ -1,6 +1,7 @@
 import { decryptData } from "./SecurityConfig";
 
 
+
 export const getAuthUserData = (key) => {
   const sessionData = localStorage.getItem('data');
   const userData = sessionData ? decryptData(sessionData) : '';
@@ -44,3 +45,4 @@ export const formatDateForBackend = (date) => {
 
   return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 };
+

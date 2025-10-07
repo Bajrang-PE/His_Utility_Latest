@@ -49,7 +49,8 @@ apiHis.interceptors.request.use(
 apiHis.interceptors.response.use(
     async (response) => {
         if (response?.data?.status && response?.data?.status === 401) {
-            ToastAlert('Session expired. Please log in again.', 'error');
+            ToastAlert("Network Exception!!!", 'error');
+            localStorage.clear();
             // setTimeout(() => {
             //     logout();
             // }, 1000);
@@ -62,14 +63,16 @@ apiHis.interceptors.response.use(
             const { status, data } = error.response;
             if (status === 401 || status === 403) {
                 // Token is expired or unauthorized
-                ToastAlert(data?.error, 'error');
+                ToastAlert("Network Exception!!!", 'error');
+                localStorage.clear();
                 // setTimeout(() => {
                 //     logout();
                 // }, 1000);
 
             }
         } else {
-            ToastAlert("Authorization Failed!!!!", 'error');
+            ToastAlert("Network Exception!!!", 'error');
+            localStorage.clear();
             // setTimeout(() => {
             //     logout();
             // }, 1000);
@@ -106,7 +109,7 @@ export const fetchData = async (url, params = null) => {
     try {
         const response = await apiHis.get(url, { params: params || "" });
 
-        const token = response.headers['authorization'] ||
+        const rawToken = response.headers['authorization'] ||
             response.headers['Authorization'] ||
             response.headers?.get?.('authorization') ||
             response.headers?.get?.('Authorization');
@@ -114,6 +117,12 @@ export const fetchData = async (url, params = null) => {
         const decryptedData = decryptAesOrRsa(response?.data);
         const jsonData = JSON.parse(decryptedData);
 
+        // const jsonData = response?.data;
+
+        let token = null;
+        if (rawToken) {
+            token = rawToken.split(",")[0].trim();
+        }
 
         if (token) {
             return {
@@ -157,7 +166,7 @@ export const fetchPostData = async (url, data, rtblob, signal) => {
             );
             const decryptedData = decryptAesOrRsa(response?.data)
             return JSON.parse(decryptedData);
-            // return response.data;7,18,173
+            // return response.data;
         }
 
     } catch (error) {

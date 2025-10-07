@@ -27,6 +27,8 @@ const TabDash = React.memo(() => {
 
     const groupId = atob(searchParams.get("groupId"));
     const dashboardFor = atob(searchParams.get("dashboardFor"));
+    const isGlobal = searchParams.get("isGlobal") || 0;
+
 
     // const [groupId, setGroupId] = useState('');
     // const [dashboardFor, setDashboardFor] = useState('');
@@ -57,7 +59,7 @@ const TabDash = React.memo(() => {
                 dashboardFor: dashFor || 'CENTRAL DASHBOARD',
                 masterName: "DashboardWidgetMst"
             };
-            const data = await fetchPostData("/hisutils/getWdgtMultipleData", val);
+            const data = await fetchPostData(`/hisutils/getWdgtMultipleData?isGlobal=${isGlobal || 0}`, val);
 
             if (data?.status === 1) {
                 setAllWidgetData(data?.data);
@@ -257,6 +259,7 @@ const TabDash = React.memo(() => {
 
     const bgclr = activeTab?.jsonData?.tabBackgroundColor || "#ffffff";
     const titleclr = activeTab?.jsonData?.tabTitleFontColor || "#000000";
+
 
     return (
         <>

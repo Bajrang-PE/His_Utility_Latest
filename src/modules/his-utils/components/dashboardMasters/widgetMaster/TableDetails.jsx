@@ -7,10 +7,10 @@ import { faAdd, faEdit, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { headingDisplayStyleOptions, isActionButtonReqOptions } from '../../../localData/DropDownData'
 
 const TableDetails = (props) => {
-    const { handleValueChange, handleRadioChange, radioValues, values, setValues, parentWidget,dt } = props;
+    const { handleValueChange, handleRadioChange, radioValues, values, setValues, parentWidget, dt, tabDrpData } = props;
 
     const [rows, setRows] = useState([]);
-    const [newRow, setNewRow] = useState({ modeForOpeningPopup: "", drillWidgetName: "", titleMsg: "", drillDownType: "", popupWidgetId: "" });
+    const [newRow, setNewRow] = useState({ modeForOpeningPopup: "", drillWidgetName: "", titleMsg: "Click To View Details", drillDownType: "Widget", popupWidgetId: "", drillTabId: "", drillTabName: "" });
 
     useEffect(() => {
         if (values?.popUpDetails?.length > 0) {
@@ -22,7 +22,9 @@ const TableDetails = (props) => {
 
     const handleInputChange = (field, e) => {
         if (e.target.name === 'popupWidgetId') {
-            setNewRow({ ...newRow, [field]: e.target.value, ['drillWidgetName']: e.target.label })
+            setNewRow({ ...newRow, [field]: e.target.value, ['drillWidgetName']: parentWidget?.find(dt => dt?.value == e.target.value)?.label })
+        } else if (e.target.name === "drillTabId") {
+            setNewRow({ ...newRow, [field]: e.target.value, ['drillTabName']: tabDrpData?.find(dt => dt?.value == e.target.value)?.label })
         } else {
             setNewRow({ ...newRow, [field]: e.target.value });
         }
@@ -41,7 +43,7 @@ const TableDetails = (props) => {
             oldDt?.push(newRow)
             setValues({ ...values, ['popUpDetails']: oldDt })
         }
-        setNewRow({ modeForOpeningPopup: "", drillWidgetName: "", titleMsg: "", drillDownType: "", popupWidgetId: "" });
+        setNewRow({ modeForOpeningPopup: "", drillWidgetName: "", titleMsg: "Click To View Details", drillDownType: "Widget", popupWidgetId: "", drillTabId: "", drillTabName: "" });
     };
 
     const handleEditRow = (index) => {
@@ -55,17 +57,16 @@ const TableDetails = (props) => {
         setValues({ ...values, ['popUpDetails']: updatedRows })
     };
 
-
     return (
         <>
             <b><h6 className='header-devider m-0'>{dt('Table Heading Related Details')}</h6></b>
             {/* SECTION DEVIDER table heading*/}
-            <div className='row role-theme user-form' style={{ paddingBottom: "1px" }}>
+            <d iv className='row role-theme user-form' style={{ paddingBottom: "1px" }}>
                 {/* //left columns */}
                 <div className='col-sm-6'>
                     <div className="form-group row">
                         <label className="col-sm-5 col-form-label pe-0">
-                           {dt('Is Table Heading Required')} :
+                            {dt('Is Table Heading Required')} :
                         </label>
                         <div className="col-sm-7 ps-0 align-content-center">
                             <div className="form-check form-check-inline">
@@ -93,7 +94,7 @@ const TableDetails = (props) => {
                                     checked={radioValues?.isTableHeadingReq === "No"}
                                 />
                                 <label className="form-check-label" htmlFor="dbNo">
-                                   {dt('No')} 
+                                    {dt('No')}
                                 </label>
                             </div>
                         </div>
@@ -222,7 +223,7 @@ const TableDetails = (props) => {
                         </div>
                     </div>
                 }
-            </div>
+            </d>
 
             <b><h6 className='header-devider m-0'>{dt('Table - Pagination and Records')}</h6></b>
             {/* SECTION DEVIDER pagination and records*/}
@@ -311,7 +312,7 @@ const TableDetails = (props) => {
                                         checked={radioValues?.isHeadingFixed === 'No'}
                                     />
                                     <label className="form-check-label" htmlFor="dbNo">
-                                       {dt('No')} 
+                                        {dt('No')}
                                     </label>
                                 </div>
                             </div>
@@ -335,7 +336,7 @@ const TableDetails = (props) => {
                     }
                     <div className="form-group row">
                         <label className="col-sm-5 col-form-label pe-0">
-                           {dt('Is Last row Total')} :
+                            {dt('Is Last row Total')} :
                         </label>
                         <div className="col-sm-7 ps-0 align-content-center">
                             <div className="form-check form-check-inline">
@@ -349,7 +350,7 @@ const TableDetails = (props) => {
                                     checked={radioValues?.isLastRowTotal === 'Yes'}
                                 />
                                 <label className="form-check-label" htmlFor="dbYes">
-                                   {dt('Yes')} 
+                                    {dt('Yes')}
                                 </label>
                             </div>
                             <div className="form-check form-check-inline">
@@ -424,7 +425,7 @@ const TableDetails = (props) => {
                                     checked={radioValues?.isSearchReq === 'Yes'}
                                 />
                                 <label className="form-check-label" htmlFor="dbYes">
-                                   {dt('Yes')} 
+                                    {dt('Yes')}
                                 </label>
                             </div>
                             <div className="form-check form-check-inline">
@@ -438,7 +439,7 @@ const TableDetails = (props) => {
                                     checked={radioValues?.isSearchReq === 'No'}
                                 />
                                 <label className="form-check-label" htmlFor="dbNo">
-                                   {dt('No')} 
+                                    {dt('No')}
                                 </label>
                             </div>
                         </div>
@@ -547,7 +548,7 @@ const TableDetails = (props) => {
                                         checked={radioValues?.isHideParent === 'No'}
                                     />
                                     <label className="form-check-label" htmlFor="dbNo">
-                                       {dt('No')} 
+                                        {dt('No')}
                                     </label>
                                 </div>
                             </div>
@@ -632,7 +633,7 @@ const TableDetails = (props) => {
                                     checked={radioValues?.isShowPrntHeadChild === 'No'}
                                 />
                                 <label className="form-check-label" htmlFor="dbNo">
-                                   {dt('No')} 
+                                    {dt('No')}
                                 </label>
                             </div>
                         </div>
@@ -777,7 +778,7 @@ const TableDetails = (props) => {
                                     checked={radioValues?.printPdfIn === 'Potrait'}
                                 />
                                 <label className="form-check-label" htmlFor="dbNo">
-                                   {dt('Potrait')} 
+                                    {dt('Potrait')}
                                 </label>
                             </div>
                         </div>
@@ -826,7 +827,7 @@ const TableDetails = (props) => {
                                     checked={radioValues?.pdfTheme === 'plain'}
                                 />
                                 <label className="form-check-label" htmlFor="dbNo">
-                                   {dt('Plain')} 
+                                    {dt('Plain')}
                                 </label>
                             </div>
                         </div>
@@ -897,7 +898,7 @@ const TableDetails = (props) => {
 
                                 />
                                 <label className="form-check-label" htmlFor="dbYes">
-                                   {dt('Yes')} 
+                                    {dt('Yes')}
                                 </label>
                             </div>
                             <div className="form-check form-check-inline">
@@ -911,7 +912,7 @@ const TableDetails = (props) => {
                                     checked={radioValues?.isReportPrintDtReq === 'No'}
                                 />
                                 <label className="form-check-label" htmlFor="dbNo">
-                                   {dt('No')} 
+                                    {dt('No')}
                                 </label>
                             </div>
                         </div>
@@ -946,7 +947,7 @@ const TableDetails = (props) => {
                                     checked={radioValues?.isTableBorderReq === 'No'}
                                 />
                                 <label className="form-check-label" htmlFor="dbNo">
-                                   {dt('No')} 
+                                    {dt('No')}
                                 </label>
                             </div>
                         </div>
@@ -1040,7 +1041,7 @@ const TableDetails = (props) => {
                     </div>
                     <div className="form-group row">
                         <label className="col-sm-5 col-form-label pe-0">
-                           {dt('Is PDF Header Required in all pages')} :
+                            {dt('Is PDF Header Required in all pages')} :
                         </label>
                         <div className="col-sm-7 ps-0 align-content-center">
                             <div className="form-check form-check-inline">
@@ -1054,7 +1055,7 @@ const TableDetails = (props) => {
                                     checked={radioValues?.isPdfHeadReqAllPgs === 'Yes'}
                                 />
                                 <label className="form-check-label" htmlFor="dbYes">
-                                   {dt('Yes')} 
+                                    {dt('Yes')}
                                 </label>
                             </div>
                             <div className="form-check form-check-inline">
@@ -1068,7 +1069,7 @@ const TableDetails = (props) => {
                                     checked={radioValues?.isPdfHeadReqAllPgs === 'No'}
                                 />
                                 <label className="form-check-label" htmlFor="dbNo">
-                                   {dt('No')} 
+                                    {dt('No')}
                                 </label>
                             </div>
                         </div>
@@ -1187,7 +1188,7 @@ const TableDetails = (props) => {
                                     checked={radioValues?.isDirectDownloadBtn === 'Yes'}
                                 />
                                 <label className="form-check-label" htmlFor="dbYes">
-                                   {dt('Yes')} 
+                                    {dt('Yes')}
                                 </label>
                             </div>
                             <div className="form-check form-check-inline">
@@ -1286,11 +1287,11 @@ const TableDetails = (props) => {
                                     <td>
                                         <InputSelect
                                             className="backcolorinput"
-                                            id="popupWidgetId"
-                                            name="popupWidgetId"
-                                            options={parentWidget}
-                                            onChange={(e) => handleInputChange("popupWidgetId", e)}
-                                            value={newRow.popupWidgetId}
+                                            id={newRow.drillDownType === 'Tab' ? "drillTabId" : "popupWidgetId"}
+                                            name={newRow.drillDownType === 'Tab' ? "drillTabId" : "popupWidgetId"}
+                                            options={newRow.drillDownType === 'Tab' ? tabDrpData : parentWidget}
+                                            onChange={(e) => handleInputChange(newRow.drillDownType === 'Tab' ? "drillTabId" : "popupWidgetId", e)}
+                                            value={newRow.drillDownType === 'Tab' ? newRow?.drillTabId : newRow.popupWidgetId}
                                             placeholder={'Select Widget'}
                                         >
                                         </InputSelect>
@@ -1306,15 +1307,15 @@ const TableDetails = (props) => {
                                         />
                                     </td>
                                     <td className='px-0 action-buttons'>
-                                        <button className='btn btn-sm me-1 py-0 px-0' style={{ background: "#34495e", color: "white" }} onClick={()=>handleAddRow()}><FontAwesomeIcon icon={faAdd} className="dropdown-gear-icon" size='sm' />{dt('Add')}</button>
+                                        <button className='btn btn-sm me-1 py-0 px-0' style={{ background: "#34495e", color: "white" }} onClick={() => handleAddRow()}><FontAwesomeIcon icon={faAdd} className="dropdown-gear-icon" size='sm' />{dt('Add')}</button>
                                     </td>
                                 </tr>
                                 {rows.map((row, index) => (
                                     <tr className='table-row-form text-start' key={index}>
                                         <td>{row.modeForOpeningPopup || "---"}</td>
                                         <td>{row.drillDownType || "---"}</td>
-                                        <td>{row.drillWidgetName || "---"}</td>
-                                        <td>{row.titleMsg || "---"}</td>
+                                        <td>{row.drillDownType === 'Tab' ? row?.drillTabName :row.drillWidgetName || "---"}</td>
+                                        <td>{row.titleMsg || "Click To View Details"}</td>
                                         <td className=''>
                                             <div className='text-center'>
                                                 <button
@@ -1361,7 +1362,7 @@ const TableDetails = (props) => {
                                             checked={radioValues?.treeChildDataBy === 'Query'}
                                         />
                                         <label className="form-check-label" htmlFor="dbYes">
-                                           {dt('By Query')} 
+                                            {dt('By Query')}
                                         </label>
                                     </div>
                                     <div className="form-check form-check-inline">
@@ -1523,7 +1524,7 @@ const TableDetails = (props) => {
                                             checked={radioValues?.dataDisplay === 'vertical'}
                                         />
                                         <label className="form-check-label" htmlFor="dbNo">
-                                           {dt('Vertical')} 
+                                            {dt('Vertical')}
                                         </label>
                                     </div>
                                 </div>

@@ -19,7 +19,8 @@ const TabularDash = (props) => {
 
   const { widgetData, setWidgetData, levelData, setLevelData, pkColumn, setPkColumn, isLayoutWithPreview, presentTabs } = props;
 
-  const { theme, singleConfigData, paramsValues, setLoading, presentWidgets, isSearchQuery, setIsSearchQuery, setSearchScope, searchScope, dt } = useContext(HISContext);
+
+  const { theme, singleConfigData, paramsValues, setLoading, presentWidgets, isSearchQuery, setIsSearchQuery, setSearchScope, searchScope, dt, presentTabsDash, setActiveTab, activeTab, setPrevKpiTab } = useContext(HISContext);
 
 
   const [tableData, setTableData] = useState([]);
@@ -33,26 +34,26 @@ const TabularDash = (props) => {
   const [MainHeaders, setMainHeaders] = useState([])
   const [multipleTables, setMultipleTables] = useState([]);
   const [widgetParams, setWidgetParams] = useState([]);
-
-  console.log('paramsValues', paramsValues)
-  console.log('widgetParams', widgetParams)
+  const [allDrpDtParams, setAllDrpDtParams] = useState([]);
 
 
-  const getParametersWithValues = (parameters, paramsData, widgetId) => {
+  const getParametersWithValues = (parameters, paramsData, widgetId, allDrpDtParams) => {
     return parameters.map(param => {
-      const value = paramsData?.widgetParams?.[widgetId]?.[param.id] || null;
+      const value = paramsData?.widgetParams?.[widgetId]?.[param?.id] || null;
+      const val = allDrpDtParams?.[param?.paraName] || null;
+
       return {
         ...param,
-        value: value
+        value: value,
+        val: val?.find(dt => dt?.optionValue == value)?.optionText || value
       };
     });
   }
 
-  console.log(getParametersWithValues(widgetParams,paramsValues,widgetData?.rptId),'bgbgbgbbg'+widgetData?.rptId)
-
 
   const [queryParams] = useSearchParams();
   const isPrev = queryParams.get('isPreview');
+  const isGlobal = queryParams.get("isGlobal") || 0;
 
   // const encIFUrl = queryParams.get("dbfhttf");
   // const isPrev = encIFUrl ? getEncryptedParamValue(encIFUrl, "isPreview") : '';
@@ -198,15 +199,25 @@ const TabularDash = (props) => {
         ToastAlert(`No popup config found for indicator ${widgetIndicator}`, 'warning');
         return;
       }
+      if (config?.drillDownType === "Tab") {
+        const tabdt = presentTabsDash?.filter(tab => tab?.jsonData?.dashboardId == config?.drillTabId)
+        if (tabdt?.length > 0) {
+          setActiveTab(tabdt[0]);
+          setPrevKpiTab([activeTab]);
+        } else {
+          ToastAlert('Tab Not Found', 'warning')
+        }
 
-      setPopupConfig({
-        widgetId: config.popupWidgetId,
-        pkValue: pkValue,
-        title: config.titleMsg,
-        mode: config.modeForOpeningPopup,
-        widgetName: config?.drillWidgetName
-      });
-      setShowPopUpWidget(true);
+      } else {
+        setPopupConfig({
+          widgetId: config.popupWidgetId,
+          pkValue: pkValue,
+          title: config.titleMsg,
+          mode: config.modeForOpeningPopup,
+          widgetName: config?.drillWidgetName
+        });
+        setShowPopUpWidget(true);
+      }
 
     } catch (error) {
       console.error('Error opening popup:', error);
@@ -555,8 +566,16 @@ const TabularDash = (props) => {
         }
       }
 
-      const dynamicColumns = reorderedKeys.map((key) => {
+      const formatSettings = widgetData?.mpFormatColumn?.[0]?.lstFormatColumn || [];
+
+      const dynamicColumns = reorderedKeys.map((key, index) => {
         const isDateColumn = dateColumns.has(key);
+
+        // 📏 Find corresponding format by columnNo
+        const format = formatSettings.find(f => parseInt(f.columnNo) === index + 1);
+
+        const align = format?.columnAlignment || 'Left';
+        const widthPercent = format?.columnWidth ? `${format.columnWidth}%` : undefined;
 
         return {
           name: key,
@@ -564,7 +583,11 @@ const TabularDash = (props) => {
           selector: row => getFirstValue(row[key]),
           sortable: true,
           wrap: true,
-          width: /^sno$/i.test(key) ? '8%' : undefined,
+          // width: /^sno$/i.test(key) ? '8%' : undefined,
+          width: widthPercent || (/^sno$/i.test(key) ? '8%' : undefined),
+          center: align.toLowerCase() === 'center' ? true : false,
+          right: align.toLowerCase() === 'right' ? true : false,
+
           // Add custom sort function for date columns
           sortFunction: isDateColumn ? (rowA, rowB) => {
             const dateA = new Date(getFirstValue(rowA[key]));
@@ -584,24 +607,29 @@ const TabularDash = (props) => {
               );
             }
 
-            if (typeof value === 'string' && (value.trim().startsWith('<a') || value.trim().startsWith('<div') || isHTML(value.trim()))) {
+            if (typeof value === 'string' && !value.includes("##") && (value.trim().startsWith('<a') || value.trim().startsWith('<div') || isHTML(value.trim()))) {
               return (
                 <span
-                  dangerouslySetInnerHTML={{ __html: value }}
+                  dangerouslySetInnerHTML={{ __html: getFirstValue(value) }}
+                  style={{ textAlign: align.toLowerCase() }}
                 />
               );
             }
 
             return typeof value === 'string' && value.includes("##") ? (
               <span
-                style={{ color: 'blue', cursor: 'pointer' }}
+                style={{ color: 'blue', cursor: 'pointer', textAlign: align.toLowerCase() }}
                 onClick={() => openPopUpWidget(value)}
               >
-                {displayValue}
+                {!isHTML(value.trim()) ? displayValue : <span
+                  dangerouslySetInnerHTML={{ __html: getFirstValue(value) }}
+                  style={{ textAlign: align.toLowerCase() }}
+                />}
               </span>
-            ) : (
-              <span>{displayValue}</span>
-            );
+            ) :
+              (
+                <span style={{ textAlign: align.toLowerCase(), display: 'block' }}>{displayValue}</span>
+              );
           }
         };
       });
@@ -646,7 +674,7 @@ const TabularDash = (props) => {
           formatDateFullYear(new Date()),//from values
           formatDateFullYear(new Date()) // to values
         ]
-        const response = await fetchProcedureData(widget?.procedureMode, params, widget?.JNDIid);
+        const response = await fetchProcedureData(widget?.procedureMode, params, widget?.JNDIid, null, isGlobal);
         // if (response?.data?.length > 0) {
 
         let filteredData = response.data;
@@ -692,7 +720,7 @@ const TabularDash = (props) => {
         const allQueryResults = await Promise.all(
           widget.queryVO.map(async (queryObj) => {
             const params = getOrderedParamValues(queryObj?.mainQuery, paramsValues, widget?.rptId);
-            const data = await fetchQueryData([queryObj], widget?.JNDIid, params, pkColumn);
+            const data = await fetchQueryData([queryObj], widget?.JNDIid, params, pkColumn, isGlobal);
             return { queryObj, data };
           })
         );
@@ -860,13 +888,12 @@ const TabularDash = (props) => {
     }));
   };
 
-  console.log('paramsData', paramsData)
 
   return (
     <>
       {/* {currentLevel == 0 && */}
       <div className={`tabular-box ${theme === 'Dark' ? 'dark-theme' : ''} tabular-box-border ${borderReq === 'No' ? 'border-0' : ''}`} style={{
-        height: isLayoutWithPreview ? '100%' : widheight ? `${widheight}px` : '650px',
+        height: isLayoutWithPreview ? '100%' : widheight && widheight != '0' ? `${widheight}px` : '650px',
         border: `1px solid ${theme === 'Dark' ? 'white' : 'black'}`,
         marginTop: `${widgetTopMargin}px`
       }} key={widgetData?.rptId}>
@@ -874,7 +901,7 @@ const TabularDash = (props) => {
 
         <div className={`row px-1 py-1 border-bottom ${headingReq !== "Yes" ? "align-content-end" : ""}`}>
           {headingReq === "Yes" &&
-            <div className={` ${isActionButtonReq !== 'No' || isActionButtonReq !== 'None' || currentLevel !== 0 ? 'col-md-9' : 'col-md-12'} fw-medium fs-6`} style={{ textAlign: headingAlign, color: widgetHeadingColor }} >{dt(widgetData?.rptName)}</div>
+            <div className={` ${isActionButtonReq !== 'No' || isActionButtonReq !== 'None' || currentLevel !== 0 ? 'col-md-9' : 'col-md-12'} fw-medium fs-6`} style={{ textAlign: headingAlign, color: widgetHeadingColor }} >{dt(widgetData?.rptDisplayName)}</div>
           }
 
           <div className={`${headingReq === "Yes" ? "col-md-3" : "col-md-12"}`}>
@@ -904,7 +931,12 @@ const TabularDash = (props) => {
                             ? table.data.slice(0, safeLimit)
                             : table.data
                       }));
-                      generatePDF(widgetData, limitedTables, singleConfigData?.databaseConfigVO, filterColumns(multipleTables[0]?.columns, visibleColumns, isFirstRowHeading), isFirstRowHeading)
+                      generatePDF(widgetData, limitedTables, singleConfigData?.databaseConfigVO,
+                        // filterColumns(multipleTables[0]?.columns, visibleColumns, isFirstRowHeading), 
+                        multipleTables.map((tbl, idx) =>
+                          filterColumns(tbl?.columns, visibleColumns, isFirstRowHeading)
+                        ),
+                        isFirstRowHeading, getParametersWithValues(widgetParams, paramsValues, widgetData?.rptId, allDrpDtParams))
                     }} title="PDF">
                     <FontAwesomeIcon icon={faFilePdf} className="dropdown-gear-icon me-2" />{dt('Download PDF')}
                   </li>
@@ -920,7 +952,12 @@ const TabularDash = (props) => {
                             ? table.data.slice(0, safeLimit)
                             : table.data
                       }));
-                      generateCSV(widgetData, limitedTables, singleConfigData?.databaseConfigVO, filterColumns(multipleTables[0]?.columns, visibleColumns, isFirstRowHeading), isFirstRowHeading)
+                      generateCSV(widgetData, limitedTables, singleConfigData?.databaseConfigVO,
+                        // filterColumns(multipleTables[0]?.columns, visibleColumns, isFirstRowHeading),
+                        multipleTables.map((tbl, idx) =>
+                          filterColumns(tbl?.columns, visibleColumns, isFirstRowHeading)
+                        ),
+                        isFirstRowHeading, getParametersWithValues(widgetParams, paramsValues, widgetData?.rptId, allDrpDtParams))
                     }} title="CSV">
                     <FontAwesomeIcon icon={faFileExcel} className="dropdown-gear-icon me-2" />{dt('Download CSV')}
                   </li>
@@ -932,11 +969,21 @@ const TabularDash = (props) => {
               </ul>
             </>)}
             {isDirectDownloadRequired === "Yes" && (<>
-              <button className="small-box-btn-dwn" onClick={() => generatePDF(widgetData, multipleTables, singleConfigData?.databaseConfigVO, filterColumns(multipleTables[0]?.columns, visibleColumns, isFirstRowHeading), isFirstRowHeading)} title="PDF">
+              <button className="small-box-btn-dwn" onClick={() => generatePDF(widgetData, multipleTables, singleConfigData?.databaseConfigVO,
+                // filterColumns(multipleTables[0]?.columns, visibleColumns, isFirstRowHeading),
+                multipleTables.map((tbl, idx) =>
+                  filterColumns(tbl?.columns, visibleColumns, isFirstRowHeading)
+                ),
+                isFirstRowHeading, getParametersWithValues(widgetParams, paramsValues, widgetData?.rptId, allDrpDtParams))} title="PDF">
                 <FontAwesomeIcon icon={faFilePdf} />
               </button>
 
-              <button className="small-box-btn-dwn" onClick={() => generateCSV(widgetData, multipleTables, singleConfigData?.databaseConfigVO, filterColumns(multipleTables[0]?.columns, visibleColumns, isFirstRowHeading), isFirstRowHeading)} title="CSV">
+              <button className="small-box-btn-dwn" onClick={() => generateCSV(widgetData, multipleTables, singleConfigData?.databaseConfigVO,
+                // filterColumns(multipleTables[0]?.columns, visibleColumns, isFirstRowHeading), 
+                multipleTables.map((tbl, idx) =>
+                  filterColumns(tbl?.columns, visibleColumns, isFirstRowHeading)
+                ),
+                isFirstRowHeading, getParametersWithValues(widgetParams, paramsValues, widgetData?.rptId, allDrpDtParams))} title="CSV">
                 <FontAwesomeIcon icon={faFileExcel} />
               </button>
             </>)}
@@ -974,7 +1021,7 @@ const TabularDash = (props) => {
         </div>
         {paramsData && (
           <div className='parameter-box py-1'>
-            <Parameters params={paramsData} scope={'widgetParams'} widgetId={widgetData?.rptId} setWidgetParams={setWidgetParams} widgetParams={widgetParams}/>
+            <Parameters params={paramsData} scope={'widgetParams'} widgetId={widgetData?.rptId} setWidgetParams={setWidgetParams} setAllDrpDtParams={setAllDrpDtParams} />
           </div>
         )}
 
@@ -995,9 +1042,10 @@ const TabularDash = (props) => {
             return (
               <>
                 <div className="px-2 py-2" >
-                  <h4 style={{ fontWeight: "500", fontSize: "20px" }}>{dt('Query')} :</h4>
-                  {(widgetData?.modeOfQuery === 'Query' && isPrev == 1) &&
+                  {(widgetData?.modeOfQuery === 'Query' && isPrev == 1) && <>
+                    <h4 style={{ fontWeight: "500", fontSize: "20px" }}>{dt('Query')} :</h4>
                     <span>{table?.queryObj?.mainQuery}</span>
+                  </>
                   }
                   {(widgetData?.modeOfQuery === "Procedure" && isPrev == 1) &&
                     <span>{widgetData?.procedureMode}</span>

@@ -10,7 +10,6 @@ export default function ComponentList() {
 
   const { widgetDrpData, getAllWidgetData, getAllParameterData, parameterDrpData } = useContext(HISContext);
 
-  // console.log(widgetDrpData, 'widgetDrpData')
 
   const initialState = [
     {
@@ -31,7 +30,6 @@ export default function ComponentList() {
     // if (!response) return;
 
     // const data = response?.data || [];
-    // console.log(data, 'data')
 
     // const categoryMap = {
     //   Parameters: new Map(),
@@ -102,7 +100,6 @@ export default function ComponentList() {
     initialState
   );
 
-  // console.log('componentList', componentList)
 
   useEffect(() => {
     getComponentDetails();

@@ -42,7 +42,7 @@ const WidgetMaster = () => {
     // other link
     "lstOtherLink": [],
     "sqChildJsonString": [],
-    "selFilterIds": ""
+    "selFilterIds": "","mpFormatColumn":""
   })
 
   const [radioValues, setRadioValues] = useState({
@@ -566,6 +566,7 @@ const WidgetMaster = () => {
     }
   }, [singleData]);
 
+
   //parameter search
   useEffect(() => {
     if (!searchInput) {
@@ -617,7 +618,7 @@ const WidgetMaster = () => {
       // newsTicker fields
       noOfNewsVisible, newsSpeed, newsInterval,
       // iframe
-      urlForIframe, lstOtherLink, sqChildJsonString } = values;
+      urlForIframe, lstOtherLink, sqChildJsonString,mpFormatColumn } = values;
 
     const {
       widgetViewed, isWidgetNameVisible, selectedModeQuery, widgetPurpose, widgetHeadingAlign, isRecordLimitReq, isWidgetBorderReq,
@@ -683,6 +684,7 @@ const WidgetMaster = () => {
         treeChildQuery: treeChildQuery,
         treeChildProcedure: treeChildProcedure,
         drillDownJsonString: popUpDetails?.length > 0 ? JSON?.stringify(popUpDetails) : "",
+        mpFormatColumn:mpFormatColumn,
         treeChildrecordPerPage: recordsPerPageTreeCh,
         parameterOptions: parameterOption,
         widgetLoadOption: loadOption,
@@ -844,7 +846,7 @@ const WidgetMaster = () => {
       // newsTicker fields
       noOfNewsVisible, newsSpeed, newsInterval,
       // iframe
-      urlForIframe, lstOtherLink, sqChildJsonString } = values;
+      urlForIframe, lstOtherLink, sqChildJsonString,mpFormatColumn } = values;
 
     const {
       widgetViewed, isWidgetNameVisible, selectedModeQuery, widgetPurpose, widgetHeadingAlign, isRecordLimitReq, isWidgetBorderReq,
@@ -913,6 +915,7 @@ const WidgetMaster = () => {
         treeChildQuery: treeChildQuery,
         treeChildProcedure: treeChildProcedure,
         drillDownJsonString: popUpDetails?.length > 0 ? JSON?.stringify(popUpDetails) : "",
+        mpFormatColumn:mpFormatColumn,
         treeChildrecordPerPage: recordsPerPageTreeCh,
         parameterOptions: parameterOption,
         widgetLoadOption: loadOption,
@@ -1387,7 +1390,7 @@ const WidgetMaster = () => {
               {tabName?.value === 3 &&
                 <>
                   {radioValues?.widgetViewed === "Tabular" &&
-                    <TableDetails handleValueChange={handleValueChange} handleRadioChange={handleRadioChange} radioValues={radioValues} values={values} parentWidget={widgetDrpData} setValues={setValues} errors={errors} dt={dt} />
+                    <TableDetails handleValueChange={handleValueChange} handleRadioChange={handleRadioChange} radioValues={radioValues} values={values} parentWidget={widgetDrpData} setValues={setValues} errors={errors} dt={dt} tabDrpData={tabDrpData}/>
                   }
 
                   {radioValues?.widgetViewed === "Graph" &&

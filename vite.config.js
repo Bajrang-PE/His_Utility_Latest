@@ -4,7 +4,7 @@ import { dirname, resolve } from 'path';
 
 export default defineConfig({
   plugins: [react()],
-  base: '/',
+  base: '/db/',
   server: {
     port: 5175,
     host: '0.0.0.0',
@@ -15,7 +15,7 @@ export default defineConfig({
       //   changeOrigin: true,
       //   secure: false,
       // },
-      '/hisutils': {
+       '/hisutils': {
         target: 'http://10.226.17.6:8024',
         changeOrigin: true,
         secure: false,

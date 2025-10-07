@@ -23,6 +23,7 @@ const MapDash = ({ widgetData, setWidgetData, pkColumn, setPkColumn, levelData, 
 
     const [queryParams] = useSearchParams();
     const isPrev = queryParams.get('isPreview');
+    const isGlobal = queryParams.get("isGlobal") || 0;
     //   const encIFUrl = queryParams.get("dbfhttf");
     //   const isPrev = encIFUrl ? getEncryptedParamValue(encIFUrl, "isPreview") : '';
 
@@ -213,7 +214,7 @@ const MapDash = ({ widgetData, setWidgetData, pkColumn, setPkColumn, levelData, 
                     formatDateFullYear(new Date()),//from values
                     formatDateFullYear(new Date()) // to values
                 ]
-                const response = await fetchProcedureData(widget?.procedureMode, params, widget?.JNDIid);
+                const response = await fetchProcedureData(widget?.procedureMode, params, widget?.JNDIid,null,isGlobal);
                 const formattedData = formatData(response.data || []);
                 const generatedColumns = generateColumns(formattedData, isChildPresent);
                 setColumns(generatedColumns);
@@ -231,7 +232,7 @@ const MapDash = ({ widgetData, setWidgetData, pkColumn, setPkColumn, levelData, 
             const params = getOrderedParamValues(widget?.queryVO[0]?.mainQuery, paramsValues, widget?.rptId);
 
             try {
-                const data = await fetchQueryData(widget?.queryVO?.length > 0 ? widget?.queryVO : [], widget?.JNDIid, params);
+                const data = await fetchQueryData(widget?.queryVO?.length > 0 ? widget?.queryVO : [], widget?.JNDIid, params,null,isGlobal);
                 if (data?.length > 0) {
                     let filteredData = data;
 

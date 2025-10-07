@@ -1,6 +1,7 @@
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { fetchPostData } from '../../../utils/HisApiHooks';
+import { useSearchParams } from 'react-router-dom';
 
 //FUNCTION TO MANAGE GLOBAL ALERTS
 export const ToastAlert = (message, type) => {
@@ -56,7 +57,8 @@ export const convertToISODate = (dateStr) => {
   return `${formattedYear}-${formattedMonth}-${day}`;
 };
 
-export const fetchQueryData = async (queryVO = [], jndiServer, params, pkColumn) => {
+export const fetchQueryData = async (queryVO = [], jndiServer, params, pkColumn, isGlobal) => {
+
   if (!Array.isArray(queryVO) || queryVO.length === 0) {
     console.error("Invalid or empty queryVO array provided.");
     return [];
@@ -69,11 +71,16 @@ export const fetchQueryData = async (queryVO = [], jndiServer, params, pkColumn)
       return [];
     }
 
-    const popupIds = [...query?.matchAll(/#(PK\d+)#/gi)]?.map(match => match[1]);
+    // const popupIds = [...query?.matchAll(/#(PK\d+)#/gi)]?.map(match => match[1]);
+    const popupIds = [
+      ...new Set([...query.matchAll(/#(PK\d+)#/gi)].map(match => match[1]))
+    ];
+    // const uniqueIds = 
     const popupIdStr = popupIds?.join(",");
 
+
     const requestBody = {
-      query, 
+      query,
       params: {},
       jndi: jndiServer,
       strGroupParaId: params?.strGroupParaId,
@@ -82,9 +89,10 @@ export const fetchQueryData = async (queryVO = [], jndiServer, params, pkColumn)
       popupValue: pkColumn ? pkColumn?.toString() : ""
       // popupValue: "99929068@99929068"
     };
-console.log('requestBody', requestBody)
-    const response = await fetchPostData("/hisutils/GenericApiQry", requestBody);
-    console.log('response', response)
+
+    const response = await fetchPostData(`/hisutils/GenericApiQry?isGlobal=${isGlobal || 0}`, requestBody);
+
+
     return response?.data || [];
   } catch (error) {
     console.error("Error fetching query data:", error);
@@ -92,7 +100,7 @@ console.log('requestBody', requestBody)
   }
 };
 
-export const fetchProcedureData = async (procedure, params, jndiServer,signal=null) => {
+export const fetchProcedureData = async (procedure, params, jndiServer, signal = null, isGlobal) => {
   if (!procedure) {
     return [];
   }
@@ -103,7 +111,7 @@ export const fetchProcedureData = async (procedure, params, jndiServer,signal=nu
       "parameters": params,
       "jndi": jndiServer
     };
-    const response = await fetchPostData(`/hisutils/procedures/execute`, requestBody,null,signal);
+    const response = await fetchPostData(`/hisutils/procedures/execute?isGlobal=${isGlobal || 0}`, requestBody, null, signal);
 
     return response?.data || [];
   } catch (error) {
@@ -151,7 +159,7 @@ export const fetchLocalLogoAsBase64 = (filePath) => {
 export const formatParams = (allParams, widgetId) => {
   const tabParams = allParams?.tabParams || {};
   const widgetSpecificParams = allParams?.widgetParams?.[widgetId] || {};
-  
+
   const combinedParams = {
     ...tabParams,
     ...widgetSpecificParams
@@ -170,14 +178,14 @@ export const formatParams = (allParams, widgetId) => {
 };
 
 
-export const getOrderedParamValues = (query, paramsValues,widgetId) => {
+export const getOrderedParamValues = (query, paramsValues, widgetId) => {
   const paramVal = formatParams(paramsValues ? paramsValues : null, widgetId || '');
   const paramOrder = [];
   const regex = /#PARA#(\d+)#PARA#/g;
   let match;
   while ((match = regex.exec(query)) !== null) {
     // paramOrder.push(match[1]);
-     const id = match[1];
+    const id = match[1];
     if (!paramOrder.includes(id)) {
       paramOrder.push(id); // Add only if not already included
     }
@@ -191,7 +199,7 @@ export const getOrderedParamValues = (query, paramsValues,widgetId) => {
     idToValue[id] = values[index];
   });
 
- const filteredIds = [];
+  const filteredIds = [];
   const filteredValues = [];
 
   paramOrder.forEach((id) => {
@@ -234,7 +242,7 @@ export const extractAllPageText = (config = {}) => {
     includeTags: userIncludeTags = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'label', 'span', 'button', 'a', 'li', 'th'],
     excludeTags: userExcludeTags = [],
     excludeClasses: userExcludeClasses = [],
-    includeClasses: userIncludeClasses = ['card-header-count','apexcharts-title-text','apexcharts-text','rdt_TableCol']
+    includeClasses: userIncludeClasses = ['card-header-count', 'apexcharts-title-text', 'apexcharts-text', 'rdt_TableCol']
   } = config;
 
   const texts = new Set();

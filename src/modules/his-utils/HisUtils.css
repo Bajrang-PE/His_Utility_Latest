@@ -1081,6 +1081,10 @@ label {
   text-align: center;
 }
 
+.react-select-multi{
+  z-index: 3 !important;
+}
+
 
 /* ------------------------------------------islayout preview------------------------------------- */
 

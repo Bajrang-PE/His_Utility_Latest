@@ -479,10 +479,10 @@ export const generatePDF = async (widgetData, multipleTables, config, visibleCol
     pdf.text('Filters Applied:', 14, yPosition);
     yPosition += 5;
     filters.forEach((filter) => {
-      pdf.text(`${filter.label}: ${filter.value}`, 14, yPosition);
+      pdf.text(`${filter.disName}: ${filter.val}`, 14, yPosition);
       yPosition += 5;
     });
-    yPosition += 5;
+    // yPosition += 5;
   }
   const maxColsPerPage = 10;
   // CHANGE START — Loop through each table in multipleTables
@@ -490,23 +490,52 @@ export const generatePDF = async (widgetData, multipleTables, config, visibleCol
     if (!Array.isArray(data?.data) || data?.data.length === 0) return;
 
     let tableData = [];
-    if (isH2 === 'Yes') {
-      const columnDefinitions = visibleColumns;
-      const columnNames = columnDefinitions?.map(col => col.name?.trim() ? `${col?.mainHeader}_${col?.name}` : col?.mainHeader);
-      tableData = data?.data?.map(row => {
-        const filteredRow = {};
-        columnNames.forEach(key => { if (row.hasOwnProperty(key)) filteredRow[key] = row[key]; });
-        return filteredRow;
+
+      const columnDefinitions = Array.isArray(visibleColumns[tableIndex])
+    ? visibleColumns[tableIndex]
+    : visibleColumns;
+
+    // if (isH2 === 'Yes') {
+    //   const columnDefinitions = visibleColumns;
+    //   const columnNames = columnDefinitions?.map(col => col.name?.trim() ? `${col?.mainHeader}_${col?.name}` : col?.mainHeader);
+    //   tableData = data?.data?.map(row => {
+    //     const filteredRow = {};
+    //     columnNames.forEach(key => { if (row.hasOwnProperty(key)) filteredRow[key] = row[key]; });
+    //     return filteredRow;
+    //   });
+    // } else {
+    //   const columnDefinitions = visibleColumns;
+    //   const columnNames = columnDefinitions?.map(col => col.name);
+    //   tableData = data?.data?.map(row => {
+    //     const filteredRow = {};
+    //     columnNames.forEach(key => { if (row.hasOwnProperty(key)) filteredRow[key] = row[key]; });
+    //     return filteredRow;
+    //   });
+    // }
+
+      if (isH2 === 'Yes') {
+    // 🔹 For H2 headers
+    const columnNames = columnDefinitions?.map(col =>
+      col.name?.trim() ? `${col?.mainHeader}_${col?.name}` : col?.mainHeader
+    );
+    tableData = data?.data?.map(row => {
+      const filteredRow = {};
+      columnNames.forEach(key => {
+        if (row.hasOwnProperty(key)) filteredRow[key] = row[key];
       });
-    } else {
-      const columnDefinitions = visibleColumns;
-      const columnNames = columnDefinitions?.map(col => col.name);
-      tableData = data?.data?.map(row => {
-        const filteredRow = {};
-        columnNames.forEach(key => { if (row.hasOwnProperty(key)) filteredRow[key] = row[key]; });
-        return filteredRow;
+      return filteredRow;
+    });
+  } else {
+    // 🔹 Normal headers
+    const columnNames = columnDefinitions?.map(col => col.name);
+    tableData = data?.data?.map(row => {
+      const filteredRow = {};
+      columnNames.forEach(key => {
+        if (row.hasOwnProperty(key)) filteredRow[key] = row[key];
       });
-    }
+      return filteredRow;
+    });
+  }
 
     const unwantedKeys = ['pkcolumn'];
     const headers = Object.keys(tableData[0] || {})
@@ -518,30 +547,17 @@ export const generatePDF = async (widgetData, multipleTables, config, visibleCol
     const availableWidth = pdf.internal.pageSize.getWidth() - 10;
     const avgColumnWidth = availableWidth / columnCount;
 
-    //FOR PAGE BREAK
-    // if (headers.length < maxColsPerPage) {
-    //   headers.forEach(header => { header.width = Math.min(avgColumnWidth); });
-    // }
 
     //FOR NOT PAGE BREAK
     headers.forEach(header => { header.width = Math.min(avgColumnWidth); });
 
-    //FOR LOOP FOR PAGE BREAK
-    // for (let start = 0; start < headers.length; start += maxColsPerPage) {
-    //   const chunkHeaders = headers.slice(start, start + maxColsPerPage);
-    //   const chunkData = tableData.map(row =>
-    //     chunkHeaders.map(header => {
-    //       const content = row[header.dataKey];
-    //       if (content === null || content === undefined) return '';
-    //       if (typeof content === 'object') return JSON.stringify(content);
-    //       if (typeof content === 'string' && content.includes('##')) {
-    //         return content.split('##')[0];
-    //       }
-    //       return content.toString();
-    //     })
-    //   );
 
-    //OT FOR PAGE BREAK
+    const stripHtml = (str) => {
+      if (!str) return '';
+      return str.replace(/<[^>]*>/g, '').trim();
+    };
+
+
     const chunkData = tableData.map(row =>
       headers.map(header => {
         const content = row[header.dataKey];
@@ -550,9 +566,15 @@ export const generatePDF = async (widgetData, multipleTables, config, visibleCol
         if (typeof content === 'string' && content.includes('##')) {
           return content.split('##')[0];
         }
+        // ✅ Strip HTML if string contains tags
+        if (typeof content === 'string') {
+          return stripHtml(content);
+        }
         return content.toString();
       })
     );
+
+
 
     pdf.autoTable({
       startY: yPosition,
@@ -588,7 +610,7 @@ export const generatePDF = async (widgetData, multipleTables, config, visibleCol
       margin: { top: isPdfHeaderReqInAllPages === 'Yes' ? 50 : 10, left: 5, right: 10 },
       didDrawPage: (data) => {
         const pageNumber = data.pageNumber;
-        if (pageNumber === 1 && tableIndex === 0 ) { //FOR PAGE BREAK   && start === 0
+        if (pageNumber === 1 && tableIndex === 0) { //FOR PAGE BREAK   && start === 0
           drawHeader(pdf);
         }
         if (isReportPrintDateRequired === 'Yes') {
@@ -601,24 +623,15 @@ export const generatePDF = async (widgetData, multipleTables, config, visibleCol
     });
 
     yPosition = pdf.lastAutoTable.finalY + 10; // spacing between tables
-    //NOT FOR PAGE BREAK
-    // if (start + maxColsPerPage < headers.length) {
-    //   pdf.addPage();
-    //   yPosition = isPdfHeaderReqInAllPages === 'Yes' ? 50 : 10;
-    // }
-  // }
+
   });
-// CHANGE END
+  // CHANGE END
 
 
-// if (isDirectDownloadRequired === 'Yes') {
-pdf.save(`${rptDisplayName || 'report'}.pdf`);
-  // } else {
-  //   const pdfBlob = pdf.output('blob');
-  //   const pdfUrl = URL.createObjectURL(pdfBlob);
-  //   window.open(pdfUrl, '_blank');
-  //   setTimeout(() => URL.revokeObjectURL(pdfUrl), 10000);
-  // }
+  // if (isDirectDownloadRequired === 'Yes') {
+  const filterLabels = filters?.map(f => f.val).join("--") || "report";
+  pdf.save(`${rptDisplayName}--${filterLabels}.pdf`);
+
 };
 
 
@@ -926,7 +939,7 @@ export const generateGraphPDF = async (widgetData, tableData, config, visibleCol
     pdf.text('Filters Applied:', 14, yPosition);
     yPosition += 5;
     filters.forEach((filter) => {
-      pdf.text(`${filter.label}: ${filter.value}`, 14, yPosition);
+      pdf.text(`${filter.disName}: ${filter.val}`, 14, yPosition);
       yPosition += 5;
     });
     yPosition += 5;
@@ -1010,9 +1023,10 @@ export const generateGraphPDF = async (widgetData, tableData, config, visibleCol
   });
 
   // if (isDirectDownloadRequired === 'Yes') {
-  pdf.save(`${rptDisplayName || 'report'}.pdf`);
+  const filterLabels = filters?.map(f => f.val).join("--") || "report";
+  pdf.save(`${rptDisplayName}--${filterLabels}.pdf`);
+  // pdf.save(`${rptDisplayName || 'report'}.pdf`);
   // } else {
-  //   alert('bb')
   //   pdf.output('dataurlnewwindow');
   // }
 };
@@ -1111,11 +1125,16 @@ export const generateCSVfff = (widgetData, multipleTables, config, visibleColumn
 };
 
 
-export const generateCSV = (widgetData, multipleTables, config, visibleColumns, isH2) => {
+export const generateCSV = (widgetData, multipleTables, config, visibleColumns, isH2, filters) => {
   if (!Array.isArray(multipleTables) || multipleTables.length === 0) {
     ToastAlert('No data available to download.', 'warning');
     return;
   }
+
+      const stripHtml = (str) => {
+       if (!str) return '';
+       return str.replace(/<[^>]*>/g, '').trim();
+     };
 
   if (!widgetData) return;
 
@@ -1134,70 +1153,147 @@ export const generateCSV = (widgetData, multipleTables, config, visibleColumns, 
   finalData.push([`Date: ${currentDate}`]);
   finalData.push([]);
 
-  // Loop through each table
-  multipleTables.forEach((tableObj, tableIndex) => {
-    const { data, title } = tableObj;
-
-    if (!Array.isArray(data) || data.length === 0) {
-      finalData.push([`Table ${tableIndex + 1}: ${title || ''}`]);
-      finalData.push(['No Data Available']);
-      finalData.push([]);
-      return;
-    }
-
-    // Add table title
-    // finalData.push([`Table ${tableIndex + 1}: ${title || ''}`]);
-    // finalData.push([]);
-
-    // Get columns
-    let columnNames;
-    if (isH2 === 'Yes') {
-      columnNames = visibleColumns?.map(col =>
-        col.name?.trim() ? `${col?.mainHeader}_${col?.name}` : col?.mainHeader
-      );
-    } else {
-      columnNames = visibleColumns?.map(col => col.name);
-    }
-
-    const unwantedKeys = ['pkcolumn'];
-    const tableHeaders = columnNames.filter(col => !unwantedKeys.includes(col));
-
-    // Add column headings
-    finalData.push(tableHeaders);
-
-    // Add rows
-    data.forEach(row => {
-      const filteredRow = tableHeaders.map(header => {
-        const content = row[header];
-        if (content === null || content === undefined) return '';
-        if (typeof content === 'object') return JSON.stringify(content);
-        if (typeof content === 'string' && content.includes('##')) {
-          return content.split('##')[0];
-        }
-        return content.toString();
-      });
-      finalData.push(filteredRow);
+  if (filters?.length) {
+    finalData.push(['Filters Applied:']);
+    filters.forEach(filter => {
+      finalData.push([`${filter.disName}: ${filter.val}`]);
     });
+    finalData.push([]); // extra empty line after filters
+  }
 
-    // Add an empty line after each table
+  // Loop through each table
+  // multipleTables.forEach((tableObj, tableIndex) => {
+  //   const { data, title } = tableObj;
+
+  //   if (!Array.isArray(data) || data.length === 0) {
+  //     finalData.push([`Table ${tableIndex + 1}: ${title || ''}`]);
+  //     finalData.push(['No Data Available']);
+  //     finalData.push([]);
+  //     return;
+  //   }
+
+  //   // Get columns
+  //   let columnNames;
+  //   if (isH2 === 'Yes') {
+  //     columnNames = visibleColumns?.map(col =>
+  //       col.name?.trim() ? `${col?.mainHeader}_${col?.name}` : col?.mainHeader
+  //     );
+  //   } else {
+  //     columnNames = visibleColumns?.map(col => col.name);
+  //   }
+
+  //   const unwantedKeys = ['pkcolumn'];
+  //   const tableHeaders = columnNames.filter(col => !unwantedKeys.includes(col));
+
+  //   // Add column headings
+  //   finalData.push(tableHeaders);
+
+  //   const stripHtml = (str) => {
+  //     if (!str) return '';
+  //     return str.replace(/<[^>]*>/g, '').trim();
+  //   };
+
+
+  //   // Add rows
+  //   data.forEach(row => {
+  //     // const filteredRow = tableHeaders.map(header => {
+  //     //   const content = row[header];
+  //     //   if (content === null || content === undefined) return '';
+  //     //   if (typeof content === 'object') return JSON.stringify(content);
+  //     //   if (typeof content === 'string' && content.includes('##')) {
+  //     //     return content.split('##')[0];
+  //     //   }
+  //     //   return content.toString();
+  //     // });
+  //     const filteredRow = tableHeaders.map(header => {
+  //       const content = row[header];
+  //       if (content === null || content === undefined) return '';
+  //       if (typeof content === 'object') return JSON.stringify(content);
+  //       if (typeof content === 'string') {
+  //         if (content.includes('##')) {
+  //           return stripHtml(content.split('##')[0]);
+  //         }
+  //         return stripHtml(content);
+  //       }
+  //       return content.toString();
+  //     });
+
+
+  //     finalData.push(filteredRow);
+  //   });
+
+  //   // Add an empty line after each table
+  //   finalData.push([]);
+  // });
+
+  multipleTables.forEach((tableObj, tableIndex) => {
+  const { data, title } = tableObj;
+
+  if (!Array.isArray(data) || data.length === 0) {
+    finalData.push([`Table ${tableIndex + 1}: ${title || ''}`]);
+    finalData.push(['No Data Available']);
     finalData.push([]);
+    return;
+  }
+
+  // 🔹 Use columns specific to this table
+  const currentColumns = Array.isArray(visibleColumns[tableIndex])
+    ? visibleColumns[tableIndex]
+    : visibleColumns;
+
+  let columnNames;
+  if (isH2 === 'Yes') {
+    columnNames = currentColumns?.map(col =>
+      col.name?.trim() ? `${col?.mainHeader}_${col?.name}` : col?.mainHeader
+    );
+  } else {
+    columnNames = currentColumns?.map(col => col.name);
+  }
+
+  const unwantedKeys = ['pkcolumn'];
+  const tableHeaders = columnNames.filter(col => !unwantedKeys.includes(col));
+
+  // Add headings
+  finalData.push([`Table ${tableIndex + 1}: ${title || ''}`]);
+  finalData.push(tableHeaders);
+
+  // Add rows
+  data.forEach(row => {
+    const filteredRow = tableHeaders.map(header => {
+      const content = row[header];
+      if (content === null || content === undefined) return '';
+      if (typeof content === 'object') return JSON.stringify(content);
+      if (typeof content === 'string') {
+        if (content.includes('##')) {
+          return stripHtml(content.split('##')[0]);
+        }
+        return stripHtml(content);
+      }
+      return content.toString();
+    });
+    finalData.push(filteredRow);
   });
+
+  finalData.push([]); // spacing
+});
+
 
   // Convert to CSV
   const csvContent = Papa.unparse(finalData, { skipEmptyLines: false });
+  const filterLabels = filters?.map(f => f.val).join("--") || "report";
 
   // Download CSV
   const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
   const link = document.createElement('a');
   link.href = URL.createObjectURL(blob);
-  link.setAttribute('download', `${rptDisplayName || 'report'}.csv`);
+  link.setAttribute('download', `${rptDisplayName}--${filterLabels}.csv`);
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
 };
 
 
-export const generateGraphCSV = (widgetData, data, config, visibleColumns, sortConfig,) => {
+export const generateGraphCSV = (widgetData, data, config, visibleColumns, sortConfig, filters) => {
   if (!widgetData) return;
 
   const { rptDisplayName, xAxisLabel, yAxisLabel } = widgetData || {};
@@ -1216,6 +1312,14 @@ export const generateGraphCSV = (widgetData, data, config, visibleColumns, sortC
     [`Date: ${currentDate}`],
     ['']
   ];
+
+  if (filters?.length) {
+    heading.push(['Filters Applied:']);
+    filters.forEach(filter => {
+      heading.push([`${filter.disName}: ${filter.val}`]);
+    });
+    heading.push([]); // extra empty line after filters
+  }
 
   let csvContent;
 
@@ -1268,11 +1372,14 @@ export const generateGraphCSV = (widgetData, data, config, visibleColumns, sortC
     quotes: true
   });
 
+  const filterLabels = filters?.map(f => f.val).join("--") || "report";
+
   // Create and trigger download
   const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
   const link = document.createElement('a');
   link.href = URL.createObjectURL(blob);
-  link.setAttribute('download', `${rptDisplayName || 'report'}.csv`);
+  // link.setAttribute('download', `${rptDisplayName || 'report'}.csv`);
+  link.setAttribute('download', `${rptDisplayName}--${filterLabels}.csv`);
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
