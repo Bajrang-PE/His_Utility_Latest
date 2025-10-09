@@ -41,6 +41,9 @@ const HISContextData = ({ children }) => {
   const [presentTabsDash, setPresentTabsDash] = useState([]);
 
 
+  const [tabParams, setTabParams] = useState([]);
+
+
   // ALL DATA
   const [parameterData, setParameterData] = useState([]);
   const [allWidgetData, setAllWidgetData] = useState([]);
@@ -323,7 +326,7 @@ const HISContextData = ({ children }) => {
       fetchTranslations,
       setLanguage,
       showTranslateModal, setShowTranslateModal,
-      extractedTexts, setExtractedTexts, token, setToken
+      extractedTexts, setExtractedTexts, token, setToken, setTabParams, tabParams
     }}>
       {children}
     </HISContext.Provider>

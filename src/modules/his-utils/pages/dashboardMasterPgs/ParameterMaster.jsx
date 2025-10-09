@@ -22,7 +22,7 @@ const ParameterMaster = () => {
   const [isMultiSelectReq, setIsMultiSelectReq] = useState('No');
   const [singleData, setSingleData] = useState([]);
   const [values, setValues] = useState({
-    "parameterFor": "", "parameterType": "1", "parameterInternal": "", "parameterDisplay": "", "placeHolder": "", "parameterWidth": "", "parameterAlignment": "", "paraLabelWidth": "", "paraLabelAlignment": "", "paraControlWidth": "", "paraControlAlignment": "", "mandatory": "", "defaultValueIfLeft": "", "defaultValue": "", "validation": "1", "maxLength": "", "minLength": "", "parentID": [], "modeForQuery": 'query', "query": "", "defaultOptValue": "", "defaultOptText": "", "defOptFilterVal": "", "defOptFilterTxt": "", "jndiSavingData": "1", "stmtTimeOut": "", "id": "", "shouldBeLess": "", "shouldBeGreater": "", "minDaysBefore": "", "maxDaysAfter": "", "parameterQueryForDate": ""
+    "parameterFor": "", "parameterType": "1", "parameterInternal": "", "parameterDisplay": "", "placeHolder": "", "parameterWidth": "", "parameterAlignment": "", "paraLabelWidth": "", "paraLabelAlignment": "", "paraControlWidth": "", "paraControlAlignment": "", "mandatory": "", "defaultValueIfLeft": "", "defaultValue": "", "validation": "1", "maxLength": "", "minLength": "", "parentID": [], "modeForQuery": 'query', "query": "", "defaultOptValue": "", "defaultOptText": "", "defOptFilterVal": "", "defOptFilterTxt": "", "jndiSavingData": "1", "stmtTimeOut": "5", "id": "", "shouldBeLess": "", "shouldBeGreater": "", "minDaysBefore": "", "maxDaysAfter": "", "parameterQueryForDate": ""
   })
 
   const [searchInput, setSearchInput] = useState('');
@@ -274,22 +274,22 @@ const ParameterMaster = () => {
       setErrors(prev => ({ ...prev, 'parameterQueryForDateErr': "query is required" }));
       isValid = false;
     }
-    if (values?.parameterType !== '2' && values?.parameterType !== '4' && !values?.defaultOptValue?.trim()) {
-      setErrors(prev => ({ ...prev, 'defaultOptValueErr': "default Value is required" }));
-      isValid = false;
-    }
-    if (values?.parameterType !== '2' && values?.parameterType !== '4' && !values?.defaultOptText?.trim()) {
-      setErrors(prev => ({ ...prev, 'defaultOptTextErr': "default text is required" }));
-      isValid = false;
-    }
-    if (values?.parameterType !== '2' && values?.parameterType !== '4' && !values?.defOptFilterVal?.trim()) {
-      setErrors(prev => ({ ...prev, 'defOptFilterValErr': "filter value is required" }));
-      isValid = false;
-    }
-    if (values?.parameterType !== '2' && values?.parameterType !== '4' && !values?.defOptFilterTxt?.trim()) {
-      setErrors(prev => ({ ...prev, 'defOptFilterTxtErr': "filter text is required" }));
-      isValid = false;
-    }
+    // if (values?.parameterType !== '2' && values?.parameterType !== '4' && !values?.defaultOptValue?.trim()) {
+    //   setErrors(prev => ({ ...prev, 'defaultOptValueErr': "default Value is required" }));
+    //   isValid = false;
+    // }
+    // if (values?.parameterType !== '2' && values?.parameterType !== '4' && !values?.defaultOptText?.trim()) {
+    //   setErrors(prev => ({ ...prev, 'defaultOptTextErr': "default text is required" }));
+    //   isValid = false;
+    // }
+    // if (values?.parameterType !== '2' && values?.parameterType !== '4' && !values?.defOptFilterVal?.trim()) {
+    //   setErrors(prev => ({ ...prev, 'defOptFilterValErr': "filter value is required" }));
+    //   isValid = false;
+    // }
+    // if (values?.parameterType !== '2' && values?.parameterType !== '4' && !values?.defOptFilterTxt?.trim()) {
+    //   setErrors(prev => ({ ...prev, 'defOptFilterTxtErr': "filter text is required" }));
+    //   isValid = false;
+    // }
     if (values?.parameterType !== '2' && values?.parameterType !== '4' && values?.modeForQuery === "multiRowOption" && rows?.length > 0 && !rows[rows?.length - 1]?.optionValue) {
       setErrors(prev => ({ ...prev, 'listOptValErr': "list option value is required" }));
       isValid = false;
@@ -355,12 +355,12 @@ const ParameterMaster = () => {
         parentID: jsonData.parentId || [],
         modeForQuery: jsonData.modeForQuery || "",
         query: jsonData.parameterQuery || "",
-        defaultOptValue: jsonData.defaultOption?.optionText || "",
-        defaultOptText: jsonData.defaultOption?.optionValue || "",
+        defaultOptValue: jsonData.defaultOption?.optionValue || "",
+        defaultOptText: jsonData.defaultOption?.optionText || "",
         defOptFilterVal: jsonData.defaultOptionForFilter?.optionValue || "",
         defOptFilterTxt: jsonData.defaultOptionForFilter?.optionText || "",
         jndiSavingData: singleData[0]?.jndiIdForGettingData || "",
-        stmtTimeOut: singleData[0]?.statementTimeout || "",
+        stmtTimeOut: singleData[0]?.statementTimeout || "5",
 
         maxDaysAfter: jsonData?.maxDaysAfterCurrentDate || "",
         minDaysBefore: jsonData?.minDaysBeforeCurrentDate || "",
@@ -391,7 +391,7 @@ const ParameterMaster = () => {
   }
 
   const reset = () => {
-    setValues({ "parameterFor": dashFor, "parameterType": "1", "parameterInternal": "", "parameterDisplay": "", "placeHolder": "", "parameterWidth": "", "parameterAlignment": "", "paraLabelWidth": "", "paraLabelAlignment": "", "paraControlWidth": "", "paraControlAlignment": "", "mandatory": "", "defaultValueIfLeft": "", "defaultValue": "", "validation": "", "maxLength": "", "minLength": "", "parentID": [], "modeForQuery": 'query', "query": "", "defaultOptValue": "", "defaultOptText": "", "defOptFilterVal": "", "defOptFilterTxt": "", "jndiSavingData": "", "stmtTimeOut": "", "id": "", "shouldBeLess": "", "shouldBeGreater": "", "minDaysBefore": "", "maxDaysAfter": "" })
+    setValues({ "parameterFor": dashFor, "parameterType": "1", "parameterInternal": "", "parameterDisplay": "", "placeHolder": "", "parameterWidth": "", "parameterAlignment": "", "paraLabelWidth": "", "paraLabelAlignment": "", "paraControlWidth": "", "paraControlAlignment": "", "mandatory": "", "defaultValueIfLeft": "", "defaultValue": "", "validation": "", "maxLength": "", "minLength": "", "parentID": [], "modeForQuery": 'query', "query": "", "defaultOptValue": "", "defaultOptText": "", "defOptFilterVal": "", "defOptFilterTxt": "", "jndiSavingData": "", "stmtTimeOut": "5", "id": "", "shouldBeLess": "", "shouldBeGreater": "", "minDaysBefore": "", "maxDaysAfter": "" })
     setActionMode('home');
     setShowParamsTable(false);
     setShowDataTable(false);
@@ -1080,12 +1080,13 @@ const ParameterMaster = () => {
                       placeholder={dt("Enter value...")}
                       value={values?.defaultOptValue}
                       onChange={handleValueChange}
+                      isSpecialChrs={true}
                     />
-                    {errors?.defaultOptValueErr &&
+                    {/* {errors?.defaultOptValueErr &&
                       <div className="required-input">
                         {errors?.defaultOptValueErr}
                       </div>
-                    }
+                    } */}
                   </div>
                   <div className="col-4">
                     <InputField
@@ -1096,12 +1097,13 @@ const ParameterMaster = () => {
                       placeholder={dt("Enter text...")}
                       value={values?.defaultOptText}
                       onChange={handleValueChange}
+                      isSpecialChrs={true}
                     />
-                    {errors?.defaultOptTextErr &&
+                    {/* {errors?.defaultOptTextErr &&
                       <div className="required-input">
                         {errors?.defaultOptTextErr}
                       </div>
-                    }
+                    } */}
                   </div>
                 </div>
                 {/* DEFAULT OPTION FOR FILTER */}
@@ -1116,12 +1118,13 @@ const ParameterMaster = () => {
                       placeholder={dt("Enter value...")}
                       value={values?.defOptFilterVal}
                       onChange={handleValueChange}
+                      isSpecialChrs={true}
                     />
-                    {errors?.defOptFilterValErr &&
+                    {/* {errors?.defOptFilterValErr &&
                       <div className="required-input">
                         {errors?.defOptFilterValErr}
                       </div>
-                    }
+                    } */}
                   </div>
                   <div className="col-4">
                     <InputField
@@ -1132,12 +1135,13 @@ const ParameterMaster = () => {
                       placeholder={dt("Option Text")}
                       value={values?.defOptFilterTxt}
                       onChange={handleValueChange}
+                      isSpecialChrs={true}
                     />
-                    {errors?.defOptFilterTxtErr &&
+                    {/* {errors?.defOptFilterTxtErr &&
                       <div className="required-input">
                         {errors?.defOptFilterTxtErr}
                       </div>
-                    }
+                    } */}
                   </div>
                 </div>
               </div>

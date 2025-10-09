@@ -759,9 +759,9 @@ const TableDetails = (props) => {
                                     type="radio"
                                     name="printPdfIn"
                                     id="printPdfInLandscape"
-                                    value={'landscape'}
+                                    value={'Landscape'}
                                     onChange={handleRadioChange}
-                                    checked={radioValues?.printPdfIn === 'landscape'}
+                                    checked={radioValues?.printPdfIn === 'Landscape'}
                                 />
                                 <label className="form-check-label" htmlFor="dbYes">
                                     {dt('Landscape')}

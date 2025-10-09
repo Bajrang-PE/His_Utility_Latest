@@ -16,7 +16,7 @@ const PdfDownload = lazy(() => import('../commons/PdfDownload'));
 const Parameters = lazy(() => import('./Parameters'));
 
 const TabDash = React.memo(() => {
-    const { setLoading, loading, activeTab, setParamsValues, presentWidgets, setPresentWidgets, prevKpiTab, setActiveTab, setPrevKpiTab, setParamsValuesPro, dt } = useContext(HISContext);
+    const { setLoading, loading, activeTab, setParamsValues, presentWidgets, setPresentWidgets, prevKpiTab, setActiveTab, setPrevKpiTab, setParamsValuesPro, dt, setTabParams, tabParams } = useContext(HISContext);
     const [presentTabs, setPresentTabs] = useState([]);
     const [widWithoutLinked, setWidWithoutLinked] = useState([]);
     const [allWidgetData, setAllWidgetData] = useState([]);
@@ -187,10 +187,25 @@ const TabDash = React.memo(() => {
         loadWidgets();
     }, [activeTab, dashboardFor]);
 
+    // const onPrevClick = () => {
+    //     setActiveTab(prevKpiTab[0])
+    //     setPrevKpiTab([])
+    // }
+
     const onPrevClick = () => {
-        setActiveTab(prevKpiTab[0])
-        setPrevKpiTab([])
-    }
+        if (prevKpiTab.length > 0) {
+            const previous = prevKpiTab[prevKpiTab.length - 1];
+            setActiveTab(previous);
+            setPrevKpiTab(prev => prev.slice(0, -1));
+        }
+    };
+
+    const onPrevSelect = (index) => {
+        const selectedTab = prevKpiTab[index];
+        setActiveTab(selectedTab);
+        // Keep only tabs before the selected one (like real navigation)
+        setPrevKpiTab(prev => prev.slice(0, index));
+    };
 
     const dispatch = useDispatch();
     const gridStyles = useRef(themeClasses.minimalistic);
@@ -271,13 +286,66 @@ const TabDash = React.memo(() => {
                         padding: "10px 20px"
                     }}
                 >
-                    {prevKpiTab?.length > 0 &&
+                    {/* {prevKpiTab?.length > 0 &&
                         <div className=''>
                             <button className='btn btn-sm me-1 back-button-kpi' onClick={onPrevClick}>
                                 <FontAwesomeIcon icon={faArrowLeft}
                                     className="me-1" />{dt('Back')}</button>
                         </div>
-                    }
+                    } */}
+                    {prevKpiTab?.length > 0 && (
+                        <div className="btn-group" role="group" aria-label="Button group with nested dropdown">
+                            <button className='btn btn-sm back-button-kpi' onClick={onPrevClick}>
+                                <FontAwesomeIcon icon={faArrowLeft}
+                                    className="me-1" />{dt('Back')}</button>
+                            {prevKpiTab?.length > 1 &&
+                                <div className="btn-group" role="group" style={{borderLeft:".5px solid"}}>
+                                    <button type="button" className="btn btn-danger dropdown-toggle back-button-kpi" data-bs-toggle="dropdown" aria-expanded="false">
+                                    </button>
+                                    <ul className="dropdown-menu dropdown-menu-start">
+                                        {prevKpiTab.map((tab, index) => (
+                                            <li key={index}>
+                                                <button
+                                                    className="dropdown-item pointer text-primary p-1"
+                                                    onClick={() => onPrevSelect(index)}
+                                                >
+                                                    {tab?.jsonData?.dashboardName || `Level ${index + 1}`}
+                                                </button>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            }
+                        </div>
+                    )}
+
+                    {/* {prevKpiTab?.length > 0 && (
+                        <div className="dropdown d-inline-block">
+                            <button
+                                className="btn btn-sm me-1 back-button-kpi dropdown-toggle"
+                                type="button"
+                                data-bs-toggle="dropdown"
+                                aria-expanded="false"
+                            >
+                                <FontAwesomeIcon icon={faArrowLeft} className="me-1" />
+                                {dt('Back')}
+                            </button>
+
+                            <ul className="dropdown-menu">
+                                {prevKpiTab.map((tab, index) => (
+                                    <li key={index}>
+                                        <button
+                                            className="dropdown-item"
+                                            onClick={() => onPrevSelect(index)}
+                                        >
+                                            {tab?.jsonData?.dashboardName || `Level ${index + 1}`}
+                                        </button>
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                    )} */}
+
                     {(activeTab?.jsonData?.docJsonString && JSON.parse(activeTab?.jsonData?.docJsonString)?.length > 0) && (
                         <>
 
@@ -314,7 +382,7 @@ const TabDash = React.memo(() => {
                                                 </div>
                                             }
                                         >
-                                            <Parameters params={param} dashFor={activeTab?.dashboardFor} scope={'tabParams'} isLayoutWithPreview={true} />
+                                            <Parameters params={param} dashFor={activeTab?.dashboardFor} scope={'tabParams'} isLayoutWithPreview={true} setTabParams={setTabParams} tabParams={tabParams} />
                                         </Suspense>
                                     </div>
                                 ))
@@ -353,7 +421,7 @@ const TabDash = React.memo(() => {
                                             </div>
                                         }
                                     >
-                                        <Parameters params={activeTab?.jsonData?.allParameters} dashFor={activeTab?.dashboardFor} scope={'tabParams'} isLayoutWithPreview={false} />
+                                        <Parameters params={activeTab?.jsonData?.allParameters} dashFor={activeTab?.dashboardFor} scope={'tabParams'} isLayoutWithPreview={false} setTabParams={setTabParams} tabParams={tabParams} />
                                     </Suspense>
                                 </div>
                             )}

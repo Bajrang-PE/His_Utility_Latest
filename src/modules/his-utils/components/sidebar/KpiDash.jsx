@@ -134,7 +134,8 @@ const KpiDash = ({ widgetData, presentTabs, isLayoutWithPreview }) => {
         const tabdt = presentTabsDash?.filter(tab => tab?.jsonData?.dashboardId == id)
         if (tabdt?.length > 0) {
             setActiveTab(tabdt[0]);
-            setPrevKpiTab([activeTab]);
+            // setPrevKpiTab([activeTab]);
+             setPrevKpiTab(prev => [...prev, activeTab]);
         } else {
             ToastAlert('Tab Not Found', 'warning')
         }

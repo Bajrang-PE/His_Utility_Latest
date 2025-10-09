@@ -13,7 +13,7 @@ import AdvancedOptionsModal from "./AdvancedOptionsModal";
 
 const Parameters = lazy(() => import('./Parameters'));
 
-const GraphDash = ({ widgetData, pkColumn, setPkColumn, isLayoutWithPreview }) => {
+const GraphDash = ({ widgetData, pkColumn, setPkColumn, isLayoutWithPreview, presentTabs }) => {
   const { theme, paramsValues, singleConfigData, isSearchQuery, setIsSearchQuery, setSearchScope, searchScope, dt } = useContext(HISContext);
   const [widParamsValues, setWidParamsValues] = useState();
   const [filteredGraphOptions, setFilteredGraphOptions] = useState([]);
@@ -63,6 +63,8 @@ const GraphDash = ({ widgetData, pkColumn, setPkColumn, isLayoutWithPreview }) =
   const safeLimit = isNaN(parsedLimit) || parsedLimit <= 0 ? null : parsedLimit;
 
   const customMessage = widgetData?.customMessage || "";
+
+  const widheight = presentTabs?.length > 0 && presentTabs?.filter(dt => dt?.rptId == widgetData?.rptId)[0]?.widgetHeight;
 
   const getParametersWithValues = (parameters, paramsData, widgetId, allDrpDtParams) => {
     return parameters.map(param => {
@@ -536,7 +538,12 @@ const GraphDash = ({ widgetData, pkColumn, setPkColumn, isLayoutWithPreview }) =
 
 
   return (
-    <div className={`high-chart-main ${theme === 'Dark' ? 'dark-theme' : ""}`} style={{ border: `7px solid ${theme === 'Dark' ? 'white' : 'black'}`, height: isLayoutWithPreview ? '100%' : '650px', }} key={widgetData?.id}>
+    <div className={`widget_id_${widgetData?.rptId} high-chart-main ${theme === 'Dark' ? 'dark-theme' : ""}`}
+      style={{
+        border: `7px solid ${theme === 'Dark' ? 'white' : 'black'}`,
+        // height: isLayoutWithPreview ? '100%' : '650px'
+        height: isLayoutWithPreview ? '100%' : widheight && widheight != '0' ? `${widheight}px` : '650px',
+      }} key={widgetData?.id}>
 
 
       <div className="row px-2 py-2 border-bottom">

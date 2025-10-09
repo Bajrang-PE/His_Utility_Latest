@@ -10,7 +10,7 @@ import Loader from './modules/his-utils/components/commons/Loader';
 import "react-datepicker/dist/react-datepicker.css";
 import DbConfigMaster from './modules/his-utils/pages/dashboardMasterPgs/DbConfigMaster';
 import BarRaceChart from './modules/his-utils/pages/TestBar';
-import useAutoLogout from './hooks/useAutoLogout';
+// import useAutoLogout from './hooks/useAutoLogout';
 import Auth from './Auth';
 
 function App() {

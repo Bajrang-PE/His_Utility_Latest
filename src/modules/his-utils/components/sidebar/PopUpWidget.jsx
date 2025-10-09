@@ -14,6 +14,7 @@ const PopUpWidget = (props) => {
     const [searchParams] = useSearchParams();
     const groupId = atob(searchParams.get("groupId"));
     const dashboardFor = atob(searchParams.get("dashboardFor"));
+     const isGlobal = searchParams.get("isGlobal") || 0;
 
     // const [groupId, setGroupId] = useState('');
     // const [dashboardFor, setDashboardFor] = useState('');
@@ -35,7 +36,7 @@ const PopUpWidget = (props) => {
     // }, [searchParams])
 
     const getWidgetData = (widid) => {
-        fetchData(`/hisutils/getWdgtSnglData?id=${widid}&dashboardFor=${dashboardFor}&masterName=DashboardWidgetMst`).then(data => {
+        fetchData(`/hisutils/getWdgtSnglData?id=${widid}&dashboardFor=${dashboardFor}&masterName=DashboardWidgetMst&isGlobal=${isGlobal || 0}`).then(data => {
             if (data?.status === 1) {
                 setWidgetData(data?.data);
             } else {

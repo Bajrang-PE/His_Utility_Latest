@@ -4,7 +4,7 @@ import * as SolidIcons from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import DropdownPortal from '../commons/DropdownPortal';
 
-const TopBar = ({ data, setActiveTab, dashboardData,setPrevKpiTab,dt }) => {
+const TopBar = ({ data, setActiveTab, dashboardData, setPrevKpiTab, dt }) => {
     const [openSubMenu, setOpenSubMenu] = useState(null);
     const [canScrollLeft, setCanScrollLeft] = useState(false);
     const [canScrollRight, setCanScrollRight] = useState(true);
@@ -14,7 +14,7 @@ const TopBar = ({ data, setActiveTab, dashboardData,setPrevKpiTab,dt }) => {
 
     // Memoize root tabs to avoid recalculation on every render
     const rootTabs = useMemo(() => {
-        return data?.filter(dt=>dt?.jsonData?.isTabUsedForDrillDown === "No")?.filter(tab => !tab.jsonData.parentTabId || tab.jsonData.parentTabId === "0") || [];
+        return data?.filter(dt => dt?.jsonData?.isTabUsedForDrillDown === "No")?.filter(tab => !tab.jsonData.parentTabId || tab.jsonData.parentTabId === "0") || [];
     }, [data]);
 
 
@@ -47,7 +47,7 @@ const TopBar = ({ data, setActiveTab, dashboardData,setPrevKpiTab,dt }) => {
         if (rootTabs.length > 0) {
             setActiveTab(rootTabs[0]);
             setOpenSubMenu(null);
-        }else {
+        } else {
             setActiveTab(data[0]);
             setOpenSubMenu(data[0]?.id);
         }
@@ -105,6 +105,7 @@ const TopBar = ({ data, setActiveTab, dashboardData,setPrevKpiTab,dt }) => {
                                             onClick={(e) => {
                                                 e.preventDefault();
                                                 setActiveTab(tab);
+                                                setPrevKpiTab([]);
                                                 setOpenSubMenu(openSubMenu === tab.id ? null : tab.id);
                                             }}
                                         >
@@ -124,6 +125,7 @@ const TopBar = ({ data, setActiveTab, dashboardData,setPrevKpiTab,dt }) => {
                                                                     e.preventDefault();
                                                                     setActiveTab(child);
                                                                     setOpenSubMenu(null);
+                                                                    setPrevKpiTab([]);
                                                                 }}
                                                             >
                                                                 <FontAwesomeIcon icon={getDynamicIcon(child?.jsonData?.iconName)} className="me-2 dropdown-gear-icon" />

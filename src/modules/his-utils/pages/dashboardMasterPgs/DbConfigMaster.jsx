@@ -306,8 +306,6 @@ const DbConfigMaster = () => {
   }
 
 
-
-
   return (
     <>
       <NavbarHeader />
@@ -722,6 +720,7 @@ const DbConfigMaster = () => {
                     value={values?.staticReportHead1}
                     onChange={handleValueChange}
                     errorMessage={errors?.staticReportHead1Err}
+                    isSpecialChrs={true}
                   />
                 </div>
               </div>
@@ -736,6 +735,7 @@ const DbConfigMaster = () => {
                     id='staticReportHead2'
                     value={values?.staticReportHead2}
                     onChange={handleValueChange}
+                    isSpecialChrs={true}
                   />
                 </div>
               </div>
@@ -751,6 +751,7 @@ const DbConfigMaster = () => {
                     id='staticReportHead3'
                     value={values?.staticReportHead3}
                     onChange={handleValueChange}
+                    isSpecialChrs={true}
                   />
                 </div>
               </div>

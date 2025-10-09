@@ -6,7 +6,7 @@ import { HISContext } from '../../../contextApi/HISContext';
 const JndiDetails = (props) => {
     const { handleValueChange, handleRadioChange, radioValues, values,dt } = props;
     const {jndiServerDrpData} = useContext(HISContext)
-
+console.log('values?.stmtTimeOut', values?.stmtTimeOut)
     return (
         <>
             {/* MAIN DEVIDER FOR JNDI */}
@@ -22,7 +22,7 @@ const JndiDetails = (props) => {
                             <InputSelect
                                 id="jndiSavingData"
                                 name="jndiSavingData"
-                                placeholder="Select"
+                                // placeholder="Select"
                                 options={jndiServerDrpData}
                                 className="backcolorinput"
                                 onChange={handleValueChange}
@@ -39,7 +39,7 @@ const JndiDetails = (props) => {
                             <InputSelect
                                 id="stmtTimeOut"
                                 name="stmtTimeOut"
-                                placeholder="Select "
+                                // placeholder="Select "
                                 options={timeOutOptions}
                                 className="backcolorinput"
                                 onChange={handleValueChange}

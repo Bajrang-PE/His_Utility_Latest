@@ -20,7 +20,7 @@ const TabularDash = (props) => {
   const { widgetData, setWidgetData, levelData, setLevelData, pkColumn, setPkColumn, isLayoutWithPreview, presentTabs } = props;
 
 
-  const { theme, singleConfigData, paramsValues, setLoading, presentWidgets, isSearchQuery, setIsSearchQuery, setSearchScope, searchScope, dt, presentTabsDash, setActiveTab, activeTab, setPrevKpiTab } = useContext(HISContext);
+  const { theme, singleConfigData, paramsValues, setLoading, presentWidgets, isSearchQuery, setIsSearchQuery, setSearchScope, searchScope, dt, presentTabsDash, setActiveTab, activeTab, setPrevKpiTab, tabParams } = useContext(HISContext);
 
 
   const [tableData, setTableData] = useState([]);
@@ -37,18 +37,115 @@ const TabularDash = (props) => {
   const [allDrpDtParams, setAllDrpDtParams] = useState([]);
 
 
-  const getParametersWithValues = (parameters, paramsData, widgetId, allDrpDtParams) => {
-    return parameters.map(param => {
-      const value = paramsData?.widgetParams?.[widgetId]?.[param?.id] || null;
-      const val = allDrpDtParams?.[param?.paraName] || null;
+  // const getParametersWithValues = (parameters, paramsData, widgetId, allDrpDtParams) => {
+  //   return parameters.map(param => {
+  //     const value = paramsData?.widgetParams?.[widgetId]?.[param?.id] || null;
+  //     const val = allDrpDtParams?.[param?.paraName] || null;
+
+  //     return {
+  //       ...param,
+  //       value: value,
+  //       val: val?.find(dt => dt?.optionValue == value)?.optionText || value === "%" ? 'All' : value
+  //     };
+  //   });
+  // }
+
+  // getParametersWithValues(widgetParams, paramsValues, widgetData?.rptId, allDrpDtParams)
+
+  // const getParametersWithValues = (parameters, paramsData, widgetId, allDrpDtParams) => {
+  //   return parameters.map(param => {
+  //     // First priority → widgetParams
+  //     const widgetValue = paramsData?.widgetParams?.[widgetId]?.[param?.id];
+  //     // Second priority → tabParams
+  //     const tabValue = paramsData?.tabParams?.[param?.id];
+  //     // Final fallback → null
+  //     const value = widgetValue ?? tabValue ?? null;
+
+  //     const valOptions = allDrpDtParams?.[param?.paraName] || [];
+  //     const matchedOption = valOptions.find(dt => dt?.optionValue == value);
+
+  //     return {
+  //       ...param,
+  //       value: value,
+  //       val: matchedOption
+  //         ? matchedOption.optionText
+  //         : value === "%" ? "All" : value
+  //     };
+  //   });
+  // };
+
+  //   const getParametersWithValues = (widgetParams, paramsValues, widgetId, allDrpDtParams) => {
+  //   let allParams = [...widgetParams];
+
+  //   const tabParamsEntries = Object.entries(paramsValues?.tabParams || {});
+
+  //   tabParamsEntries.forEach(([id, value]) => {
+  //     const exists = allParams.some(p => String(p.id) === String(id));
+  //     if (!exists) {
+  //       allParams.push({
+  //         id: parseInt(id),
+  //         disName: '',
+  //         paraName: '',
+  //         value
+  //       });
+  //     }
+  //   });
+
+  //   return allParams.map(param => {
+  //     const widgetValue = paramsValues?.widgetParams?.[widgetId]?.[param?.id] || null;
+  //     const tabValue = paramsValues?.tabParams?.[param?.id] || param?.value || null;
+  //     const value = widgetValue ?? tabValue ?? null;
+
+  //     const valOptions = allDrpDtParams?.[param?.paraName] || [];
+  //     const matchedOption = valOptions.find(dt => dt?.optionValue == value);
+
+  //     return {
+  //       ...param,
+  //       value,
+  //       val: matchedOption
+  //         ? matchedOption.optionText
+  //         : value === "%" ? "All" : value
+  //     };
+  //   });
+  // };
+
+  const getParametersWithValues = (widgetParams, paramsValues, widgetId, allDrpDtParams) => {
+    let allParams = [...widgetParams];
+
+    const tabParamsEntries = Object.entries(paramsValues?.tabParams || {});
+
+    tabParamsEntries.forEach(([id, value]) => {
+      const exists = allParams.some(p => String(p.id) === String(id));
+      if (!exists) {
+        // Find the tab parameter data to get the label
+        const tabParamData = tabParams.find(tab => String(tab.id) === String(id));
+
+        allParams.push({
+          id: parseInt(id),
+          disName: tabParamData?.disName || '',
+          paraName: tabParamData?.paraName || '',
+          value
+        });
+      }
+    });
+
+    return allParams.map(param => {
+      const widgetValue = paramsValues?.widgetParams?.[widgetId]?.[param?.id] || null;
+      const tabValue = paramsValues?.tabParams?.[param?.id] || param?.value || null;
+      const value = widgetValue ?? tabValue ?? null;
+
+      const valOptions = allDrpDtParams?.[param?.paraName] || [];
+      const matchedOption = valOptions.find(dt => dt?.optionValue == value);
 
       return {
         ...param,
-        value: value,
-        val: val?.find(dt => dt?.optionValue == value)?.optionText || value
+        value,
+        val: matchedOption
+          ? matchedOption.optionText
+          : value === "%" ? "All" : value
       };
     });
-  }
+  };
 
 
   const [queryParams] = useSearchParams();
@@ -203,7 +300,9 @@ const TabularDash = (props) => {
         const tabdt = presentTabsDash?.filter(tab => tab?.jsonData?.dashboardId == config?.drillTabId)
         if (tabdt?.length > 0) {
           setActiveTab(tabdt[0]);
-          setPrevKpiTab([activeTab]);
+          // setPrevKpiTab([activeTab]);
+           setPrevKpiTab(prev => [...prev, activeTab]);
+          setPkColumn(pkValue);
         } else {
           ToastAlert('Tab Not Found', 'warning')
         }
@@ -247,7 +346,7 @@ const TabularDash = (props) => {
       "fileName": fileName
     }
 
-    fetchPostData("/hisutils/ftp/view", val, { responseType: 'blob' }).then(async (data) => {
+    fetchPostData(`/hisutils/ftp/view?isGlobal=${isGlobal || 0}`, val, { responseType: 'blob' }).then(async (data) => {
       if (data) {
 
         // const contentType = data.headers['content-type'] || data.data.type;
@@ -283,6 +382,7 @@ const TabularDash = (props) => {
     })
   }
 
+
   const getFirstValue = (val) => {
     return typeof val === 'string' && val.includes('##') ? val.split('##')[0] : val;
   };
@@ -292,7 +392,7 @@ const TabularDash = (props) => {
     return pattern.test(str);
   }
 
-  const generateColumns = (data, ifDrill = isChildPresent, isFirstRowHeading, headers, isH2) => {
+  const generateColumns = (data, ifDrill = isChildPresent, isFirstRowHeading, headers, isH2, mainIndex) => {
     if (!data || data.length === 0) return [];
 
     const allKeys = data.length ? Object.keys(data[0]).filter(key => key !== 'pkcolumn') : [];
@@ -565,13 +665,12 @@ const TabularDash = (props) => {
           });
         }
       }
-
-      const formatSettings = widgetData?.mpFormatColumn?.[0]?.lstFormatColumn || [];
+      const formatSettings = widgetData?.mpFormatColumn?.[mainIndex]?.lstFormatColumn || [];
 
       const dynamicColumns = reorderedKeys.map((key, index) => {
         const isDateColumn = dateColumns.has(key);
 
-        // 📏 Find corresponding format by columnNo
+        // Find corresponding format by columnNo
         const format = formatSettings.find(f => parseInt(f.columnNo) === index + 1);
 
         const align = format?.columnAlignment || 'Left';
@@ -601,7 +700,7 @@ const TabularDash = (props) => {
             }
             const displayValue = getFirstValue(value);
 
-            if (typeof value === 'string' && value.trim().startsWith('<a') && value.includes('data-isSFTP=')) {
+            if (typeof value === 'string' && value.trim().startsWith('<a') && (value.includes('class="ftp"') || value.includes('data-isSFTP='))) {
               return (
                 <span className="pointer" dangerouslySetInnerHTML={{ __html: value }} onClick={(e) => FtpClicked(e, value)} />
               );
@@ -703,19 +802,19 @@ const TabularDash = (props) => {
           setMultipleTables([{ columns, mainHeaders: [], data: datafor, queryObj: widget?.procedureMode }])
         }
 
-        setFetching(false);
-        setIsSearchQuery(false)
-
+        setIsSearchQuery(false);
+        // setFetching(false);
+        setTimeout(() => setFetching(false), 500);
       } catch (error) {
         console.error("Error loading query data:", error);
-        setLoading(false)
-        setFetching(false)
+        setLoading(false);
+        setFetching(false);
         setIsSearchQuery(false)
       }
     } else {
       if (!widget?.queryVO?.length > 0) return;
       try {
-        setFetching(true)
+        setFetching(true);
 
         const allQueryResults = await Promise.all(
           widget.queryVO.map(async (queryObj) => {
@@ -724,9 +823,8 @@ const TabularDash = (props) => {
             return { queryObj, data };
           })
         );
-
         // Format results for each query
-        const processedTables = allQueryResults.map(({ queryObj, data }) => {
+        const processedTables = allQueryResults.map(({ queryObj, data }, index) => {
           let filteredData = data;
 
           if (widget?.isQuerychild === "1") {
@@ -744,23 +842,24 @@ const TabularDash = (props) => {
 
           if (widget?.isFirstRowColumnName === 'Yes') {
             const { headers, datafor, isH2 } = formatData(filteredData, widget?.isFirstRowColumnName);
-            const { columns, mainHeaders } = generateColumns(datafor, isChildPresent, widget?.isFirstRowColumnName, headers, isH2);
+            const { columns, mainHeaders } = generateColumns(datafor, isChildPresent, widget?.isFirstRowColumnName, headers, isH2, index);
             return { columns, mainHeaders, data: datafor, queryObj };
           } else {
             const { datafor } = formatData(filteredData, widget?.isFirstRowColumnName);
-            const columns = generateColumns(datafor, isChildPresent, widget?.isFirstRowColumnName);
+            const columns = generateColumns(datafor, isChildPresent, widget?.isFirstRowColumnName, null, null, index);
             return { columns, mainHeaders: [], data: datafor, queryObj };
           }
         });
 
-        setFetching(false);
         setMultipleTables(processedTables);
-        setIsSearchQuery(false)
+        setIsSearchQuery(false);
+        // setFetching(false);
+        setTimeout(() => setFetching(false), 500);
 
       } catch (error) {
         console.error("Error loading query data:", error);
-        setFetching(false)
-        setIsSearchQuery(false)
+        setFetching(false);
+        setIsSearchQuery(false);
       }
     }
   }
@@ -812,6 +911,7 @@ const TabularDash = (props) => {
 
 
   const onDrillDown = (pkCol) => {
+
     if (isChildPresent && childId) {
       setPkColumn(pkCol)
       setCurrentLevel(currentLevel + 1)
@@ -826,6 +926,7 @@ const TabularDash = (props) => {
           'pkclm': pkCol
         }
       ]);
+      setSearchInput('');
     } else {
       ToastAlert('No child available', 'warning')
     }
@@ -892,7 +993,7 @@ const TabularDash = (props) => {
   return (
     <>
       {/* {currentLevel == 0 && */}
-      <div className={`tabular-box ${theme === 'Dark' ? 'dark-theme' : ''} tabular-box-border ${borderReq === 'No' ? 'border-0' : ''}`} style={{
+      <div className={`widget_id_${widgetData?.rptId} tabular-box ${theme === 'Dark' ? 'dark-theme' : ''} tabular-box-border ${borderReq === 'No' ? 'border-0' : ''}`} style={{
         height: isLayoutWithPreview ? '100%' : widheight && widheight != '0' ? `${widheight}px` : '650px',
         border: `1px solid ${theme === 'Dark' ? 'white' : 'black'}`,
         marginTop: `${widgetTopMargin}px`
@@ -1017,7 +1118,6 @@ const TabularDash = (props) => {
 
           </div>
 
-
         </div>
         {paramsData && (
           <div className='parameter-box py-1'>
@@ -1026,7 +1126,13 @@ const TabularDash = (props) => {
         )}
 
         {fetching ? (
-          <h6 className="text-center">{dt('Data Fetching')}...</h6>
+          <></>
+          // <h6 className="text-center">{dt('Data Fetching')}...</h6>
+          // <div className="text-center">
+          //   <div className="spinner-border text-primary" role="status">
+          //     <span className="sr-only">Loading...</span>
+          //   </div>
+          // </div>
         ) : (
           multipleTables?.map((table, index) => {
             const lowercasedText = searchInput[index]?.toLowerCase() || "";
@@ -1038,6 +1144,7 @@ const TabularDash = (props) => {
                 )
               )
               : table.data;
+
 
             return (
               <>
@@ -1082,7 +1189,7 @@ const TabularDash = (props) => {
                   recordsPerPageOptions={[recordPerPage, 10, 20, 50]}
                   isTableHeadingRequired={!headingReq}
                   theme={theme}
-                  noDataComponent={<div className="text-danger fw-bold fs-13">{dt(customMessage || "There are no records to display")}</div>}
+                  // noDataComponent={<div className="text-danger fw-bold fs-13">{dt(customMessage || "There are no records to display")}</div>}
                   mainHeaders={(() => {
                     if (visibleColumns?.length > 0) {
                       return (table.mainHeaders || [])?.filter(header => visibleColumns?.includes(header.name));

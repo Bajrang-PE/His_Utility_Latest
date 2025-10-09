@@ -404,6 +404,7 @@ export const generatePDF = async (widgetData, multipleTables, config, visibleCol
     return;
   }
 
+
   const {
     pdfTheme,
     printPDFIn,
@@ -414,8 +415,11 @@ export const generatePDF = async (widgetData, multipleTables, config, visibleCol
     isReportPrintDateRequired,
     isDirectDownloadRequired,
     rptDisplayName,
-    isPdfHeaderReqInAllPages
+    isPdfHeaderReqInAllPages,
+    mpFormatColumn
   } = widgetData || {};
+
+ 
 
   const { reportHeader1, reportHeader2, reportHeader3, isLogoRequired, headingAlignment, logos } = config || {};
   const orientation = printPDFIn === 'Landscape' ? 'l' : 'p';
@@ -476,7 +480,7 @@ export const generatePDF = async (widgetData, multipleTables, config, visibleCol
   if (showFilterDetailsInPDF === 'Yes' && filters.length) {
     pdf.setFontSize(10);
     pdf.setFont('helvetica', 'normal');
-    pdf.text('Filters Applied:', 14, yPosition);
+    // pdf.text('Filters Applied:', 14, yPosition);
     yPosition += 5;
     filters.forEach((filter) => {
       pdf.text(`${filter.disName}: ${filter.val}`, 14, yPosition);
@@ -491,9 +495,9 @@ export const generatePDF = async (widgetData, multipleTables, config, visibleCol
 
     let tableData = [];
 
-      const columnDefinitions = Array.isArray(visibleColumns[tableIndex])
-    ? visibleColumns[tableIndex]
-    : visibleColumns;
+    const columnDefinitions = Array.isArray(visibleColumns[tableIndex])
+      ? visibleColumns[tableIndex]
+      : visibleColumns;
 
     // if (isH2 === 'Yes') {
     //   const columnDefinitions = visibleColumns;
@@ -513,29 +517,29 @@ export const generatePDF = async (widgetData, multipleTables, config, visibleCol
     //   });
     // }
 
-      if (isH2 === 'Yes') {
-    // 🔹 For H2 headers
-    const columnNames = columnDefinitions?.map(col =>
-      col.name?.trim() ? `${col?.mainHeader}_${col?.name}` : col?.mainHeader
-    );
-    tableData = data?.data?.map(row => {
-      const filteredRow = {};
-      columnNames.forEach(key => {
-        if (row.hasOwnProperty(key)) filteredRow[key] = row[key];
+    if (isH2 === 'Yes') {
+      // 🔹 For H2 headers
+      const columnNames = columnDefinitions?.map(col =>
+        col.name?.trim() ? `${col?.mainHeader}_${col?.name}` : col?.mainHeader
+      );
+      tableData = data?.data?.map(row => {
+        const filteredRow = {};
+        columnNames.forEach(key => {
+          if (row.hasOwnProperty(key)) filteredRow[key] = row[key];
+        });
+        return filteredRow;
       });
-      return filteredRow;
-    });
-  } else {
-    // 🔹 Normal headers
-    const columnNames = columnDefinitions?.map(col => col.name);
-    tableData = data?.data?.map(row => {
-      const filteredRow = {};
-      columnNames.forEach(key => {
-        if (row.hasOwnProperty(key)) filteredRow[key] = row[key];
+    } else {
+      // 🔹 Normal headers
+      const columnNames = columnDefinitions?.map(col => col.name);
+      tableData = data?.data?.map(row => {
+        const filteredRow = {};
+        columnNames.forEach(key => {
+          if (row.hasOwnProperty(key)) filteredRow[key] = row[key];
+        });
+        return filteredRow;
       });
-      return filteredRow;
-    });
-  }
+    }
 
     const unwantedKeys = ['pkcolumn'];
     const headers = Object.keys(tableData[0] || {})
@@ -545,11 +549,31 @@ export const generatePDF = async (widgetData, multipleTables, config, visibleCol
 
     const columnCount = headers.length;
     const availableWidth = pdf.internal.pageSize.getWidth() - 10;
-    const avgColumnWidth = availableWidth / columnCount;
+    // const avgColumnWidth = availableWidth / columnCount;
+
+    const formatSettings = mpFormatColumn?.[tableIndex]?.lstFormatColumn || [];
+
+    // If user defined widths, sum them to calculate proportionate widths
+    const totalDefinedWidth = formatSettings.reduce((sum, f) => sum + (parseInt(f.columnWidth) || 0), 0);
+
+    const avgColumnWidth = totalDefinedWidth > 0
+      ? availableWidth / totalDefinedWidth
+      : availableWidth / columnCount;
 
 
     //FOR NOT PAGE BREAK
     headers.forEach(header => { header.width = Math.min(avgColumnWidth); });
+
+    headers.forEach((header, idx) => {
+      const format = formatSettings.find(f => parseInt(f.columnNo) === idx + 1);
+
+      //  Calculate actual width from % (if defined)
+      const userWidth = parseInt(format?.columnWidth) || (100 / columnCount);
+      header.width = (userWidth / 100) * availableWidth;
+
+      //  Apply alignment from format
+      header.align = format?.columnAlignment?.toLowerCase() || 'left';
+    });
 
 
     const stripHtml = (str) => {
@@ -564,9 +588,10 @@ export const generatePDF = async (widgetData, multipleTables, config, visibleCol
         if (content === null || content === undefined) return '';
         if (typeof content === 'object') return JSON.stringify(content);
         if (typeof content === 'string' && content.includes('##')) {
-          return content.split('##')[0];
+          const sst = content.split('##')[0];
+          return stripHtml(sst);
         }
-        // ✅ Strip HTML if string contains tags
+        //  Strip HTML if string contains tags
         if (typeof content === 'string') {
           return stripHtml(content);
         }
@@ -600,19 +625,24 @@ export const generatePDF = async (widgetData, multipleTables, config, visibleCol
         textColor: '#000000'
       },
       columnStyles: headers.reduce((styles, header, idx) => {
-        styles[idx] = { cellWidth: header.width, halign: 'left', overflow: 'linebreak', };
+        styles[idx] = { cellWidth: header.width, halign: header.align, overflow: 'linebreak', };
         return styles;
       }, {}),
       styles: { overflow: 'linebreak', fontSize: parseInt(pdfTableFontSize), cellPadding: 2 },
       tableWidth: 'auto',
       showHead: isPdfHeaderReqInAllPages === 'Yes' ? 'everyPage' : 'firstPage',
       pageBreak: 'auto',
-      margin: { top: isPdfHeaderReqInAllPages === 'Yes' ? 50 : 10, left: 5, right: 10 },
+      margin: { top: isPdfHeaderReqInAllPages === 'Yes' ? 10 : 10, left: 5, right: 10 },
       didDrawPage: (data) => {
         const pageNumber = data.pageNumber;
         if (pageNumber === 1 && tableIndex === 0) { //FOR PAGE BREAK   && start === 0
           drawHeader(pdf);
         }
+        // if (isPdfHeaderReqInAllPages === 'Yes') {
+        //   drawHeader(pdf);
+        // } else if (pageNumber === 1 && tableIndex === 0) {
+        //   drawHeader(pdf);
+        // }
         if (isReportPrintDateRequired === 'Yes') {
           pdf.setFontSize(9);
           const reportDate = `Print Date: ${new Date().toLocaleDateString()}`;
@@ -631,6 +661,7 @@ export const generatePDF = async (widgetData, multipleTables, config, visibleCol
   // if (isDirectDownloadRequired === 'Yes') {
   const filterLabels = filters?.map(f => f.val).join("--") || "report";
   pdf.save(`${rptDisplayName}--${filterLabels}.pdf`);
+   ToastAlert('Report Downloaded', 'success');
 
 };
 
@@ -1007,7 +1038,12 @@ export const generateGraphPDF = async (widgetData, tableData, config, visibleCol
     didDrawPage: (data) => {
       const pageNumber = data.pageNumber;
 
-      if (pageNumber === 1 || isPdfHeaderReqInAllPages === 'Yes') {
+      // if (pageNumber === 1 || isPdfHeaderReqInAllPages === 'Yes') {
+      //   drawHeader(pdf);
+      // }
+      if (isPdfHeaderReqInAllPages === 'Yes') {
+        drawHeader(pdf);
+      } else if (pageNumber === 1) {
         drawHeader(pdf);
       }
 
@@ -1131,10 +1167,10 @@ export const generateCSV = (widgetData, multipleTables, config, visibleColumns, 
     return;
   }
 
-      const stripHtml = (str) => {
-       if (!str) return '';
-       return str.replace(/<[^>]*>/g, '').trim();
-     };
+  const stripHtml = (str) => {
+    if (!str) return '';
+    return str.replace(/<[^>]*>/g, '').trim();
+  };
 
   if (!widgetData) return;
 
@@ -1154,7 +1190,7 @@ export const generateCSV = (widgetData, multipleTables, config, visibleColumns, 
   finalData.push([]);
 
   if (filters?.length) {
-    finalData.push(['Filters Applied:']);
+    // finalData.push(['Filters Applied:']);
     filters.forEach(filter => {
       finalData.push([`${filter.disName}: ${filter.val}`]);
     });
@@ -1227,55 +1263,55 @@ export const generateCSV = (widgetData, multipleTables, config, visibleColumns, 
   // });
 
   multipleTables.forEach((tableObj, tableIndex) => {
-  const { data, title } = tableObj;
+    const { data, title } = tableObj;
 
-  if (!Array.isArray(data) || data.length === 0) {
+    if (!Array.isArray(data) || data.length === 0) {
+      // finalData.push([`Table ${tableIndex + 1}: ${title || ''}`]);
+      finalData.push(['No Data Available']);
+      finalData.push([]);
+      return;
+    }
+
+    // 🔹 Use columns specific to this table
+    const currentColumns = Array.isArray(visibleColumns[tableIndex])
+      ? visibleColumns[tableIndex]
+      : visibleColumns;
+
+    let columnNames;
+    if (isH2 === 'Yes') {
+      columnNames = currentColumns?.map(col =>
+        col.name?.trim() ? `${col?.mainHeader}_${col?.name}` : col?.mainHeader
+      );
+    } else {
+      columnNames = currentColumns?.map(col => col.name);
+    }
+
+    const unwantedKeys = ['pkcolumn'];
+    const tableHeaders = columnNames.filter(col => !unwantedKeys.includes(col));
+
+    // Add headings
     finalData.push([`Table ${tableIndex + 1}: ${title || ''}`]);
-    finalData.push(['No Data Available']);
-    finalData.push([]);
-    return;
-  }
+    finalData.push(tableHeaders);
 
-  // 🔹 Use columns specific to this table
-  const currentColumns = Array.isArray(visibleColumns[tableIndex])
-    ? visibleColumns[tableIndex]
-    : visibleColumns;
-
-  let columnNames;
-  if (isH2 === 'Yes') {
-    columnNames = currentColumns?.map(col =>
-      col.name?.trim() ? `${col?.mainHeader}_${col?.name}` : col?.mainHeader
-    );
-  } else {
-    columnNames = currentColumns?.map(col => col.name);
-  }
-
-  const unwantedKeys = ['pkcolumn'];
-  const tableHeaders = columnNames.filter(col => !unwantedKeys.includes(col));
-
-  // Add headings
-  finalData.push([`Table ${tableIndex + 1}: ${title || ''}`]);
-  finalData.push(tableHeaders);
-
-  // Add rows
-  data.forEach(row => {
-    const filteredRow = tableHeaders.map(header => {
-      const content = row[header];
-      if (content === null || content === undefined) return '';
-      if (typeof content === 'object') return JSON.stringify(content);
-      if (typeof content === 'string') {
-        if (content.includes('##')) {
-          return stripHtml(content.split('##')[0]);
+    // Add rows
+    data.forEach(row => {
+      const filteredRow = tableHeaders.map(header => {
+        const content = row[header];
+        if (content === null || content === undefined) return '';
+        if (typeof content === 'object') return JSON.stringify(content);
+        if (typeof content === 'string') {
+          if (content.includes('##')) {
+            return stripHtml(content.split('##')[0]);
+          }
+          return stripHtml(content);
         }
-        return stripHtml(content);
-      }
-      return content.toString();
+        return content.toString();
+      });
+      finalData.push(filteredRow);
     });
-    finalData.push(filteredRow);
-  });
 
-  finalData.push([]); // spacing
-});
+    finalData.push([]); // spacing
+  });
 
 
   // Convert to CSV

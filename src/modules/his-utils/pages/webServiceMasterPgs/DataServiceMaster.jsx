@@ -22,7 +22,7 @@ const DataServiceMaster = () => {
   const [showParamsTable, setShowParamsTable] = useState(false);
 
   const [values, setValues] = useState({
-    "serviceCategory": "", "serviceDisplayName": "", "serviceCallingName": "", "procedureFuncName": "", "fetchQuery": "", "webJsonType": "dataHeadingColumnType", "jndiSavingData": "", "stmtTimeOut": "", "dashboardFor": "", "id": ""
+    "serviceCategory": "", "serviceDisplayName": "", "serviceCallingName": "", "procedureFuncName": "", "fetchQuery": "", "webJsonType": "dataHeadingColumnType", "jndiSavingData": "", "stmtTimeOut": "5", "dashboardFor": "", "id": ""
   })
 
   const [errors, setErrors] = useState({ serviceCategoryErr: "", serviceDisplayNameErr: "", serviceCallingNameErr: "", fetchQueryErr: "", selectedModeErr: "", procedureFuncNameErr: "" });
@@ -253,7 +253,7 @@ const DataServiceMaster = () => {
   }, [confirmSave])
 
   const reset = () => {
-    setValues({ "serviceCategory": "", "serviceDisplayName": "", "serviceCallingName": "", "procedureFuncName": "", "fetchQuery": "", "webJsonType": "dataHeadingColumnType", "jndiSavingData": "", "stmtTimeOut": "", "dashboardFor": "", "id": "" })
+    setValues({ "serviceCategory": "", "serviceDisplayName": "", "serviceCallingName": "", "procedureFuncName": "", "fetchQuery": "", "webJsonType": "dataHeadingColumnType", "jndiSavingData": "", "stmtTimeOut": "5", "dashboardFor": "", "id": "" })
     setErrors({ serviceCategoryErr: "", serviceDisplayNameErr: "", serviceCallingNameErr: "", fetchQueryErr: "", selectedModeErr: "", procedureFuncNameErr: "" })
     setActionMode('home');
     setShowWebServiceTable(false);

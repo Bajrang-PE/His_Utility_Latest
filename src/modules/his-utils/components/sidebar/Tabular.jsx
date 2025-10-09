@@ -185,7 +185,7 @@ const Tabular = ({
                     position: 'relative'
                 }}
             >
-                {mainHeaders?.length >0  &&
+                {mainHeaders?.length > 0 &&
                     <div
                         className='first-head'
 
@@ -230,7 +230,7 @@ const Tabular = ({
                     responsive={false}
                     noTableHead={isTableHeadingRequired}
                     theme={theme === 'Dark' ? 'dark' : 'default'}
-                    noDataComponent={noDataComponent}
+                    noDataComponent={''}
                 />
             </div>
 

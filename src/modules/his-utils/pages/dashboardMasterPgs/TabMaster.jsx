@@ -45,7 +45,7 @@ const TabMaster = () => {
     //parameter detail
     "parameterOption": "1", "loadOption": "ONWINDOWLOAD", "paraComboBgColor": "", "paraComboFontColor": "", "paraLabelFontColor": "", "paraRemark": "", 'allParameters': "",
     //jndi
-    "jndiSavingData": "", "stmtTimeOut": "",
+    "jndiSavingData": "", "stmtTimeOut": "5",
     //footer
     "footerAlignment": "", "footerQuery": "", "footerText": "", "webRefName": "", "webServiceName": "",
     //helpDocs
@@ -585,7 +585,7 @@ const TabMaster = () => {
       //parameter detail
       "parameterOption": "1", "loadOption": "ONWINDOWLOAD", "paraComboBgColor": "", "paraComboFontColor": "", "paraLabelFontColor": "", "paraRemark": "",
       //jndi
-      "jndiSavingData": "", "stmtTimeOut": "",
+      "jndiSavingData": "", "stmtTimeOut": "5",
       //footer
       "footerAlignment": "", "footerQuery": "", "footerText": "", "webRefName": "", "webServiceName": "",
       //helpDocs

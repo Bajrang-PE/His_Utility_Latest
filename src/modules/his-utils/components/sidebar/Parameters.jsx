@@ -18,7 +18,7 @@ const usePrevious = (value) => {
     return ref.current;
 };
 
-const Parameters = ({ params, scope, widgetId = null, isLayoutWithPreview, setWidgetParams, setAllDrpDtParams }) => {
+const Parameters = ({ params, scope, widgetId = null, isLayoutWithPreview, setWidgetParams, setAllDrpDtParams, setTabParams, tabParams }) => {
     const { theme, setParamsValues, paramsValuesPro, setParamsValuesPro, setIsSearchQuery, activeTab, isSearchQuery, searchScope, setSearchScope, dt } = useContext(HISContext);
     const [presentParams, setPresentParams] = useState([]);
     const [selectedValues, setSelectedValues] = useState({});
@@ -36,6 +36,7 @@ const Parameters = ({ params, scope, widgetId = null, isLayoutWithPreview, setWi
 
     const [errors, setErrors] = useState({
     })
+
 
     const handleSetParamsValues = useCallback((values, type, widgetId = null) => {
         if (type === 'tabParams') {
@@ -102,9 +103,15 @@ const Parameters = ({ params, scope, widgetId = null, isLayoutWithPreview, setWi
                 masterName: "ParameterMst"
             };
             const data = await fetchPostData(`/hisutils/getparametertMultipleData?isGlobal=${isGlobal || 0}`, val);
+
             if (data?.status === 1) {
                 setPresentParams(data?.data);
-                setWidgetParams(data?.data?.map((dt) => ({ id: dt?.id, disName: dt?.jsonData?.parameterDisplayName, paraName: dt?.jsonData?.parameterName })))
+                if (scope === 'widgetParams') {
+                    setWidgetParams(data?.data?.map((dt) => ({ id: dt?.id, disName: dt?.jsonData?.parameterDisplayName, paraName: dt?.jsonData?.parameterName })))
+                }
+                if (scope === 'tabParams') {
+                    setTabParams(data?.data?.map((dt) => ({ id: dt?.id, disName: dt?.jsonData?.parameterDisplayName, paraName: dt?.jsonData?.parameterName })))
+                }
             } else {
                 setPresentParams([]);
             }
@@ -144,6 +151,23 @@ const Parameters = ({ params, scope, widgetId = null, isLayoutWithPreview, setWi
 
         handleSetProParamsValues({ [id]: sortedString || '' }, scope, widgetId);
         setErrors(prev => ({ ...prev, [id]: "" }));
+    };
+    const handleSingleSelectChange = (parameterName, selectedOption, parameterId) => {
+        const value = selectedOption ? selectedOption.optionValue : '';
+
+        setSelectedValues(prev => ({
+            ...prev,
+            [parameterName]: value
+        }));
+
+        handleSetProParamsValues({ [parameterId]: value || '' }, scope, widgetId);
+
+        if (errors[parameterId]) {
+            setErrors(prev => ({
+                ...prev,
+                [parameterId]: ''
+            }));
+        }
     };
 
     const handleInputChange = (parameterName, e, id) => {
@@ -299,8 +323,6 @@ const Parameters = ({ params, scope, widgetId = null, isLayoutWithPreview, setWi
     }, [paramsValuesPro, presentParams]);
 
 
-
-
     // useEffect(() => {
     //     if (!presentParams?.length || !prevParams) return;
 
@@ -435,7 +457,7 @@ const Parameters = ({ params, scope, widgetId = null, isLayoutWithPreview, setWi
                         isMultipleSelectionRequired,
                         parameterType,
                         parameterQueryForDate,
-                        jndiIdForGettingData
+                        jndiIdForGettingData,showAsLableIfOneData
                     } = param?.jsonData || {};
 
                     const defaultValStr = defaultOption?.optionValue || "";
@@ -491,13 +513,15 @@ const Parameters = ({ params, scope, widgetId = null, isLayoutWithPreview, setWi
         initializeParams();
     }, [presentParams, widgetId]);
 
+    // console.log(selectedValues,'BBBBBBBBBB');
+    // console.log(paramsValuesPro,'paramsValuesPro');
 
     const renderInputField = (param) => {
         const {
             parameterType, parameterDisplayName, parameterName, lstOption, isMandatory, defaultOption,
             parameterParentWidth, parentAlignment,
             parameterLabelWidth, labelAlignment,
-            parameterControlWidth, controlAlignment, isMultipleSelectionRequired, defaultValueIfEmpty, parameterId, shouldBeLessThanField, shouldBeGreaterThanField, placeHolder, textBoxValidation
+            parameterControlWidth, controlAlignment, isMultipleSelectionRequired, defaultValueIfEmpty, parameterId, shouldBeLessThanField, shouldBeGreaterThanField, placeHolder, textBoxValidation,showAsLableIfOneData
         } = param?.jsonData || {};
         const options = dropdownData[parameterName] || [];
 
@@ -544,6 +568,50 @@ const Parameters = ({ params, scope, widgetId = null, isLayoutWithPreview, setWi
                     {(parameterType === "1" && isMultipleSelectionRequired !== 'Yes') &&
                         <>
                             {!hideParams ?
+                                <Select
+                                    id={parameterId}
+                                    name={parameterName}
+                                    options={[
+                                        ...(placeHolder ? [{ optionValue: '', optionText: placeHolder }] :
+                                            [{ optionValue: '', optionText: 'Select Value' }]),
+                                        ...(defaultOption?.optionText ? [defaultOption] : []),
+                                        ...(options?.length > 0 ? options : [])
+                                    ]}
+                                    placeholder={placeHolder || 'Select Value'}
+                                    className={`${theme === 'Dark' ? 'backcolorinput-dark' : 'backcolorinput'} react-select-multi`}
+                                    classNamePrefix="react-select"
+                                    getOptionLabel={(e) => e.optionText}
+                                    getOptionValue={(e) => e.optionValue}
+                                    value={
+                                        [...(defaultOption ? [defaultOption] : []), ...(options || [])]
+                                            .find(opt => opt.optionValue === selectedValues[parameterName]) ||
+                                        null
+                                    }
+                                    onChange={(selectedOption) => handleSingleSelectChange(parameterName, selectedOption, parameterId)}
+                                    isDisabled={hideParams}
+                                    isSearchable={true}
+                                    isClearable={true}
+                                />
+                                :
+                                <span>
+                                    {
+                                        options?.find(opt => opt.optionValue === selectedValues[parameterName])?.optionText ||
+                                        defaultOption?.optionText ||
+                                        ''
+                                    }
+                                </span>
+                            }
+                            {errors[parameterId] &&
+                                <div className="required-input">
+                                    {errors[parameterId]}
+                                </div>
+                            }
+                        </>
+                    }
+
+                    {/* {(parameterType === "1" && isMultipleSelectionRequired !== 'Yes') &&
+                        <>
+                            {!hideParams ?
                                 <select
                                     id={parameterId}
                                     name={parameterName}
@@ -580,10 +648,8 @@ const Parameters = ({ params, scope, widgetId = null, isLayoutWithPreview, setWi
                                 </div>
                             }
                         </>
-                    }
+                    } */}
 
-
-                    
 
                     {parameterType === "2" && (
                         <>
@@ -694,14 +760,15 @@ const Parameters = ({ params, scope, widgetId = null, isLayoutWithPreview, setWi
     return (
         <>
             <div className={`help-docs ${isLayoutWithPreview ? 'layout-help-docs' : ''}`}>
-                <button type="button" className="small-box-btn-dwn m-1" onClick={() => searchParams()}>
-                    <FontAwesomeIcon icon={faSearch} size="xs" className="dropdown-gear-icon" />
-                </button>
+
                 <button type="button" className="small-box-btn-dwn m-1" onClick={() => resetParams()}>
                     <FontAwesomeIcon icon={faReply} size="xs" className="dropdown-gear-icon" />
                 </button>
                 <button type="button" className="small-box-btn-dwn m-1" onClick={() => setHideParams(!hideParams)}>
                     <FontAwesomeIcon icon={faEyeSlash} size="xs" className="dropdown-gear-icon" />
+                </button>
+                <button type="button" className="small-box-btn-dwn m-1" onClick={() => searchParams()}>
+                    <FontAwesomeIcon icon={faSearch} size="xs" className="dropdown-gear-icon" />
                 </button>
             </div>
             {/* {!hideParams && */}
