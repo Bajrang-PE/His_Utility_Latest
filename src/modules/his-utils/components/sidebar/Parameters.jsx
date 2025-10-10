@@ -273,14 +273,14 @@ const Parameters = ({ params, scope, widgetId = null, isLayoutWithPreview, setWi
 
         const changedKeys = [];
 
-        // 🔹 1. check tabParams
+        // check tabParams
         for (const key in paramsValuesPro?.tabParams) {
             if (paramsValuesPro.tabParams[key] !== prevParams.tabParams?.[key]) {
                 changedKeys.push({ scope: "tabParams", key, value: paramsValuesPro.tabParams[key] });
             }
         }
 
-        // 🔹 2. check widgetParams (nested)
+        // check widgetParams (nested)
         for (const widgetId in paramsValuesPro?.widgetParams) {
             const currentWidget = paramsValuesPro.widgetParams[widgetId] || {};
             const prevWidget = prevParams.widgetParams?.[widgetId] || {};
@@ -299,7 +299,7 @@ const Parameters = ({ params, scope, widgetId = null, isLayoutWithPreview, setWi
 
         if (!changedKeys.length) return;
 
-        // 🔹 3. Run dropdown fetch only for changed params
+        // Run dropdown fetch only for changed params
         presentParams.forEach((param) => {
             const query = param?.jsonData?.parameterQuery;
             if (!query) return;
@@ -396,7 +396,6 @@ const Parameters = ({ params, scope, widgetId = null, isLayoutWithPreview, setWi
     // }, [paramsValuesPro, parentId, presentParams, scope]);
 
 
-
     const resetParams = () => {
         setSelectedValues({});
     }
@@ -457,7 +456,7 @@ const Parameters = ({ params, scope, widgetId = null, isLayoutWithPreview, setWi
                         isMultipleSelectionRequired,
                         parameterType,
                         parameterQueryForDate,
-                        jndiIdForGettingData,showAsLableIfOneData
+                        jndiIdForGettingData, showAsLableIfOneData
                     } = param?.jsonData || {};
 
                     const defaultValStr = defaultOption?.optionValue || "";
@@ -491,6 +490,8 @@ const Parameters = ({ params, scope, widgetId = null, isLayoutWithPreview, setWi
                         }
                     }
 
+                    const options = dropdownData[parameterName] || [];
+
                     if (isMulti) {
                         const matchedOptions = values.map((val, idx) => ({
                             optionValue: val,
@@ -499,8 +500,18 @@ const Parameters = ({ params, scope, widgetId = null, isLayoutWithPreview, setWi
                         initialSelectedValues[parameterName] = matchedOptions;
                         defOpt[param?.id] = values.join("~");
                     } else {
-                        initialSelectedValues[parameterName] = values[0] || '';
-                        defOpt[param?.id] = values[0] || defaultValueIfEmpty;
+                        // CHANGED: If no default value but options exist, use first option
+                        let selectedValue = values[0] || '';
+
+                        // If no default value and we have options, use the first option
+                        if (!selectedValue && options.length > 0) {
+                            selectedValue = options[0].optionValue;
+                        }
+                        initialSelectedValues[parameterName] = selectedValue;
+                        defOpt[param?.id] = selectedValue || defaultValueIfEmpty;
+
+                        // initialSelectedValues[parameterName] = values[0] || '';
+                        // defOpt[param?.id] = values[0] || defaultValueIfEmpty;
                     }
                 }
 
@@ -511,19 +522,21 @@ const Parameters = ({ params, scope, widgetId = null, isLayoutWithPreview, setWi
         };
 
         initializeParams();
-    }, [presentParams, widgetId]);
+    }, [presentParams, widgetId, dropdownData[presentParams?.find(prm => prm?.jsonData?.parameterName)?.jsonData?.parameterName]]);
 
-    // console.log(selectedValues,'BBBBBBBBBB');
-    // console.log(paramsValuesPro,'paramsValuesPro');
 
     const renderInputField = (param) => {
         const {
             parameterType, parameterDisplayName, parameterName, lstOption, isMandatory, defaultOption,
             parameterParentWidth, parentAlignment,
             parameterLabelWidth, labelAlignment,
-            parameterControlWidth, controlAlignment, isMultipleSelectionRequired, defaultValueIfEmpty, parameterId, shouldBeLessThanField, shouldBeGreaterThanField, placeHolder, textBoxValidation,showAsLableIfOneData
+            parameterControlWidth, controlAlignment, isMultipleSelectionRequired, defaultValueIfEmpty, parameterId, shouldBeLessThanField, shouldBeGreaterThanField, placeHolder, textBoxValidation, showAsLableIfOneData
         } = param?.jsonData || {};
         const options = dropdownData[parameterName] || [];
+        const shouldShowAsLabel = showAsLableIfOneData === "Yes" &&
+            options.length === 1 &&
+            (!defaultOption?.optionValue ||
+                (defaultOption && options.some(opt => opt.optionValue == defaultOption.optionValue)));
 
         return (
             <div
@@ -567,16 +580,25 @@ const Parameters = ({ params, scope, widgetId = null, isLayoutWithPreview, setWi
 
                     {(parameterType === "1" && isMultipleSelectionRequired !== 'Yes') &&
                         <>
-                            {!hideParams ?
+                            {!hideParams && !shouldShowAsLabel ?
                                 <Select
                                     id={parameterId}
                                     name={parameterName}
-                                    options={[
-                                        ...(placeHolder ? [{ optionValue: '', optionText: placeHolder }] :
-                                            [{ optionValue: '', optionText: 'Select Value' }]),
-                                        ...(defaultOption?.optionText ? [defaultOption] : []),
-                                        ...(options?.length > 0 ? options : [])
-                                    ]}
+                                    menuPortalTarget={document.body}
+                                    // options={[
+                                    //     ...(defaultOption?.optionText ? [defaultOption] : []),
+                                    //     ...(options?.length > 0 ? options : [])
+                                    // ]}
+                                    options={
+                                        (() => {
+                                            const allOptions = options?.length > 0 ? options : [];
+                                            const defaultOpt = defaultOption?.optionText ? defaultOption : null;
+                                            if (defaultOpt && !allOptions.some(opt => opt.optionValue == defaultOpt.optionValue)) {
+                                                return [defaultOpt, ...allOptions];
+                                            }
+                                            return allOptions;
+                                        })()
+                                    }
                                     placeholder={placeHolder || 'Select Value'}
                                     className={`${theme === 'Dark' ? 'backcolorinput-dark' : 'backcolorinput'} react-select-multi`}
                                     classNamePrefix="react-select"
@@ -591,9 +613,12 @@ const Parameters = ({ params, scope, widgetId = null, isLayoutWithPreview, setWi
                                     isDisabled={hideParams}
                                     isSearchable={true}
                                     isClearable={true}
+                                    styles={{
+                                        menuPortal: base => ({ ...base, zIndex: 9999 }),
+                                    }}
                                 />
                                 :
-                                <span>
+                                <span className="fw-medium">
                                     {
                                         options?.find(opt => opt.optionValue === selectedValues[parameterName])?.optionText ||
                                         defaultOption?.optionText ||
@@ -608,48 +633,6 @@ const Parameters = ({ params, scope, widgetId = null, isLayoutWithPreview, setWi
                             }
                         </>
                     }
-
-                    {/* {(parameterType === "1" && isMultipleSelectionRequired !== 'Yes') &&
-                        <>
-                            {!hideParams ?
-                                <select
-                                    id={parameterId}
-                                    name={parameterName}
-                                    className={`${theme === 'Dark' ? 'backcolorinput-dark' : 'backcolorinput'} form-select form-select-sm`}
-                                    value={selectedValues[parameterName] || defaultValueIfEmpty || ''}
-                                    onChange={(e) => handleInputChange(parameterName, e, parameterId)}
-                                >
-                                    {placeHolder ?
-                                        <option value=''>{placeHolder}</option> :
-                                        <option value=''>{'select'}</option>
-
-                                    }
-                                    {defaultOption?.optionText !== '' &&
-                                        <option value={defaultOption?.optionValue ? defaultOption?.optionValue : ''}>{defaultOption?.optionText ? defaultOption?.optionText : 'Select Value'}</option>
-                                    }
-                                    {options?.length > 0 && options.map((option, index) => (
-                                        <option key={index} value={option.optionValue}>
-                                            {option.optionText}
-                                        </option>
-                                    ))}
-                                </select>
-                                :
-
-                                <span>
-                                    {
-                                        defaultOption?.optionValue == selectedValues[parameterName] || defaultValueIfEmpty ? defaultOption?.optionText :
-                                            options?.filter((dt => dt?.optionValue == selectedValues[parameterName] || defaultValueIfEmpty))[0]?.optionText
-                                    }
-                                </span>
-                            }
-                            {errors[parameterId] &&
-                                <div className="required-input">
-                                    {errors[parameterId]}
-                                </div>
-                            }
-                        </>
-                    } */}
-
 
                     {parameterType === "2" && (
                         <>
@@ -755,7 +738,6 @@ const Parameters = ({ params, scope, widgetId = null, isLayoutWithPreview, setWi
             </div >
         );
     };
-
 
     return (
         <>

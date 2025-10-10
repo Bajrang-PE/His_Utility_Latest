@@ -245,7 +245,7 @@ const TabularDash = (props) => {
       return { headers, datafor: formattedData, isH2 };
     } else {
       // This logic handles the case where there is no multi-level header
-      const formattedData = rawData.map((item) => {
+      const formattedData = rawData?.length > 0 && rawData?.map((item) => {
         const formattedItem = {};
         Object.entries(item).forEach(([key, value]) => {
           const formattedKey = key.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
@@ -301,7 +301,7 @@ const TabularDash = (props) => {
         if (tabdt?.length > 0) {
           setActiveTab(tabdt[0]);
           // setPrevKpiTab([activeTab]);
-           setPrevKpiTab(prev => [...prev, activeTab]);
+          setPrevKpiTab(prev => [...prev, activeTab]);
           setPkColumn(pkValue);
         } else {
           ToastAlert('Tab Not Found', 'warning')
@@ -858,8 +858,8 @@ const TabularDash = (props) => {
 
       } catch (error) {
         console.error("Error loading query data:", error);
-        setFetching(false);
         setIsSearchQuery(false);
+        setFetching(false);
       }
     }
   }
@@ -999,7 +999,6 @@ const TabularDash = (props) => {
         marginTop: `${widgetTopMargin}px`
       }} key={widgetData?.rptId}>
 
-
         <div className={`row px-1 py-1 border-bottom ${headingReq !== "Yes" ? "align-content-end" : ""}`}>
           {headingReq === "Yes" &&
             <div className={` ${isActionButtonReq !== 'No' || isActionButtonReq !== 'None' || currentLevel !== 0 ? 'col-md-9' : 'col-md-12'} fw-medium fs-6`} style={{ textAlign: headingAlign, color: widgetHeadingColor }} >{dt(widgetData?.rptDisplayName)}</div>
@@ -1136,7 +1135,6 @@ const TabularDash = (props) => {
         ) : (
           multipleTables?.map((table, index) => {
             const lowercasedText = searchInput[index]?.toLowerCase() || "";
-
             const filteredData = lowercasedText
               ? table.data.filter(row =>
                 Object.values(row).some(val =>
@@ -1168,6 +1166,7 @@ const TabularDash = (props) => {
                           placeholder="Enter"
                           className={`${theme === 'Dark' ? 'backcolorinput-dark' : 'backcolorinput'}`}
                           onChange={(e) => { handleSearchChange(index, e?.target?.value); }}
+                          isSpecialChrs={true}
                         />
                       </div>
                     </div>

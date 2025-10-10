@@ -148,6 +148,7 @@ const DataServiceTable = (props) => {
                                 placeholder="Search"
                                 className="backcolorinput"
                                 onChange={(e) => { setSearchInput(e?.target?.value); }}
+                                  isSpecialChrs={true}
                             // value={values?.customMsgForNoData}
                             />
                         </div>

@@ -50,7 +50,8 @@ const GlobalDataTable = (props) => {
                                 placeholder="Enter"
                                 className="backcolorinput"
                                 onChange={(e) => { setSearchInput(e?.target?.value); }}
-                            // value={values?.customMsgForNoData}
+                                // value={values?.customMsgForNoData}
+                                isSpecialChrs={true}
                             />
                         </div>
                     </div>

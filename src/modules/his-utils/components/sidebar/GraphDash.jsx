@@ -615,8 +615,8 @@ const GraphDash = ({ widgetData, pkColumn, setPkColumn, isLayoutWithPreview, pre
             },
           },
           title: {
-            text: widgetData.rptName || "",
-            style: { color: isDarkTheme ? "#ffffff" : "#000000" }
+            text: "",
+            // style: { color: isDarkTheme ? "#ffffff" : "#000000" }
           },
           xAxis: {
             categories: gdata?.categories,

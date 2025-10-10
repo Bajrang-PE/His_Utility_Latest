@@ -1290,7 +1290,7 @@ export const generateCSV = (widgetData, multipleTables, config, visibleColumns, 
     const tableHeaders = columnNames.filter(col => !unwantedKeys.includes(col));
 
     // Add headings
-    finalData.push([`Table ${tableIndex + 1}: ${title || ''}`]);
+    // finalData.push([`Table ${tableIndex + 1}: ${title || ''}`]);
     finalData.push(tableHeaders);
 
     // Add rows
@@ -1310,6 +1310,7 @@ export const generateCSV = (widgetData, multipleTables, config, visibleColumns, 
       finalData.push(filteredRow);
     });
 
+    finalData.push([]); // spacing
     finalData.push([]); // spacing
   });
 

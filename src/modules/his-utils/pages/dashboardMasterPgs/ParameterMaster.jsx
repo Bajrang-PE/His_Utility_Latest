@@ -18,7 +18,7 @@ const ParameterMaster = () => {
   const { parameterData, getAllParameterData, selectedOption, setSelectedOption, setShowDataTable, dashboardForDt, getDashboardForDrpData, actionMode, setActionMode, parameterDrpData, getAllServiceData, dataServiceData, setLoading, setShowConfirmSave, confirmSave, setConfirmSave, jndiServerDrpData, getDashConfigData, singleConfigData, dt } = useContext(HISContext);
 
   const [rows, setRows] = useState([{ optionValue: "", optionText: "" }]);
-  const [showAsLabel, setShowAsLabel] = useState(false);
+  const [showAsLabel, setShowAsLabel] = useState('No');
   const [isMultiSelectReq, setIsMultiSelectReq] = useState('No');
   const [singleData, setSingleData] = useState([]);
   const [values, setValues] = useState({
@@ -369,6 +369,8 @@ const ParameterMaster = () => {
         parameterQueryForDate: jsonData?.parameterQueryForDate || "",
       });
       setRows(jsonData?.lstOption?.length > 0 ? jsonData?.lstOption : [])
+      setShowAsLabel(jsonData?.showAsLableIfOneData || 'No')
+
     }
   }, [singleData]);
 
@@ -580,8 +582,8 @@ const ParameterMaster = () => {
                         name="showAsLabel"
                         id="showAsLabelYes"
                         value={showAsLabel}
-                        onChange={(e) => setShowAsLabel(true)}
-                        checked={showAsLabel}
+                        onChange={(e) => setShowAsLabel('Yes')}
+                        checked={showAsLabel === 'Yes'}
                       />
                       <label className="form-check-label" htmlFor="dbYes">
                         {dt("Yes")}
@@ -594,8 +596,8 @@ const ParameterMaster = () => {
                         name="showAsLabel"
                         id="showAsLabelNo"
                         value={showAsLabel}
-                        onChange={(e) => setShowAsLabel(false)}
-                        checked={!showAsLabel}
+                        onChange={(e) => setShowAsLabel('No')}
+                        checked={showAsLabel === 'No'}
                       />
                       <label className="form-check-label" htmlFor="dbNo">
                         {dt("No")}
@@ -1070,7 +1072,7 @@ const ParameterMaster = () => {
                 </div>
                 {/* DEFAULT OPTION 1 */}
                 <div className="row mb-1">
-                  <label className="col-form-label fix-label pe-0 required-label" style={{ width: "20%" }}>{dt("Default Option")} : </label>
+                  <label className="col-form-label fix-label pe-0" style={{ width: "20%" }}>{dt("Default Option")} : </label>
                   <div className="col-4">
                     <InputField
                       type="text"
@@ -1108,7 +1110,7 @@ const ParameterMaster = () => {
                 </div>
                 {/* DEFAULT OPTION FOR FILTER */}
                 <div className="row mb-1" >
-                  <label className="col-form-label fix-label pe-0 required-label" style={{ width: "20%" }}>{dt("Default Option For Filter")} : </label>
+                  <label className="col-form-label fix-label pe-0" style={{ width: "20%" }}>{dt("Default Option For Filter")} : </label>
                   <div className="col-4">
                     <InputField
                       type="text"

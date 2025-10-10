@@ -89,10 +89,14 @@ export const fetchQueryData = async (queryVO = [], jndiServer, params, pkColumn,
       popupValue: pkColumn ? pkColumn?.toString() : ""
       // popupValue: "99929068@99929068"
     };
-    console.log(requestBody, 'requestbody');
     const response = await fetchPostData(`/hisutils/GenericApiQry?isGlobal=${isGlobal || 0}`, requestBody);
-console.log(query,response)
-    return response?.data || [];
+
+    if (response?.status === 1) {
+      return response?.data || [];
+    } else {
+      return response?.message;
+    }
+
   } catch (error) {
     console.error("Error fetching query data:", error);
     return [];

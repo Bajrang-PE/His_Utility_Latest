@@ -6,7 +6,6 @@ import { HISContext } from '../../../contextApi/HISContext';
 const JndiDetails = (props) => {
     const { handleValueChange, handleRadioChange, radioValues, values,dt } = props;
     const {jndiServerDrpData} = useContext(HISContext)
-console.log('values?.stmtTimeOut', values?.stmtTimeOut)
     return (
         <>
             {/* MAIN DEVIDER FOR JNDI */}
