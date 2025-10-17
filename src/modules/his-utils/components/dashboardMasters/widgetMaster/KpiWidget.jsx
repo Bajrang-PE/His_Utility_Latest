@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import InputField from '../../commons/InputField'
 import InputSelect from '../../commons/InputSelect'
-import { iconType, kpiBoxClickOptions, kpiTypes } from '../../../localData/DropDownData';
+import { iconImageOptions, iconType, kpiBoxClickOptions, kpiTypes } from '../../../localData/DropDownData';
 import * as FaIcons from "react-icons/fa";
 import IconPicker from '../../commons/IconPicker';
 
@@ -116,7 +116,7 @@ const KpiWidget = (props) => {
                                         placeholder="Select Image"
                                         name='kpiTabIconImage'
                                         id="kpiTabIconImage"
-                                        options={[{ value: "default", label: "Default-Image.png" }]}
+                                        options={iconImageOptions}
                                         onChange={handleValueChange}
                                         value={values?.kpiTabIconImage}
                                     />
@@ -294,9 +294,9 @@ const KpiWidget = (props) => {
                 <div className='col-sm-6'>
                     {values?.kpiBoxClickOptions !== '0' &&
                         <div className="form-group row">
-                            <label className="col-sm-5 col-form-label pe-0">{values?.kpiBoxClickOptions === 'showTab' ? dt("Tab open on click") : values?.kpiBoxClickOptions === 'showWidget' ? dt('Widget open on click') : dt('Dashboard open on click')}  : </label>
+                            <label className="col-sm-5 col-form-label pe-0">{(values?.kpiTabOpenOnClick !== '0' && values?.kpiTabOpenOnClick) ? dt("Tab open on click") : (values?.kpiWidgetOpenOnClick !== '0' && values?.kpiWidgetOpenOnClick) ? dt('Widget open on click') : dt('Dashboard open on click')}  : </label>
                             <div className="col-sm-7 ps-0 align-content-center">
-                                {values?.kpiBoxClickOptions === 'showTab' &&
+                                {(values?.kpiBoxClickOptions === 'showTab' || values?.kpiTabOpenOnClick !== '0' && values?.kpiTabOpenOnClick) &&
                                     <InputSelect
                                         className="backcolorinput "
                                         placeholder="No Tabs"
@@ -306,7 +306,7 @@ const KpiWidget = (props) => {
                                         onChange={handleValueChange}
                                         value={values?.kpiTabOpenOnClick}
                                     />}
-                                {values?.kpiBoxClickOptions === 'showWidget' &&
+                                {(values?.kpiBoxClickOptions === 'showWidget' || values?.kpiWidgetOpenOnClick !== '0' && values?.kpiWidgetOpenOnClick) &&
                                     <InputSelect
                                         className="backcolorinput "
                                         placeholder="No Widget"
@@ -316,7 +316,7 @@ const KpiWidget = (props) => {
                                         onChange={handleValueChange}
                                         value={values?.kpiWidgetOpenOnClick}
                                     />}
-                                {values?.kpiBoxClickOptions === 'showDashboard' &&
+                                {(values?.kpiBoxClickOptions === 'showDashboard' || values?.kpiDashboardOpenOnClick !== '0' && values?.kpiDashboardOpenOnClick) &&
                                     <InputSelect
                                         className="backcolorinput "
                                         placeholder="No Dashboard"

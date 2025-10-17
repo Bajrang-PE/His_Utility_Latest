@@ -7,6 +7,7 @@ import { HISContext } from '../../contextApi/HISContext';
 import TranslateModal from './TranslateModal';
 import axios from 'axios';
 import { extractAllPageText, ToastAlert } from '../../utils/commonFunction';
+import SessionClock from '../commons/SessionClock';
 
 const NavbarHeader = () => {
     const { setActionMode, setSelectedOption, language, changeLanguage, showTranslateModal, setShowTranslateModal, fetchTranslations, setLanguage, extractedTexts, setExtractedTexts, setLoading, dt } = useContext(HISContext)
@@ -113,7 +114,8 @@ const NavbarHeader = () => {
             {/* <DashHeader/> */}
             <nav className="navbar navbar-expand-lg navbar-dark navbar-header-his">
                 <div className="container-fluid his-brand">
-                    <div className="navbar-brand logo">{dt("HIS Utility")}</div>
+                    {/* <div className="navbar-brand logo">{dt("HIS Utility")}</div> */}
+                    {/* <SessionClock /> */}
                     <button
                         className="navbar-toggler"
                         type="button"

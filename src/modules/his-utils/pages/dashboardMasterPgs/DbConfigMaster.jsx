@@ -10,6 +10,8 @@ import { HISContext } from '../../contextApi/HISContext'
 import { fetchData, fetchPostData } from '../../../../utils/HisApiHooks'
 import LogoUploader from '../../components/commons/LogoUploader'
 import { decryptAesOrRsa } from '../../../../utils/SecurityConfig'
+import { jwtDecode } from "jwt-decode";
+import SessionClock from '../../components/commons/SessionClock'
 
 const DbConfigMaster = () => {
   const { dashboardForDt, getDashboardForDrpData, setSelectedOption, setLoading, setShowConfirmSave, confirmSave, setConfirmSave, singleConfigData, getDashConfigData, clearAllCache, dt } = useContext(HISContext);
@@ -105,6 +107,7 @@ const DbConfigMaster = () => {
       setRows(dtd?.lstWebServiceClientConfigVO || [])
       setLogoCounts(dtd?.logoCounts || '1')
       setIsHeadByQueryReq(dtd?.isHeadByQueryReq || "No")
+      localStorage?.setItem("dfor", dtd?.dashboardFor);
     }
   }, [singleConfigData])
 
@@ -304,6 +307,7 @@ const DbConfigMaster = () => {
     setRows([])
     setLogoPosition({ "logo1Position": "left", "logo2Position": "right", "logo3Position": "top" })
   }
+
 
 
   return (
@@ -1352,6 +1356,7 @@ const DbConfigMaster = () => {
               {dt("Clear All Cached Data")}
             </button>
           </div>
+          {/* <SessionClock /> */}
         </div>
       </div>
     </>

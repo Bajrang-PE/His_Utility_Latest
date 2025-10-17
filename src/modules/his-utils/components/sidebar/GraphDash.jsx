@@ -25,6 +25,8 @@ const GraphDash = ({ widgetData, pkColumn, setPkColumn, isLayoutWithPreview, pre
   const [queryParams] = useSearchParams();
   const isPrev = queryParams.get('isPreview');
   const isGlobal = queryParams.get("isGlobal") || 0;
+  const [fetching, setFetching] = useState(false);
+  const [statusMessage, setStatusMessage] = useState('');
 
   const is3D = widgetData.is3d === "true" || widgetData.is3d === "Yes";
   const xAxisLabel = widgetData.xAxisLabel || "X Axis";
@@ -154,8 +156,11 @@ const GraphDash = ({ widgetData, pkColumn, setPkColumn, isLayoutWithPreview, pre
   const fetchDataQry = async (widget) => {
     const queries = widget?.queryVO?.length > 0 ? widget?.queryVO : [];
     if (!queries.length) return;
+    setFetching(true);
+    setStatusMessage("Requesting...");
 
     try {
+      setStatusMessage("Executing Query...");
       const results = await Promise.all(
         queries.map(async (q) => {
           const params = getOrderedParamValues(q?.mainQuery, paramsValues, widget?.rptId);
@@ -250,6 +255,8 @@ const GraphDash = ({ widgetData, pkColumn, setPkColumn, isLayoutWithPreview, pre
         })
       );
 
+      setStatusMessage("Prepairing Data...")
+
       const limitedResults = results.map(r => r.limited);
       const allResults = results.map(r => r.all);
 
@@ -258,10 +265,13 @@ const GraphDash = ({ widgetData, pkColumn, setPkColumn, isLayoutWithPreview, pre
 
       setIsSearchQuery(false);
       setSearchScope({ scope: "", id: "" });
-
+      setFetching(false);
+      setStatusMessage('');
     } catch (error) {
       console.error("Error loading query data:", error);
       setIsSearchQuery(false);
+      setFetching(false);
+      setStatusMessage('');
     }
   };
 
@@ -390,6 +400,8 @@ const GraphDash = ({ widgetData, pkColumn, setPkColumn, isLayoutWithPreview, pre
     if (widget?.modeOfQuery === "Procedure") {
       if (!widget?.procedureMode) return;
       try {
+        setFetching(true);
+        setStatusMessage("Requesting...");
         const paramVal = formatParams(paramsValues ? paramsValues : null, widgetData?.rptId || '');
         const widgetLimit = widget?.limitHTMLFromDb || ''
         const defLimit = singleConfigData?.databaseConfigVO?.setDefaultLimit || ''
@@ -409,7 +421,9 @@ const GraphDash = ({ widgetData, pkColumn, setPkColumn, isLayoutWithPreview, pre
           formatDateFullYear(new Date()),//from values
           formatDateFullYear(new Date()) // to values
         ]
+        setStatusMessage("Executing Query...");
         const data = await fetchProcedureData(widget?.procedureMode, params, widgetData?.JNDIid, null, isGlobal);
+        setStatusMessage("Prepairing Data...")
         const limit = widgetLimit
           ? parseInt(widgetLimit)
           : safeLimit
@@ -421,17 +435,21 @@ const GraphDash = ({ widgetData, pkColumn, setPkColumn, isLayoutWithPreview, pre
         setGraphData([formattedData]);
         setIsSearchQuery(false)
         setSearchScope({ scope: "", id: "" })
+        setFetching(false);
+        setStatusMessage('');
       } catch (error) {
         console.error("Error loading query data:", error);
         setIsSearchQuery(false)
+        setFetching(false);
+        setStatusMessage('');
       }
     }
   }
 
   useEffect(() => {
-    if (widgetData && widgetData?.modeOfQuery === "Procedure" && !isSearchQuery) {
+    if (widgetData && widgetData?.modeOfQuery === "Procedure" && !isSearchQuery && widgetData?.widgetLoadOption !== "ONGOBUTTONCLICK") {
       fetchProcedure(widgetData)
-    } else if (widgetData && !isSearchQuery) {
+    } else if (widgetData && !isSearchQuery && widgetData?.widgetLoadOption !== "ONGOBUTTONCLICK") {
       fetchDataQry(widgetData);
     }
   }, [paramsValues, widgetData]);
@@ -532,8 +550,8 @@ const GraphDash = ({ widgetData, pkColumn, setPkColumn, isLayoutWithPreview, pre
     const headerWithName = headers?.map(h => ({
       name: h
     }))
-    setColumns(headerWithName)
-    setShowAdvancedOptions(true)
+    setColumns(headerWithName);
+    setShowAdvancedOptions(true);
   }
 
 
@@ -763,6 +781,7 @@ const GraphDash = ({ widgetData, pkColumn, setPkColumn, isLayoutWithPreview, pre
             },
           },
         };
+
         return (
           <>
             <div className="px-2 py-2" style={{ marginTop: `${widgetTopMargin}px` }}>
@@ -776,9 +795,19 @@ const GraphDash = ({ widgetData, pkColumn, setPkColumn, isLayoutWithPreview, pre
                 <span>{widgetData?.procedureMode}</span>
               }
             </div>
-
             <div className="high-chart-box">
-              <HighchartsReact highcharts={Highcharts} options={options} />
+              {(fetching || statusMessage) ? (
+                <>
+                  <h6 className="text-center">{statusMessage}</h6>
+                  <div className="text-center">
+                    <div className="spinner-border text-primary" role="status">
+                      <span className="sr-only">Loading...</span>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <HighchartsReact highcharts={Highcharts} options={options} />
+              )}
             </div>
           </>
         )

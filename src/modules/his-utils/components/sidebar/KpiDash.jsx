@@ -4,9 +4,11 @@ import * as SolidIcons from '@fortawesome/free-solid-svg-icons';
 import React, { useContext, useEffect, useState } from 'react'
 import { faSearch } from '@fortawesome/free-solid-svg-icons/faSearch';
 import { HISContext } from '../../contextApi/HISContext';
-import { fetchProcedureData, fetchQueryData, formatDateFullYear, formatParams, getOrderedParamValues, ToastAlert } from '../../utils/commonFunction';
+import { fetchProcedureData, fetchQueryData, formatDateFullYear, formatParams, getImagebg, getOrderedParamValues, ToastAlert } from '../../utils/commonFunction';
 import PopUpWidget from './PopUpWidget';
 import { useSearchParams } from 'react-router-dom';
+import * as FaIcons from "react-icons/fa";
+import defImg from "../../../../assets/Icon_images/default-icon.png"
 
 const KpiDash = ({ widgetData, presentTabs, isLayoutWithPreview }) => {
     const { setActiveTab, setLoading, paramsValues, searchScope, isSearchQuery, setIsSearchQuery, setSearchScope, setPrevKpiTab, activeTab, dt, presentTabsDash } = useContext(HISContext);
@@ -49,7 +51,7 @@ const KpiDash = ({ widgetData, presentTabs, isLayoutWithPreview }) => {
                     formatDateFullYear(new Date()),//from values
                     formatDateFullYear(new Date()) // to values
                 ]
-                const response = await fetchProcedureData(widget?.procedureMode, params, widget?.JNDIid,null,isGlobal);
+                const response = await fetchProcedureData(widget?.procedureMode, params, widget?.JNDIid, null, isGlobal);
                 const formattedData = formatData(response.data || []);
                 // const generatedColumns = generateColumns(formattedData);
                 setKpiData(formattedData);
@@ -67,7 +69,7 @@ const KpiDash = ({ widgetData, presentTabs, isLayoutWithPreview }) => {
             const params = getOrderedParamValues(widget?.queryVO[0]?.mainQuery, paramsValues, widget?.rptId);
             try {
 
-                const data = await fetchQueryData(widget?.queryVO, widgetData?.JNDIid, params,null,isGlobal);
+                const data = await fetchQueryData(widget?.queryVO, widgetData?.JNDIid, params, null, isGlobal);
                 if (data?.length > 0) {
                     const firstItem = data[0];
                     const dynamicKey = Object.keys(firstItem)[0];
@@ -110,18 +112,50 @@ const KpiDash = ({ widgetData, presentTabs, isLayoutWithPreview }) => {
     }, [isSearchQuery]);
 
 
-    const getDynamicIcon = (iconName) => {
-        if (!iconName) return SolidIcons.faMedkit;
+    // const getDynamicIcon = (iconName) => {
+    //     if (!iconName) return SolidIcons.faMedkit;
 
-        let formattedIconName = "fa" + iconName
-            .replace("fa-", "")
-            .replace(/-([a-z])/g, (match, letter) => letter.toUpperCase());
-        let iconKey = Object.keys(SolidIcons).find(key => key.toLowerCase() === formattedIconName.toLowerCase());
-        if (!iconKey) {
-            iconKey = Object.keys(SolidIcons).find(key => key.toLowerCase().includes(formattedIconName.toLowerCase().replace(/[^a-zA-Z]/g, "")));
+    //     let formattedIconName = "fa" + iconName
+    //         .replace("fa-", "")
+    //         .replace(/-([a-z])/g, (match, letter) => letter.toUpperCase());
+    //     let iconKey = Object.keys(SolidIcons).find(key => key.toLowerCase() === formattedIconName.toLowerCase());
+    //     if (!iconKey) {
+    //         iconKey = Object.keys(SolidIcons).find(key => key.toLowerCase().includes(formattedIconName.toLowerCase().replace(/[^a-zA-Z]/g, "")));
+    //     }
+    //     return iconKey ? SolidIcons[iconKey] : SolidIcons.faMedkit;
+    // };
+
+
+    const getDynamicIcon = (iconName) => {
+        if (!iconName) return <FontAwesomeIcon icon={SolidIcons.faBarChart} />;
+
+        if (iconName?.includes("_") || iconName?.includes("-")) {
+            const formattedIconName =
+                "fa" +
+                iconName
+                    .replace(/-o$/, "")
+                    .replace(/^fa-/, "")
+                    .replace(/-([a-z])/g, (_, letter) => letter.toUpperCase());
+
+            const iconKey = Object.keys(SolidIcons).find(
+                (key) =>
+                    key.toLowerCase() === formattedIconName.toLowerCase() ||
+                    key
+                        .toLowerCase()
+                        .includes(
+                            formattedIconName.replace(/[^a-zA-Z]/g, "").toLowerCase()
+                        )
+            );
+
+            const IconDef = iconKey ? SolidIcons[iconKey] : SolidIcons.faBarChart;
+            return <FontAwesomeIcon icon={IconDef} />;
         }
-        return iconKey ? SolidIcons[iconKey] : SolidIcons.faMedkit;
+
+        const Cmp = FaIcons[iconName] || FaBars;
+        return <Cmp />;
     };
+
+
 
     const onHover = (e) => {
         e.currentTarget.style.backgroundColor = widgetData?.widgetHoverBackground || widgetData?.widgetBackgroundColour
@@ -135,7 +169,7 @@ const KpiDash = ({ widgetData, presentTabs, isLayoutWithPreview }) => {
         if (tabdt?.length > 0) {
             setActiveTab(tabdt[0]);
             // setPrevKpiTab([activeTab]);
-             setPrevKpiTab(prev => [...prev, activeTab]);
+            setPrevKpiTab(prev => [...prev, activeTab]);
         } else {
             ToastAlert('Tab Not Found', 'warning')
         }
@@ -175,7 +209,7 @@ const KpiDash = ({ widgetData, presentTabs, isLayoutWithPreview }) => {
                 // borderRadius: "50%",
                 // borderStyle: 'solid',
                 boxShadow: widgetData?.isWidgetShadowRequired === 'Yes' ? '5px 5px 10px rgba(0,0,0,0.2)' : 'none',
-                 height: isLayoutWithPreview ? '100%' : !widheight || widheight === "0" ? 'auto' : `${widheight}px`,
+                height: isLayoutWithPreview ? '100%' : !widheight || widheight === "0" ? 'auto' : `${widheight}px`,
                 width: "100%"
             }} onMouseEnter={onHover} onMouseLeave={onMouseLeave}>
 
@@ -232,13 +266,13 @@ const KpiDash = ({ widgetData, presentTabs, isLayoutWithPreview }) => {
                             />
                             {/* widgetData?.onClickOfKPITabId !== '0' && widgetData?.onClickOfKPITabId !== '' && */}
 
-                            {(widgetData?.onClickKPITypeOption !== "0" && widgetData?.onClickOfKPITabId && widgetData?.onClickOfKPITabId !== '0') &&
+                            {(widgetData?.onClickOfKPITabId && widgetData?.onClickOfKPITabId !== '0') &&
                                 <div className='small-box-kpi-link-dtl' style={{ color: widgetData?.kpiLinkFontColor }} onClick={() => onKpiClickDetails(widgetData?.onClickOfKPITabId)}>
                                     <span>{dt(widgetData?.linkTab || 'Click For Details')}</span>
                                     <b><FontAwesomeIcon icon={faSearch} /></b>
                                 </div>
                             }
-                            {(widgetData?.onClickKPITypeOption !== "0" && widgetData?.onClickOfKPIWidgetId && widgetData?.onClickOfKPIWidgetId !== '0') &&
+                            {(widgetData?.onClickOfKPIWidgetId && widgetData?.onClickOfKPIWidgetId !== '0') &&
                                 <div className='small-box-kpi-link-dtl' style={{ color: widgetData?.kpiLinkFontColor }} onClick={() => onWidgetClickDetails(widgetData?.onClickOfKPIWidgetId)}>
                                     <span>{dt(widgetData?.linkWidget || 'Click For Details')}</span>
                                     <b><FontAwesomeIcon icon={faSearch} /></b>
@@ -251,9 +285,10 @@ const KpiDash = ({ widgetData, presentTabs, isLayoutWithPreview }) => {
                 {(widgetData?.iconType !== 'NO_ICON' && widgetData?.kpiType !== "isKpiACircle") &&
                     <div className="small-box-icon kpi-icon-img">
                         {widgetData?.iconType === 'IMAGE' ?
-                            <img src="https://uatcdash.dcservices.in/HISUtilities/dashboard/images/Icon_images/default-icon.png" alt="image" className='dropdown-gear-icon' />
+                            <img src={defImg} className='dropdown-gear-icon' style={{ height: "60px" }} />
                             :
-                            <FontAwesomeIcon icon={getDynamicIcon(widgetData?.iconName)} color={widgetData?.widgetIconColour} />
+                            getDynamicIcon(widgetData?.iconName)
+                            // <FontAwesomeIcon icon={getDynamicIcon(widgetData?.iconName)} color={widgetData?.widgetIconColour} />
                         }
                         {/* <i className='fa fa-balance-scale'></i> */}
                     </div>

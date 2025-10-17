@@ -6,7 +6,7 @@ import { ToastAlert } from '../modules/his-utils/utils/commonFunction';
 
 // const BaseUrl = 'http://10.226.28.17:8024/';  //server
 // const BaseUrl = 'http://10.226.25.164:8024/';  //server
-// const BaseUrl = 'http://10.226.17.6:8024/';  //server
+// const BaseUrl = 'http://10.226.29.102:8024/';  //server
 
 const apiHis = axios.create({
     baseURL: ''
@@ -64,7 +64,7 @@ apiHis.interceptors.response.use(
             if (status === 401 || status === 403) {
                 // Token is expired or unauthorized
                 ToastAlert("Network Exception!!!", 'error');
-                localStorage.clear();
+                // localStorage.clear();
                 // setTimeout(() => {
                 //     logout();
                 // }, 1000);

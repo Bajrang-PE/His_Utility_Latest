@@ -11,6 +11,7 @@ import { getEncryptedParamValue } from '../../../../utils/Security';
 import { useDispatch } from 'react-redux';
 import { setWidgitStyle } from '../../Features/WidgitEngine/WidgitViewerSlice';
 import { themeClasses } from '../dragdrop/dashboardSettings';
+import SessionClock from '../commons/SessionClock';
 
 const PdfDownload = lazy(() => import('../commons/PdfDownload'));
 const Parameters = lazy(() => import('./Parameters'));
@@ -275,6 +276,7 @@ const TabDash = React.memo(() => {
     const bgclr = activeTab?.jsonData?.tabBackgroundColor || "#ffffff";
     const titleclr = activeTab?.jsonData?.tabTitleFontColor || "#000000";
 
+    // console.log('widWithoutLinked', widWithoutLinked);
 
     return (
         <>
@@ -299,7 +301,7 @@ const TabDash = React.memo(() => {
                                 <FontAwesomeIcon icon={faArrowLeft}
                                     className="me-1" />{dt('Back')}</button>
                             {prevKpiTab?.length > 1 &&
-                                <div className="btn-group" role="group" style={{borderLeft:".5px solid"}}>
+                                <div className="btn-group" role="group" style={{ borderLeft: ".5px solid" }}>
                                     <button type="button" className="btn btn-danger dropdown-toggle back-button-kpi" data-bs-toggle="dropdown" aria-expanded="false">
                                     </button>
                                     <ul className="dropdown-menu dropdown-menu-start">
@@ -318,6 +320,10 @@ const TabDash = React.memo(() => {
                             }
                         </div>
                     )}
+
+                    {/* <div className='session-timer' style={{ float: "right" }}>
+                        <SessionClock />
+                    </div> */}
 
                     {/* {prevKpiTab?.length > 0 && (
                         <div className="dropdown d-inline-block">

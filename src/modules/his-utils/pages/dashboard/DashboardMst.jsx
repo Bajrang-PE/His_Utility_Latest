@@ -180,7 +180,7 @@ const DashboardMst = () => {
 
     return (
         <>
-            {loading ? <h1 className="text-center">Loding...</h1> : (
+            {loading ? <h1 className="text-center">Loading...</h1> : (
                 <div className={`${theme === 'Dark' ? 'dark-theme' : ''}`} style={{
                     display: isTopBarLayout ? "block" : 'flex',
                     backgroundColor: "#f4f4f4",

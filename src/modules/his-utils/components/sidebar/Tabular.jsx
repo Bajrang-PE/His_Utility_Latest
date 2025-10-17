@@ -230,7 +230,7 @@ const Tabular = ({
                     responsive={false}
                     noTableHead={isTableHeadingRequired}
                     theme={theme === 'Dark' ? 'dark' : 'default'}
-                    noDataComponent={''}
+                    // noDataComponent={''}
                 />
             </div>
 
@@ -239,7 +239,7 @@ const Tabular = ({
                     {`Showing 1 to ${data?.length} of ${data?.length} entries`}<br />
                 </div>
             )}
-            {(isRecordsLimitedLineRequired === 'Yes' && allData?.length > data?.length) && (
+            {(allData?.length > data?.length) && (
                 <div style={{ textAlign: 'right', marginTop: '8px', fontSize: '12px' }}>
                     {`*Records limited to ${limit} out of ${allData?.length}`}<br />
                 </div>

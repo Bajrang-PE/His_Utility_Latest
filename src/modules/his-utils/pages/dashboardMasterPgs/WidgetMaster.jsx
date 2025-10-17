@@ -27,7 +27,7 @@ const WidgetMaster = () => {
   const { setShowDataTable, allWidgetData, getAllWidgetData, dashboardForDt, getDashboardForDrpData, parameterData, getAllParameterData, widgetDrpData, getAllServiceData, dataServiceData, selectedOption, setSelectedOption, actionMode, setActionMode, parameterDrpData, setLoading, setShowConfirmSave, confirmSave, setConfirmSave, getAllTabsData, tabDrpData, getDashConfigData, singleConfigData, dt } = useContext(HISContext);
 
   const [values, setValues] = useState({
-    "id": "", "widgetFor": "", "widgetType": "columnBased", "widgetNameDisplay": "", "widgetNameInternal": "", "widgetRefreshTime": "", "widgetRefreshDelayTime": "", "cachingStatus": "Cache for All", "limit": "150", "widgetHadingClr": "", "widgetTopMargin": "", "headingBgColor": "", "headingFontColor": "#ffffff", "headingDisplayStyle": "", "recordsPerPage": "", "pagePerBlock": "", "DataScrollHeight": "", "parentWidget": "", "columnNoToDisplay": "", "leftClmNoToFixed": "", "rightClmNoToFixed": "", "linkedWidget": [], "actionBtnReq": "", "pdfTableFontSize": "10", "pdfTableHeadBarClr": "", "pdfTableHeadTxtFontClr": "", "groupClmNoComma": "", "query": "", "webQuery": "", "procedureName": "", "recordsPerPageTreeCh": "", "parameterOption": "", "loadOption": "ONWINDOWLOAD", "paraComboBgColor": "", "paraComboFontColor": "", "paraLabelFontColor": "", "jndiSavingData": "", "stmtTimeOut": "5", "lastUpdatedQuery": "", "FooterText": "", "customMsgForNoData": "", "treeChildQuery": "", "treeChildProcedure": "", "popUpDetails": [], "queryLabel": '', "htmlText": '', 'iconName': "",
+    "id": "", "widgetFor": "", "widgetType": "columnBased", "widgetNameDisplay": "", "widgetNameInternal": "", "widgetRefreshTime": "", "widgetRefreshDelayTime": "", "cachingStatus": "Cache for All", "limit": "150", "widgetHadingClr": "", "widgetTopMargin": "", "headingBgColor": "", "headingFontColor": "#ffffff", "headingDisplayStyle": "", "recordsPerPage": "", "pagePerBlock": "", "DataScrollHeight": "", "parentWidget": "", "columnNoToDisplay": "1", "leftClmNoToFixed": "", "rightClmNoToFixed": "", "linkedWidget": [], "actionBtnReq": "", "pdfTableFontSize": "10", "pdfTableHeadBarClr": "", "pdfTableHeadTxtFontClr": "", "groupClmNoComma": "", "query": "", "webQuery": "", "procedureName": "", "recordsPerPageTreeCh": "", "parameterOption": "", "loadOption": "ONWINDOWLOAD", "paraComboBgColor": "", "paraComboFontColor": "", "paraLabelFontColor": "", "jndiSavingData": "", "stmtTimeOut": "5", "lastUpdatedQuery": "", "FooterText": "", "customMsgForNoData": "", "treeChildQuery": "", "treeChildProcedure": "", "popUpDetails": [], "queryLabel": '', "htmlText": '', 'iconName': "",
     //graphs fields
     "defaultPluginName": "highchart", "defaultGraphType": "BAR_GRAPH", "graphTypes": [], "clmNameForLineGraph": "", "colorsForBars": "", "graphHeight": "", "graphBottomMargin": "", "graphBgStartColor": "", "graphBgEndColor": "", "graphFontColor": "", "graphTypeBgColor": "", "graphTypeFontColor": "", "labelRotation": "", "alphaGraph3D": "", "betaGraph3D": "", "xAxisLabel": "", "yAxisLabel": "", "xAxisFontSize": "", "yAxisFontSize": "", "annotationFontSize": "", "maxValueOfAxis": "", "parentWidgetGraph": "", "isActionBtnReqGraph": "Yes", "minValueOfAxis": '',
     //kpi details
@@ -42,7 +42,7 @@ const WidgetMaster = () => {
     // other link
     "lstOtherLink": [],
     "sqChildJsonString": [],
-    "selFilterIds": "","mpFormatColumn":""
+    "selFilterIds": "", "mpFormatColumn": ""
   })
 
   const [radioValues, setRadioValues] = useState({
@@ -289,7 +289,7 @@ const WidgetMaster = () => {
     // const isReset = window.confirm('Do you want to reset whole form!');
     // if (isReset) {
     setValues({
-      "id": "", "widgetFor": dashFor || "", "widgetType": "columnBased", "widgetNameDisplay": "", "widgetNameInternal": "", "widgetRefreshTime": "", "widgetRefreshDelayTime": "", "cachingStatus": "Cache for All", "limit": "150", "widgetHadingClr": "", "widgetTopMargin": "", "headingBgColor": "", "headingFontColor": "#ffffff", "headingDisplayStyle": "", "recordsPerPage": "", "pagePerBlock": "", "DataScrollHeight": "", "parentWidget": "", "columnNoToDisplay": "", "leftClmNoToFixed": "", "rightClmNoToFixed": "", "linkedWidget": [], "actionBtnReq": "", "pdfTableFontSize": "10", "pdfTableHeadBarClr": "", "pdfTableHeadTxtFontClr": "", "groupClmNoComma": "", "query": "", "procedureName": "", "recordsPerPageTreeCh": "", "parameterOption": "", "loadOption": "ONWINDOWLOAD", "paraComboBgColor": "", "paraComboFontColor": "", "paraLabelFontColor": "", "jndiSavingData": "", "stmtTimeOut": "5", "lastUpdatedQuery": "", "FooterText": "", "customMsgForNoData": "", "treeChildQuery": "", "treeChildProcedure": "", "popUpDetails": [], "webQuery": "", "queryLabel": '', "htmlText": '', 'iconName': "",
+      "id": "", "widgetFor": dashFor || "", "widgetType": "columnBased", "widgetNameDisplay": "", "widgetNameInternal": "", "widgetRefreshTime": "", "widgetRefreshDelayTime": "", "cachingStatus": "Cache for All", "limit": "150", "widgetHadingClr": "", "widgetTopMargin": "", "headingBgColor": "", "headingFontColor": "#ffffff", "headingDisplayStyle": "", "recordsPerPage": "", "pagePerBlock": "", "DataScrollHeight": "", "parentWidget": "", "columnNoToDisplay": "1", "leftClmNoToFixed": "", "rightClmNoToFixed": "", "linkedWidget": [], "actionBtnReq": "", "pdfTableFontSize": "10", "pdfTableHeadBarClr": "", "pdfTableHeadTxtFontClr": "", "groupClmNoComma": "", "query": "", "procedureName": "", "recordsPerPageTreeCh": "", "parameterOption": "", "loadOption": "ONWINDOWLOAD", "paraComboBgColor": "", "paraComboFontColor": "", "paraLabelFontColor": "", "jndiSavingData": "", "stmtTimeOut": "5", "lastUpdatedQuery": "", "FooterText": "", "customMsgForNoData": "", "treeChildQuery": "", "treeChildProcedure": "", "popUpDetails": [], "webQuery": "", "queryLabel": '', "htmlText": '', 'iconName': "",
       //graphs fields
       "defaultPluginName": "highchart", "defaultGraphType": "BAR_GRAPH", "graphTypes": [], "clmNameForLineGraph": "", "colorsForBars": "", "graphHeight": "", "graphBottomMargin": "", "graphBgStartColor": "", "graphBgEndColor": "", "graphFontColor": "", "graphTypeBgColor": "", "graphTypeFontColor": "", "labelRotation": "", "alphaGraph3D": "", "betaGraph3D": "", "xAxisLabel": "", "yAxisLabel": "", "xAxisFontSize": "", "yAxisFontSize": "", "annotationFontSize": "", "maxValueOfAxis": "", "parentWidgetGraph": "", "isActionBtnReqGraph": "Yes", "minValueOfAxis": "",
       //kpi details
@@ -368,7 +368,7 @@ const WidgetMaster = () => {
       return 'right';
     } else if (val === 'center' || val === "Center") {
       return 'center';
-    }else{
+    } else {
       return "left";
     }
   }
@@ -406,7 +406,7 @@ const WidgetMaster = () => {
         pagePerBlock: singleData[0]?.pagePerBlock,//
         DataScrollHeight: singleData[0]?.scrollYValue,//
         parentWidget: singleData[0]?.parentReport,//
-        columnNoToDisplay: singleData[0]?.parentDisplaycolumnno,//
+        columnNoToDisplay: singleData[0]?.parentDisplaycolumnno || '1',//
         leftClmNoToFixed: singleData[0]?.leftColumnsToBeFixed,//
         rightClmNoToFixed: singleData[0]?.rightColumnsToBeFixed,//
         linkedWidget: returnLinkedData(singleData[0]?.linkedWidgetRptId),//
@@ -432,7 +432,7 @@ const WidgetMaster = () => {
         paraComboFontColor: singleData[0]?.widgetParameterComboFontColor,//
         paraLabelFontColor: singleData[0]?.widgetParameterLabelFontColor,//
         jndiSavingData: singleData[0]?.JNDIid,//
-        stmtTimeOut: singleData[0]?.statementTimeOut||'5',//
+        stmtTimeOut: singleData[0]?.statementTimeOut || '5',//
         lastUpdatedQuery: singleData[0]?.lastUpdatedQuery,//
         FooterText: singleData[0]?.footerText,//
         customMsgForNoData: singleData[0]?.customMessage,//
@@ -472,7 +472,7 @@ const WidgetMaster = () => {
         kpiDefaultFontColor: singleData[0]?.widgetFontColour,//
         kpiDefaultHoverBg: singleData[0]?.widgetHoverBackground,//
         kpiIconColor: singleData[0]?.widgetIconColour,//
-        kpiBoxClickOptions: singleData[0]?.onClickKPITypeOption || '0',//======
+        kpiBoxClickOptions: singleData[0]?.onClickOfKPITabId && singleData[0]?.onClickOfKPITabId !== "0" ? "showTab" : singleData[0]?.onClickOfKPIWidgetId && singleData[0]?.onClickOfKPIWidgetId !== "0" ? "showWidget" : singleData[0]?.onClickOfKPIDashboardId && singleData[0]?.onClickOfKPIDashboardId !== "0" ? "showDashboard" : singleData[0]?.onClickKPITypeOption || "0",
         kpiTabOpenOnClick: singleData[0]?.onClickOfKPITabId,//
         kpiWidgetOpenOnClick: singleData[0]?.onClickOfKPIWidgetId,//
         kpiDashboardOpenOnClick: singleData[0]?.onClickOfKPIDashboardId,//
@@ -494,7 +494,7 @@ const WidgetMaster = () => {
         // single query parent
         sqChildJsonString: singleData[0]?.sqChildJsonString ? JSON?.parse(singleData[0]?.sqChildJsonString) : [],
         selFilterIds: singleData[0]?.selFilterIds,
-        mpFormatColumn:singleData[0]?.mpFormatColumn
+        mpFormatColumn: singleData[0]?.mpFormatColumn
       });
       setRadioValues({
         ...radioValues,
@@ -566,7 +566,7 @@ const WidgetMaster = () => {
       setLoading(false)
     }
   }, [singleData]);
-// console.log('singleData', singleData)
+  // console.log('singleData', singleData)
 
   //parameter search
   useEffect(() => {
@@ -619,7 +619,7 @@ const WidgetMaster = () => {
       // newsTicker fields
       noOfNewsVisible, newsSpeed, newsInterval,
       // iframe
-      urlForIframe, lstOtherLink, sqChildJsonString,mpFormatColumn } = values;
+      urlForIframe, lstOtherLink, sqChildJsonString, mpFormatColumn } = values;
 
     const {
       widgetViewed, isWidgetNameVisible, selectedModeQuery, widgetPurpose, widgetHeadingAlign, isRecordLimitReq, isWidgetBorderReq,
@@ -685,10 +685,10 @@ const WidgetMaster = () => {
         treeChildQuery: treeChildQuery,
         treeChildProcedure: treeChildProcedure,
         drillDownJsonString: popUpDetails?.length > 0 ? JSON?.stringify(popUpDetails) : "",
-        mpFormatColumn:mpFormatColumn,
+        mpFormatColumn: mpFormatColumn,
         treeChildrecordPerPage: recordsPerPageTreeCh,
         parameterOptions: parameterOption,
-        widgetLoadOption: loadOption,
+        widgetLoadOption: selectedIdParams ? loadOption : 'ONWINDOWLOAD',
         widgetParameterComboBGColor: paraComboBgColor,
         widgetParameterComboFontColor: paraComboFontColor,
         widgetParameterLabelFontColor: paraLabelFontColor,
@@ -831,6 +831,8 @@ const WidgetMaster = () => {
     });
   };
 
+  // console.log(singleData,'singledata')
+
   const updateWidgetData = () => {
     setLoading(true)
     const {
@@ -847,7 +849,7 @@ const WidgetMaster = () => {
       // newsTicker fields
       noOfNewsVisible, newsSpeed, newsInterval,
       // iframe
-      urlForIframe, lstOtherLink, sqChildJsonString,mpFormatColumn } = values;
+      urlForIframe, lstOtherLink, sqChildJsonString, mpFormatColumn } = values;
 
     const {
       widgetViewed, isWidgetNameVisible, selectedModeQuery, widgetPurpose, widgetHeadingAlign, isRecordLimitReq, isWidgetBorderReq,
@@ -866,7 +868,6 @@ const WidgetMaster = () => {
       isSsoUrl
     } = radioValues;
     const selectedIdParams = selectedOptions?.length > 0 ? selectedOptions?.map(option => option?.value).join(",") : '';
-
 
     const val = {
       dashboardFor: widgetFor,
@@ -916,10 +917,10 @@ const WidgetMaster = () => {
         treeChildQuery: treeChildQuery,
         treeChildProcedure: treeChildProcedure,
         drillDownJsonString: popUpDetails?.length > 0 ? JSON?.stringify(popUpDetails) : "",
-        mpFormatColumn:mpFormatColumn,
+        mpFormatColumn: mpFormatColumn,
         treeChildrecordPerPage: recordsPerPageTreeCh,
         parameterOptions: parameterOption,
-        widgetLoadOption: loadOption,
+        widgetLoadOption: selectedIdParams ? loadOption : 'ONWINDOWLOAD',
         widgetParameterComboBGColor: paraComboBgColor,
         widgetParameterComboFontColor: paraComboFontColor,
         widgetParameterLabelFontColor: paraLabelFontColor,
@@ -1391,7 +1392,7 @@ const WidgetMaster = () => {
               {tabName?.value === 3 &&
                 <>
                   {radioValues?.widgetViewed === "Tabular" &&
-                    <TableDetails handleValueChange={handleValueChange} handleRadioChange={handleRadioChange} radioValues={radioValues} values={values} parentWidget={widgetDrpData} setValues={setValues} errors={errors} dt={dt} tabDrpData={tabDrpData}/>
+                    <TableDetails handleValueChange={handleValueChange} handleRadioChange={handleRadioChange} radioValues={radioValues} values={values} parentWidget={widgetDrpData} setValues={setValues} errors={errors} dt={dt} tabDrpData={tabDrpData} />
                   }
 
                   {radioValues?.widgetViewed === "Graph" &&

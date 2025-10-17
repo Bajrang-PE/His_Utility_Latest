@@ -89,7 +89,9 @@ export const fetchQueryData = async (queryVO = [], jndiServer, params, pkColumn,
       popupValue: pkColumn ? pkColumn?.toString() : ""
       // popupValue: "99929068@99929068"
     };
+
     const response = await fetchPostData(`/hisutils/GenericApiQry?isGlobal=${isGlobal || 0}`, requestBody);
+    // console.log(query,response);
 
     if (response?.status === 1) {
       return response?.data || [];
@@ -347,4 +349,28 @@ export const validateInput = (input) => {
   }
 
   return true; // valid
+};
+
+// Import all images from assets folder eagerly
+// const images = import.meta.glob('../../../assets/Icon_images/*', { eager: true });
+
+// export const getAssetsImage = (imageName) => {
+//   if (!imageName) {
+//     return images['../../../assets/Icon_images/default-icon.png']?.default || '';
+//   }
+
+//   const path = `../../../assets/Icon_images/${imageName}`;
+//   const image = images[path];
+
+//   if (image && image.default) {
+//     return image.default;
+//   } else {
+//     console.warn(`Image not found: ${imageName}`);
+//     return images['../../../assets/Icon_images/default-icon.png']?.default || '';
+//   }
+// };
+
+// src/utils/imageLoader.js
+export const getImagebg = (imageName) => {
+  return new URL(`../../assets/Icon_images/${imageName}`, import.meta.url).href;
 };

@@ -1093,6 +1093,21 @@ label {
   z-index: 4 !important;
 } */
 
+.column-show-data {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 30px;
+  align-items: center;
+}
+
+.column-item {
+  display: flex;
+  align-items: center;
+}
+
+.separator {
+  margin-left: 5px;
+}
 /* ------------------------------------------islayout preview------------------------------------- */
 
 .layout-help-docs {
