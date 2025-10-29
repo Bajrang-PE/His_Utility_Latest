@@ -17,101 +17,24 @@ const Parameters = lazy(() => import('./Parameters'));
 
 const TabularDash = (props) => {
 
-  const { widgetData, setWidgetData, levelData, setLevelData, pkColumn, setPkColumn, isLayoutWithPreview, presentTabs } = props;
+  const { widgetData, setWidgetData, levelData, setLevelData, pkColumn, setPkColumn, isLayoutWithPreview, presentTabs, isPopup, pkConfig } = props;
 
 
   const { theme, singleConfigData, paramsValues, setLoading, presentWidgets, isSearchQuery, setIsSearchQuery, setSearchScope, searchScope, dt, presentTabsDash, setActiveTab, activeTab, setPrevKpiTab, tabParams } = useContext(HISContext);
 
 
-  const [tableData, setTableData] = useState([]);
+  // const [tableData, setTableData] = useState([]);
   const [currentLevel, setCurrentLevel] = useState(0);
   const [searchInput, setSearchInput] = useState({});
-  const [filterData, setFilterData] = useState(tableData)
+  // const [filterData, setFilterData] = useState(tableData)
   const [columns, setColumns] = useState([]);
   const [popupConfig, setPopupConfig] = useState(null);
   const [showPopUpWidget, setShowPopUpWidget] = useState(false);
-  const [MainHeaders, setMainHeaders] = useState([])
   const [multipleTables, setMultipleTables] = useState([]);
   const [widgetParams, setWidgetParams] = useState([]);
   const [allDrpDtParams, setAllDrpDtParams] = useState([]);
   const [fetching, setFetching] = useState(false);
   const [statusMessage, setStatusMessage] = useState('');
-
-  console.log('widgetParams', widgetParams)
-  console.log('levelData', levelData)
-  console.log('paramsValues', paramsValues)
-
-  // const getParametersWithValues = (parameters, paramsData, widgetId, allDrpDtParams) => {
-  //   return parameters.map(param => {
-  //     const value = paramsData?.widgetParams?.[widgetId]?.[param?.id] || null;
-  //     const val = allDrpDtParams?.[param?.paraName] || null;
-
-  //     return {
-  //       ...param,
-  //       value: value,
-  //       val: val?.find(dt => dt?.optionValue == value)?.optionText || value === "%" ? 'All' : value
-  //     };
-  //   });
-  // }
-
-  // getParametersWithValues(widgetParams, paramsValues, widgetData?.rptId, allDrpDtParams)
-
-  // const getParametersWithValues = (parameters, paramsData, widgetId, allDrpDtParams) => {
-  //   return parameters.map(param => {
-  //     // First priority → widgetParams
-  //     const widgetValue = paramsData?.widgetParams?.[widgetId]?.[param?.id];
-  //     // Second priority → tabParams
-  //     const tabValue = paramsData?.tabParams?.[param?.id];
-  //     // Final fallback → null
-  //     const value = widgetValue ?? tabValue ?? null;
-
-  //     const valOptions = allDrpDtParams?.[param?.paraName] || [];
-  //     const matchedOption = valOptions.find(dt => dt?.optionValue == value);
-
-  //     return {
-  //       ...param,
-  //       value: value,
-  //       val: matchedOption
-  //         ? matchedOption.optionText
-  //         : value === "%" ? "All" : value
-  //     };
-  //   });
-  // };
-
-  //   const getParametersWithValues = (widgetParams, paramsValues, widgetId, allDrpDtParams) => {
-  //   let allParams = [...widgetParams];
-
-  //   const tabParamsEntries = Object.entries(paramsValues?.tabParams || {});
-
-  //   tabParamsEntries.forEach(([id, value]) => {
-  //     const exists = allParams.some(p => String(p.id) === String(id));
-  //     if (!exists) {
-  //       allParams.push({
-  //         id: parseInt(id),
-  //         disName: '',
-  //         paraName: '',
-  //         value
-  //       });
-  //     }
-  //   });
-
-  //   return allParams.map(param => {
-  //     const widgetValue = paramsValues?.widgetParams?.[widgetId]?.[param?.id] || null;
-  //     const tabValue = paramsValues?.tabParams?.[param?.id] || param?.value || null;
-  //     const value = widgetValue ?? tabValue ?? null;
-
-  //     const valOptions = allDrpDtParams?.[param?.paraName] || [];
-  //     const matchedOption = valOptions.find(dt => dt?.optionValue == value);
-
-  //     return {
-  //       ...param,
-  //       value,
-  //       val: matchedOption
-  //         ? matchedOption.optionText
-  //         : value === "%" ? "All" : value
-  //     };
-  //   });
-  // };
 
   const getParametersWithValues = (widgetParams, paramsValues, widgetId, allDrpDtParams) => {
     let allParams = [...widgetParams];
@@ -132,12 +55,11 @@ const TabularDash = (props) => {
         });
       }
     });
+    if (isPopup) {
+      if (pkConfig?.columnToShow?.length > 0) {
+        pkConfig?.columnToShow.forEach((column, colIndex) => {
 
-    levelData.forEach((level, index) => {
-      if (level?.columnToShow?.length > 0) {
-        level.columnToShow.forEach((column, colIndex) => {
-          // Create a unique ID for level data parameters
-          const levelParamId = `level_${level.rptId}_${index}_${colIndex}`;
+          const levelParamId = `level_${column.value}_${colIndex}`;
 
           allParams.push({
             id: levelParamId,
@@ -149,7 +71,26 @@ const TabularDash = (props) => {
           });
         });
       }
-    });
+    } else {
+      levelData.forEach((level, index) => {
+        if (level?.columnToShow?.length > 0) {
+          level.columnToShow.forEach((column, colIndex) => {
+            // Create a unique ID for level data parameters
+            const levelParamId = `level_${level.rptId}_${index}_${colIndex}`;
+
+            allParams.push({
+              id: levelParamId,
+              disName: column.label,
+              paraName: column.label,
+              value: column.value,
+              val: column.value,
+              isLevelData: true
+            });
+          });
+        }
+      });
+    }
+
 
     const parentWidgetIds = levelData
       .filter(level => level.rptId != widgetId)
@@ -183,49 +124,48 @@ const TabularDash = (props) => {
   };
 
 
- const getWidgetParametersOnly = (widgetParams, paramsValues, widgetId, allDrpDtParams, levelData = []) => {
-  let widgetOnlyParams = [...widgetParams];
+  const getWidgetParametersOnly = (widgetParams, paramsValues, widgetId, allDrpDtParams, levelData = []) => {
+    let widgetOnlyParams = [...widgetParams];
 
-  // Get all relevant widget IDs (current + parents from levelData)
-  const relevantWidgetIds = [widgetId];
-  levelData.forEach(level => {
-    if (level.rptId && level.rptId !== widgetId) {
-      relevantWidgetIds.push(level.rptId);
-    }
-  });
-
-  return widgetOnlyParams?.map(param => {
-    let widgetValue = null;
-    let sourceWidgetId = null;
-
-    // Look for parameter value in current widget and parent widgets
-    for (const id of relevantWidgetIds) {
-      widgetValue = paramsValues?.widgetParams?.[id]?.[param?.id] || null;
-      if (widgetValue !== null) {
-        sourceWidgetId = id;
-        break;
+    // Get all relevant widget IDs (current + parents from levelData)
+    const relevantWidgetIds = [widgetId];
+    levelData.forEach(level => {
+      if (level.rptId && level.rptId !== widgetId) {
+        relevantWidgetIds.push(level.rptId);
       }
-    }
+    });
 
-    const valOptions = allDrpDtParams?.[param?.paraName] || [];
-    const matchedOption = valOptions.find(dt => dt?.optionValue == widgetValue); // Use widgetValue here
+    return widgetOnlyParams?.map(param => {
+      let widgetValue = null;
+      let sourceWidgetId = null;
 
-    return {
-      ...param,
-      value: widgetValue,
-      val: matchedOption
-        ? matchedOption.optionText
-        : widgetValue == "%" ? "All" : widgetValue,
-      rptid: sourceWidgetId || widgetId // Track which widget this parameter came from
-    };
-  }).filter(param => param.value !== null); // Filter out null values
-};
+      // Look for parameter value in current widget and parent widgets
+      for (const id of relevantWidgetIds) {
+        widgetValue = paramsValues?.widgetParams?.[id]?.[param?.id] || null;
+        if (widgetValue !== null) {
+          sourceWidgetId = id;
+          break;
+        }
+      }
+
+      const valOptions = allDrpDtParams?.[param?.paraName] || [];
+      const matchedOption = valOptions.find(dt => dt?.optionValue == widgetValue);
+
+      return {
+        ...param,
+        value: widgetValue,
+        val: matchedOption
+          ? matchedOption.optionText
+          : widgetValue == "%" ? "All" : widgetValue,
+        rptid: sourceWidgetId || widgetId
+      };
+    }).filter(param => param.value !== null);
+  };
 
   const widgetOnlyParams = getWidgetParametersOnly(
     widgetParams, paramsValues, widgetData?.rptId, allDrpDtParams, levelData
   );
 
-  console.log('widgetOnlyParams', widgetOnlyParams)
 
   const [queryParams] = useSearchParams();
   const isPrev = queryParams.get('isPreview');
@@ -238,41 +178,6 @@ const TabularDash = (props) => {
   const childId = widgetData?.children?.length > 0 ? widgetData?.children[0] : '';
   const isFirstRowHeading = widgetData?.isFirstRowColumnName || 'No';
   const widheight = presentTabs?.length > 0 && presentTabs?.filter(dt => dt?.rptId == widgetData?.rptId)[0]?.widgetHeight;
-
-  useEffect(() => {
-    setTableData([])
-  }, [widgetData])
-
-  //parameter search
-  useEffect(() => {
-    if (!searchInput) {
-      setFilterData(multipleTables);
-    } else {
-      const lowercasedText = searchInput.text?.toLowerCase();
-
-      const newFilteredData = multipleTables?.length > 0 && multipleTables?.filter(row => {
-        return Object.values(row)?.some(val =>
-          val?.toString()?.toLowerCase()?.includes(lowercasedText)
-        );
-      });
-
-      setFilterData(newFilteredData);
-    }
-  }, [searchInput, multipleTables]);
-
-
-  // const formatData = (rawData = []) => {
-  //   return rawData.map((item) => {
-  //     const formattedItem = {};
-  //     Object.entries(item).forEach(([key, value]) => {
-
-  //       const formattedKey = key.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
-
-  //       formattedItem[formattedKey] = formattedKey.includes("State") ? value : value;
-  //     });
-  //     return formattedItem;
-  //   });
-  // };
 
 
   // FOR SUBHEADING
@@ -355,7 +260,7 @@ const TabularDash = (props) => {
     }
   };
 
-  const openPopUpWidget = (value) => {
+  const openPopUpWidget = (value, clmtoshow) => {
     try {
       if (typeof value !== 'string' || !value.includes('##')) {
         ToastAlert('Invalid data format for popup', 'warning');
@@ -379,7 +284,6 @@ const TabularDash = (props) => {
         const tabdt = presentTabsDash?.filter(tab => tab?.jsonData?.dashboardId == config?.drillTabId)
         if (tabdt?.length > 0) {
           setActiveTab(tabdt[0]);
-          // setPrevKpiTab([activeTab]);
           setPrevKpiTab(prev => [...prev, activeTab]);
           setPkColumn(pkValue);
         } else {
@@ -392,7 +296,8 @@ const TabularDash = (props) => {
           pkValue: pkValue,
           title: config.titleMsg,
           mode: config.modeForOpeningPopup,
-          widgetName: config?.drillWidgetName
+          widgetName: config?.drillWidgetName,
+          columnToShow: clmtoshow ? clmtoshow : []
         });
         setShowPopUpWidget(true);
       }
@@ -748,14 +653,11 @@ const TabularDash = (props) => {
       const clmtoshowno = widgetData?.parentDisplaycolumnno || '1';
       const columnNumbers = clmtoshowno.split(',').map(num => parseInt(num.trim()));
 
-      // const clmtoshow = reorderedKeys[parseInt(clmtoshowno)]
-
-      // const drillColumns = columnNumbers.map(num => reorderedKeys[num - 1]).filter(Boolean);
       const drillData = columnNumbers.map(num => {
         const columnKey = reorderedKeys[num - 1];
         return {
           label: columnKey,
-          value: columnKey // This will be used to get the actual value from the row later
+          value: columnKey
         };
       }).filter(item => item.label);
 
@@ -787,6 +689,10 @@ const TabularDash = (props) => {
           } : undefined,
           cell: (row) => {
             const value = row[key];
+            const drillDownData = drillData.map(item => ({
+              label: item.label,
+              value: getFirstValue(row[item.value])
+            }));
             if (value && typeof value === 'object' && !Array.isArray(value)) {
               return null;
             }
@@ -810,7 +716,7 @@ const TabularDash = (props) => {
             return typeof value === 'string' && value.includes("##") ? (
               <span
                 style={{ color: 'blue', cursor: 'pointer', textAlign: align.toLowerCase() }}
-                onClick={() => openPopUpWidget(value)}
+                onClick={() => openPopUpWidget(value, drillDownData)}
               >
                 {!isHTML(value.trim()) ? displayValue : <span
                   dangerouslySetInnerHTML={{ __html: getFirstValue(value) }}
@@ -830,7 +736,7 @@ const TabularDash = (props) => {
           name: "Action",
           cell: (row) => {
             // Create an array of values for all drill columns
-            // const drillValues = drillColumns.map(col => row[col]);
+
             const drillDownData = drillData.map(item => ({
               label: item.label,
               value: getFirstValue(row[item.value])
@@ -845,14 +751,6 @@ const TabularDash = (props) => {
               </button>
             );
           }
-          // cell: (row) => (
-          //   <button
-          //     className="rounded-4 border-1"
-          //     onClick={() => onDrillDown(row?.pkcolumn, row[clmtoshow])}
-          //   >
-          //     <FontAwesomeIcon icon={faSortAmountDesc} />
-          //   </button>
-          // )
         };
         return [drillColumn, ...dynamicColumns];
       }
@@ -861,7 +759,6 @@ const TabularDash = (props) => {
     }
   };
 
-  console.log('widgetData', widgetData);
 
   const fetchData = async (widget) => {
     if (widget?.modeOfQuery === "Procedure") {
@@ -965,7 +862,6 @@ const TabularDash = (props) => {
             return { columns, mainHeaders: [], data: datafor, queryObj };
           }
         });
-
         setMultipleTables(processedTables);
         setIsSearchQuery(false);
         setFetching(false);
@@ -986,6 +882,7 @@ const TabularDash = (props) => {
       fetchData(widgetData);
     }
   }, [widgetData, paramsValues]);
+  
 
   useEffect(() => {
     if (isSearchQuery && searchScope?.scope === "widgetParams" && searchScope?.id == widgetData?.rptId) {
@@ -1025,7 +922,6 @@ const TabularDash = (props) => {
   const mainQuery = widgetData?.queryVO && widgetData?.queryVO?.length > 0 ? widgetData?.queryVO[0]?.mainQuery : ''
   const customMessage = widgetData?.customMessage || "";
 
-
   const onDrillDown = (pkCol, clmtoshow) => {
 
     if (isChildPresent && childId) {
@@ -1049,11 +945,13 @@ const TabularDash = (props) => {
     }
   }
 
+
   const backToParentWidget = (id) => {
     if (levelData?.length > 1 && currentLevel !== 0) {
       let targetLevel = null;
       let widgetDetail = null;
       let pkClm = '';
+      const currentWidId = levelData.find(dt => dt.rptLevel === currentLevel);
 
       if (id) {
         const targetItem = levelData.find(dt => dt.rptId === id);
@@ -1069,12 +967,12 @@ const TabularDash = (props) => {
         widgetDetail = presentWidgets?.find(dt => dt?.rptId == parentItem?.rptId);
       }
 
-      if (widgetDetail && targetLevel !== null) {
-        setWidgetData(widgetDetail);
+      if (widgetDetail && targetLevel !== null && widgetData?.rptId == currentWidId?.rptId) {
         setCurrentLevel(targetLevel);
         setPkColumn(pkClm)
         const restLevels = levelData.filter(dt => dt.rptLevel <= targetLevel);
         setLevelData(restLevels);
+        setWidgetData(widgetDetail);
       }
     }
   }
@@ -1104,8 +1002,6 @@ const TabularDash = (props) => {
       [index]: value
     }));
   };
-
-  // console.log(widgetData, 'widgetData');
 
   return (
     <>
@@ -1236,21 +1132,7 @@ const TabularDash = (props) => {
 
         </div>
 
-        {/* <div className="parent heading">
-          {levelData?.length > 0 && levelData?.map((level, index) => (
-            <div key={index}>
-              {level?.columnToShow?.length > 0 && (
-                <div className="column-show-data">
-                  {level.columnToShow.map((column, colIndex) => (
-                    <div key={colIndex} className="column-item">
-                      <strong>{column.label}:</strong> {column.value}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          ))}
-        </div> */}
+        {/* DESPLAY PARAMETERS AND COLUMNS */}
 
         {widgetData?.showParentParameterDetailsinChild === "Yes" &&
           <div className="parent heading">
@@ -1268,7 +1150,7 @@ const TabularDash = (props) => {
 
         {widgetData?.showParentDetailsinChild === "Yes" &&
           <div className="parent heading">
-            {levelData?.length > 0 && levelData?.map((level, index) => (
+            {!isPopup && levelData?.length > 0 && levelData?.map((level, index) => (
               <div key={index}>
                 {level?.columnToShow?.length > 0 && (
                   <div className="column-show-data">
@@ -1282,6 +1164,22 @@ const TabularDash = (props) => {
                 )}
               </div>
             ))}
+
+            {isPopup &&
+              <div>
+                {pkConfig?.columnToShow?.length > 0 && (
+                  <div className="column-show-data">
+                    {pkConfig?.columnToShow?.map((column, colIndex) => (
+                      <span key={colIndex} className="column-item">
+                        <strong className="mx-1">{column.label} :</strong> <span className="mx-1"> {column.value}</span>
+
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            }
+
           </div>
         }
         {paramsData && (
@@ -1292,25 +1190,27 @@ const TabularDash = (props) => {
 
         {(fetching && statusMessage) ? (
           <>
-            <h6 className="text-center">{statusMessage}</h6>
             <div className="text-center">
               <div className="spinner-border text-primary" role="status">
                 <span className="sr-only">Loading...</span>
               </div>
+              <h6 className="text-center">{statusMessage}</h6>
             </div>
           </>
         ) : (
           multipleTables?.map((table, index) => {
 
-            const lowercasedText = searchInput[index]?.toLowerCase() || "";
-            const filteredData = lowercasedText
-              ? table.data.filter(row =>
-                Object.values(row).some(val =>
-                  val?.toString()?.toLowerCase()?.includes(lowercasedText)
+            let filteredData = table?.data;
+            if (searchInput) {
+              const lowercasedText = searchInput[index]?.toLowerCase() || "";
+              filteredData = lowercasedText
+                ? table.data.filter(row =>
+                  Object.values(row).some(val =>
+                    val?.toString()?.toLowerCase()?.includes(lowercasedText)
+                  )
                 )
-              )
-              : table.data;
-
+                : table.data;
+            }
 
             return (
               <>
@@ -1356,7 +1256,7 @@ const TabularDash = (props) => {
                   recordsPerPageOptions={[recordPerPage, 10, 20, 50]}
                   isTableHeadingRequired={!headingReq}
                   theme={theme}
-                  // noDataComponent={<div className="text-danger fw-bold fs-13">{dt(customMessage || "There are no records to display")}</div>}
+                  noDataComponent={<div className="text-danger fw-bold fs-13">{dt(customMessage || "There are no records to display")}</div>}
                   mainHeaders={(() => {
                     if (visibleColumns?.length > 0) {
                       return (table.mainHeaders || [])?.filter(header => visibleColumns?.includes(header.name));
@@ -1402,6 +1302,7 @@ const TabularDash = (props) => {
         visibleColumns={visibleColumns}
         onVisibleColumnsChange={setVisibleColumns}
         isFirstRowHeading={isFirstRowHeading}
+        widgetId={widgetData?.rptId}
       />
 
     </>

@@ -594,7 +594,7 @@ const DashboardMaster = () => {
       name: dt('Group Name'),
       selector: row => row?.jsonData?.groupName || "---",
       cell: row => <a
-        href={`/db/HIS_dashboard/dashboard?groupId=${row?.id ? encodeURIComponent(btoa(row?.id)) : "0"}&dashboardFor=${row?.dashboardFor ? encodeURIComponent(btoa(row?.dashboardFor)) : ""}&isPreview=1`}
+        href={`/db/HIS_dashboard/dashboard?groupId=${row?.id ? encodeURIComponent(btoa(row?.id)) : "0"}&dashboardFor=${row?.dashboardFor ? encodeURIComponent(btoa(row?.dashboardFor)) : ""}&auth=${sessionStorage.getItem('accessToken') || ''}&isPreview=1`}
         target="_blank"
         rel="noopener noreferrer"
         className='text-decoration-none'

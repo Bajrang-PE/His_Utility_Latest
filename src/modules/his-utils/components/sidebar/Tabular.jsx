@@ -230,7 +230,15 @@ const Tabular = ({
                     responsive={false}
                     noTableHead={isTableHeadingRequired}
                     theme={theme === 'Dark' ? 'dark' : 'default'}
-                    // noDataComponent={''}
+                    noDataComponent={columns?.length > 0 && sortedData?.length === 0 ?
+
+                        <div className="text-center">
+                                 <p className="text-center">{'Prepairing data...'}</p>
+                            <div className="spinner-border text-primary" role="status">
+                                <span className="sr-only">Loading...</span>
+                            </div>
+                        </div>
+                        : noDataComponent}
                 />
             </div>
 

@@ -2,6 +2,7 @@ import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { fetchPostData } from '../../../utils/HisApiHooks';
 import { useSearchParams } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 
 //FUNCTION TO MANAGE GLOBAL ALERTS
 export const ToastAlert = (message, type) => {
@@ -96,7 +97,7 @@ export const fetchQueryData = async (queryVO = [], jndiServer, params, pkColumn,
     if (response?.status === 1) {
       return response?.data || [];
     } else {
-      return response?.message;
+      return [];
     }
 
   } catch (error) {
@@ -351,26 +352,20 @@ export const validateInput = (input) => {
   return true; // valid
 };
 
-// Import all images from assets folder eagerly
-// const images = import.meta.glob('../../../assets/Icon_images/*', { eager: true });
+export const useImageWithFallback = (imageName) => {
+  const [src, setSrc] = useState('');
 
-// export const getAssetsImage = (imageName) => {
-//   if (!imageName) {
-//     return images['../../../assets/Icon_images/default-icon.png']?.default || '';
-//   }
+  useEffect(() => {
+    const imageUrl = new URL(`../../../assets/icon_images/${imageName}`, import.meta.url).href;
+    const defaultUrl = new URL(`../../../assets/default-icon.png`, import.meta.url).href;
 
-//   const path = `../../../assets/Icon_images/${imageName}`;
-//   const image = images[path];
+    const img = new Image();
+    img.src = imageUrl;
+    img.onload = () => setSrc(imageUrl);
+    img.onerror = () => setSrc(defaultUrl);
+  }, [imageName]);
 
-//   if (image && image.default) {
-//     return image.default;
-//   } else {
-//     console.warn(`Image not found: ${imageName}`);
-//     return images['../../../assets/Icon_images/default-icon.png']?.default || '';
-//   }
-// };
-
-// src/utils/imageLoader.js
-export const getImagebg = (imageName) => {
-  return new URL(`../../assets/Icon_images/${imageName}`, import.meta.url).href;
+  return src;
 };
+
+

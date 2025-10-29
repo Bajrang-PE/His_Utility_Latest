@@ -4,11 +4,10 @@ import * as SolidIcons from '@fortawesome/free-solid-svg-icons';
 import React, { useContext, useEffect, useState } from 'react'
 import { faSearch } from '@fortawesome/free-solid-svg-icons/faSearch';
 import { HISContext } from '../../contextApi/HISContext';
-import { fetchProcedureData, fetchQueryData, formatDateFullYear, formatParams, getImagebg, getOrderedParamValues, ToastAlert } from '../../utils/commonFunction';
+import { fetchProcedureData, fetchQueryData, formatDateFullYear, formatParams, getOrderedParamValues, ToastAlert, useImageWithFallback } from '../../utils/commonFunction';
 import PopUpWidget from './PopUpWidget';
 import { useSearchParams } from 'react-router-dom';
 import * as FaIcons from "react-icons/fa";
-import defImg from "../../../../assets/Icon_images/default-icon.png"
 
 const KpiDash = ({ widgetData, presentTabs, isLayoutWithPreview }) => {
     const { setActiveTab, setLoading, paramsValues, searchScope, isSearchQuery, setIsSearchQuery, setSearchScope, setPrevKpiTab, activeTab, dt, presentTabsDash } = useContext(HISContext);
@@ -112,20 +111,6 @@ const KpiDash = ({ widgetData, presentTabs, isLayoutWithPreview }) => {
     }, [isSearchQuery]);
 
 
-    // const getDynamicIcon = (iconName) => {
-    //     if (!iconName) return SolidIcons.faMedkit;
-
-    //     let formattedIconName = "fa" + iconName
-    //         .replace("fa-", "")
-    //         .replace(/-([a-z])/g, (match, letter) => letter.toUpperCase());
-    //     let iconKey = Object.keys(SolidIcons).find(key => key.toLowerCase() === formattedIconName.toLowerCase());
-    //     if (!iconKey) {
-    //         iconKey = Object.keys(SolidIcons).find(key => key.toLowerCase().includes(formattedIconName.toLowerCase().replace(/[^a-zA-Z]/g, "")));
-    //     }
-    //     return iconKey ? SolidIcons[iconKey] : SolidIcons.faMedkit;
-    // };
-
-
     const getDynamicIcon = (iconName) => {
         if (!iconName) return <FontAwesomeIcon icon={SolidIcons.faBarChart} />;
 
@@ -192,6 +177,14 @@ const KpiDash = ({ widgetData, presentTabs, isLayoutWithPreview }) => {
     };
 
     const widheight = presentTabs?.length > 0 && presentTabs?.filter(dt => dt?.rptId == widgetData?.rptId)[0]?.widgetHeight;
+
+    // const loadImage = (imageName) => {
+    //     try {
+    //         return new URL(`../../../../assets/icon_images/${imageName}`, import.meta.url).href;
+    //     } catch (error) {
+    //         return new URL(`../../../../assets/default-icon.png`, import.meta.url).href;
+    //     }
+    // };
 
 
     return (
@@ -285,7 +278,7 @@ const KpiDash = ({ widgetData, presentTabs, isLayoutWithPreview }) => {
                 {(widgetData?.iconType !== 'NO_ICON' && widgetData?.kpiType !== "isKpiACircle") &&
                     <div className="small-box-icon kpi-icon-img">
                         {widgetData?.iconType === 'IMAGE' ?
-                            <img src={defImg} className='dropdown-gear-icon' style={{ height: "60px" }} />
+                            <img src={useImageWithFallback(widgetData?.iconImageName || 'default-icon.png')} className='dropdown-gear-icon' style={{ height: "60px" }} />
                             :
                             getDynamicIcon(widgetData?.iconName)
                             // <FontAwesomeIcon icon={getDynamicIcon(widgetData?.iconName)} color={widgetData?.widgetIconColour} />

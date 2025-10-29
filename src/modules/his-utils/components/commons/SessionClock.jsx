@@ -18,7 +18,7 @@ function formatTime(ms) {
 export default function SessionClock() {
     const [timeLeft, setTimeLeft] = useState(0);
     useEffect(() => {
-        const token = localStorage.getItem("accessToken");
+        const token = sessionStorage.getItem("accessToken");
         if (!token) {
             setTimeLeft(-1);
             return;

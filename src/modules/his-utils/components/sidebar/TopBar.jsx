@@ -3,6 +3,7 @@ import '../headers/NavbarHeader.css';
 import * as SolidIcons from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import DropdownPortal from '../commons/DropdownPortal';
+import useImageWithFallback from '../../hooks/useImageWithFallback';
 
 const TopBar = ({ data, setActiveTab, dashboardData, setPrevKpiTab, dt }) => {
     const [openSubMenu, setOpenSubMenu] = useState(null);
@@ -57,6 +58,19 @@ const TopBar = ({ data, setActiveTab, dashboardData, setPrevKpiTab, dt }) => {
         }
     }, [rootTabs]);
 
+    const DynamicImage = ({ iconName }) => {
+        const imageSrc = useImageWithFallback(iconName);
+
+        return (
+            <img
+                src={imageSrc}
+                alt="menu-icon"
+                className="menu-icon-image me-2"
+                style={{ width: '16px', height: '16px' }}
+            />
+        );
+    }
+
     // Scroll logic
     const checkScroll = useCallback(() => {
         if (scrollRef.current) {
@@ -109,7 +123,14 @@ const TopBar = ({ data, setActiveTab, dashboardData, setPrevKpiTab, dt }) => {
                                                 setOpenSubMenu(openSubMenu === tab.id ? null : tab.id);
                                             }}
                                         >
-                                            <FontAwesomeIcon icon={getDynamicIcon(tab?.jsonData?.iconName)} className="me-2 dropdown-gear-icon" />
+                                            {tab?.jsonData?.isCSSTabIconRequired === "No" ?
+
+                                                <DynamicImage iconName={tab?.jsonData?.iconImageName} />
+                                                :
+                                                <FontAwesomeIcon icon={getDynamicIcon(tab?.jsonData?.iconName)} className="me-2 dropdown-gear-icon" />
+                                            }
+
+
                                             {dt(tab?.jsonData?.dashboardName)}
                                         </a>
 
@@ -128,7 +149,13 @@ const TopBar = ({ data, setActiveTab, dashboardData, setPrevKpiTab, dt }) => {
                                                                     setPrevKpiTab([]);
                                                                 }}
                                                             >
-                                                                <FontAwesomeIcon icon={getDynamicIcon(child?.jsonData?.iconName)} className="me-2 dropdown-gear-icon" />
+                                                                {child?.jsonData?.isCSSTabIconRequired === "No" ?
+
+                                                                    <DynamicImage iconName={child?.jsonData?.iconImageName} />
+                                                                    :
+                                                                    <FontAwesomeIcon icon={getDynamicIcon(child?.jsonData?.iconName)} className="me-2 dropdown-gear-icon" />
+                                                                }
+
                                                                 {dt(child?.jsonData?.dashboardName)}
                                                             </a>
                                                         </li>

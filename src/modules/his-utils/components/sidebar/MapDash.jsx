@@ -9,7 +9,6 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowCircleLeft, faSortAmountDesc, faTableCells } from "@fortawesome/free-solid-svg-icons";
 import Tabular from "./Tabular";
 import Parameters from "./Parameters";
-import { getEncryptedParamValue } from "../../../../utils/Security";
 
 
 const MapDash = ({ widgetData, setWidgetData, pkColumn, setPkColumn, levelData, setLevelData }) => {

@@ -3,6 +3,7 @@ import InputSelect from '../../commons/InputSelect'
 import InputField from '../../commons/InputField'
 import { FaIcons } from 'react-icons/fa';
 import IconPicker from '../../commons/IconPicker';
+import { iconImageOptions } from '../../../localData/DropDownData';
 
 const AboutTab = (props) => {
     const { handleValueChange, handleRadioChange, radioValues, values, dashboardForDt, setValues, tabDrpData, errors, dt } = props;
@@ -241,7 +242,7 @@ const AboutTab = (props) => {
                                     placeholder={dt("Select Image")}
                                     name='tabIconImage'
                                     id="tabIconImage"
-                                    options={[{ value: "default", label: "Default-Image.png" }]}
+                                    options={iconImageOptions}
                                     onChange={handleValueChange}
                                     value={values?.tabIconImage}
                                 />

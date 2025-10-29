@@ -566,7 +566,6 @@ const WidgetMaster = () => {
       setLoading(false)
     }
   }, [singleData]);
-  // console.log('singleData', singleData)
 
   //parameter search
   useEffect(() => {
@@ -831,7 +830,6 @@ const WidgetMaster = () => {
     });
   };
 
-  // console.log(singleData,'singledata')
 
   const updateWidgetData = () => {
     setLoading(true)

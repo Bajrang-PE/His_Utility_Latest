@@ -1,4 +1,4 @@
-import React, { lazy, Suspense, useCallback, useContext, useEffect, useRef, useState } from 'react';
+import React, { lazy, Suspense, useContext, useEffect, useRef, useState } from 'react';
 import WidgetDash from './WidgetDash';
 import { HISContext } from '../../contextApi/HISContext';
 import FooterText from '../commons/FooterText';
@@ -6,18 +6,16 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
 import { useSearchParams } from 'react-router-dom';
 import { fetchPostData } from '../../../../utils/HisApiHooks';
-import { decryptData } from '../../../../utils/SecurityConfig';
-import { getEncryptedParamValue } from '../../../../utils/Security';
 import { useDispatch } from 'react-redux';
 import { setWidgitStyle } from '../../Features/WidgitEngine/WidgitViewerSlice';
 import { themeClasses } from '../dragdrop/dashboardSettings';
-import SessionClock from '../commons/SessionClock';
+// import SessionClock from '../commons/SessionClock';
 
 const PdfDownload = lazy(() => import('../commons/PdfDownload'));
 const Parameters = lazy(() => import('./Parameters'));
 
 const TabDash = React.memo(() => {
-    const { setLoading, loading, activeTab, setParamsValues, presentWidgets, setPresentWidgets, prevKpiTab, setActiveTab, setPrevKpiTab, setParamsValuesPro, dt, setTabParams, tabParams } = useContext(HISContext);
+    const { activeTab, setParamsValues, presentWidgets, setPresentWidgets, prevKpiTab, setActiveTab, setPrevKpiTab, setParamsValuesPro, dt, setTabParams, tabParams } = useContext(HISContext);
     const [presentTabs, setPresentTabs] = useState([]);
     const [widWithoutLinked, setWidWithoutLinked] = useState([]);
     const [allWidgetData, setAllWidgetData] = useState([]);
@@ -30,29 +28,18 @@ const TabDash = React.memo(() => {
     const dashboardFor = atob(searchParams.get("dashboardFor"));
     const isGlobal = searchParams.get("isGlobal") || 0;
 
+    const abortControllerRef = useRef(null);
 
-    // const [groupId, setGroupId] = useState('');
-    // const [dashboardFor, setDashboardFor] = useState('');
-
-    // useEffect(() => {
-    //     if (searchParams.get("groupId") && searchParams.get("dashboardFor")) {
-    //         const gId = atob(searchParams.get("groupId"));
-    //         const dFor = atob(searchParams.get("dashboardFor"));
-    //         setGroupId(gId);
-    //         setDashboardFor(dFor);
-
-    //     } else if (searchParams.get("dbfhttf")) {
-    //         const encIFUrl = searchParams.get("dbfhttf");
-    //         const gId = encIFUrl ? atob(getEncryptedParamValue(encIFUrl, "groupId")) : '';
-    //         const dFor = encIFUrl ? atob(getEncryptedParamValue(encIFUrl, "dashboardFor")) : '';
-    //         setGroupId(gId);
-    //         setDashboardFor(dFor);
-    //     }
-    // }, [searchParams])
 
     const footerText = activeTab?.jsonData?.footerText || "";
 
-    const getAllAvailableWidgets = useCallback(async (idArr, dashFor) => {
+    const getAllAvailableWidgets = (idArr, dashFor) => {
+
+        if (abortControllerRef.current) {
+            abortControllerRef.current.abort();
+        }
+
+        abortControllerRef.current = new AbortController();
 
         try {
             const val = {
@@ -60,25 +47,32 @@ const TabDash = React.memo(() => {
                 dashboardFor: dashFor || 'CENTRAL DASHBOARD',
                 masterName: "DashboardWidgetMst"
             };
-            const data = await fetchPostData(`/hisutils/getWdgtMultipleData?isGlobal=${isGlobal || 0}`, val);
-
-            if (data?.status === 1) {
-                setAllWidgetData(data?.data);
-                return data?.data;
-            } else {
+            return fetchPostData(`/hisutils/getWdgtMultipleData?isGlobal=${isGlobal || 0}`, val, '', {
+                signal: abortControllerRef.current.signal
+            }).then((data) => {
+                if (data?.status === 1) {
+                    setAllWidgetData(data?.data);
+                    return data?.data;
+                } else {
+                    setAllWidgetData([]);
+                    return [];
+                }
+            }).catch((error) => {
+                console.error("Error fetching tabs data", error);
                 setAllWidgetData([]);
                 return [];
-            }
+            })
+
         } catch (error) {
             console.error("Error fetching tabs data", error);
             return [];
         }
-    }, []);
-
+    };
 
     useEffect(() => {
+        let isCurrent = true;
         const loadWidgets = async () => {
-            setTabloading(true)
+            setTabloading(true);
             if (activeTab?.jsonData?.lstDashboardWidgetMapping?.length > 0 || (activeTab?.jsonData?.isLayoutWithPreview === "Yes" && activeTab?.jsonData?.droppedComponents?.length > 0)) {
                 setParamsValues({
                     tabParams: {},
@@ -114,6 +108,7 @@ const TabDash = React.memo(() => {
 
                 const availableWidgets = await getAllAvailableWidgets(sortedWidgets?.map(dt => dt?.rptId), dashboardFor);
 
+
                 let finalWidgets = [];
 
                 sortedWidgets?.forEach(wid => {
@@ -131,7 +126,6 @@ const TabDash = React.memo(() => {
                         }
                     }
                 });
-
                 let seen = new Set();
                 let uniqueWidgets = finalWidgets?.filter(widget => {
                     if (!seen.has(widget.rptId)) {
@@ -140,7 +134,6 @@ const TabDash = React.memo(() => {
                     }
                     return false;
                 });
-
 
                 uniqueWidgets?.forEach((parent) => {
                     parent.children = uniqueWidgets
@@ -153,6 +146,7 @@ const TabDash = React.memo(() => {
                         .filter(widget => uniqueWidgets.some(parent => widget.parentReport == parent.rptId))
                         .map(widget => widget.rptId)
                 );
+
                 const allLinkedRptIds = new Set(
                     uniqueWidgets
                         .flatMap(widget => widget?.linkedWidgetRptId?.split(',') || [])
@@ -169,7 +163,9 @@ const TabDash = React.memo(() => {
                 setWidWithoutLinked(standaloneAndParentsOnly);
                 setPresentWidgets(uniqueWidgets);
                 setPresentTabs(sortedWidgets);
-                setTabloading(false);
+                if (isCurrent) {
+                    setTabloading(false);
+                }
             } else {
                 setPresentWidgets([]);
                 setWidWithoutLinked([]);
@@ -181,11 +177,17 @@ const TabDash = React.memo(() => {
                     tabParams: {},
                     widgetParams: {},
                 })
-                setTabloading(false);
+                if (isCurrent) {
+                    setTabloading(false);
+                }
             }
         };
 
         loadWidgets();
+
+        return () => {
+            isCurrent = false;
+        };
     }, [activeTab, dashboardFor]);
 
     // const onPrevClick = () => {
@@ -276,150 +278,57 @@ const TabDash = React.memo(() => {
     const bgclr = activeTab?.jsonData?.tabBackgroundColor || "#ffffff";
     const titleclr = activeTab?.jsonData?.tabTitleFontColor || "#000000";
 
-    // console.log('widWithoutLinked', widWithoutLinked);
-
     return (
         <>
-            {tabLoading ? <h1>Loading...</h1> : (
-                <div
-                    style={{
-                        height: "100%",
-                        background: bgclr,
-                        padding: "10px 20px"
-                    }}
-                >
-                    {/* {prevKpiTab?.length > 0 &&
-                        <div className=''>
-                            <button className='btn btn-sm me-1 back-button-kpi' onClick={onPrevClick}>
-                                <FontAwesomeIcon icon={faArrowLeft}
-                                    className="me-1" />{dt('Back')}</button>
-                        </div>
-                    } */}
-                    {prevKpiTab?.length > 0 && (
-                        <div className="btn-group" role="group" aria-label="Button group with nested dropdown">
-                            <button className='btn btn-sm back-button-kpi' onClick={onPrevClick}>
-                                <FontAwesomeIcon icon={faArrowLeft}
-                                    className="me-1" />{dt('Back')}</button>
-                            {prevKpiTab?.length > 1 &&
-                                <div className="btn-group" role="group" style={{ borderLeft: ".5px solid" }}>
-                                    <button type="button" className="btn btn-danger dropdown-toggle back-button-kpi" data-bs-toggle="dropdown" aria-expanded="false">
-                                    </button>
-                                    <ul className="dropdown-menu dropdown-menu-start">
-                                        {prevKpiTab.map((tab, index) => (
-                                            <li key={index}>
-                                                <button
-                                                    className="dropdown-item pointer text-primary p-1"
-                                                    onClick={() => onPrevSelect(index)}
-                                                >
-                                                    {tab?.jsonData?.dashboardName || `Level ${index + 1}`}
-                                                </button>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </div>
-                            }
-                        </div>
-                    )}
+            {tabLoading ?
+                <div className="text-center">
+                    <p className="text-center">{'Fetching Widgets data...'}</p>
+                    <div className="spinner-border text-primary" role="status">
+                        <span className="sr-only">Loading...</span>
+                    </div>
+                </div> : (
+                    <div
+                        style={{
+                            height: "100%",
+                            background: bgclr,
+                            padding: "10px 20px"
+                        }}
+                    >
+                        
+                        {prevKpiTab?.length > 0 && (
+                            <div className="btn-group" role="group" aria-label="Button group with nested dropdown">
+                                <button className='btn btn-sm back-button-kpi' onClick={onPrevClick}>
+                                    <FontAwesomeIcon icon={faArrowLeft}
+                                        className="me-1" />{dt('Back')}</button>
+                                {prevKpiTab?.length > 1 &&
+                                    <div className="btn-group" role="group" style={{ borderLeft: ".5px solid" }}>
+                                        <button type="button" className="btn btn-danger dropdown-toggle back-button-kpi" data-bs-toggle="dropdown" aria-expanded="false">
+                                        </button>
+                                        <ul className="dropdown-menu dropdown-menu-start">
+                                            {prevKpiTab.map((tab, index) => (
+                                                <li key={index}>
+                                                    <button
+                                                        className="dropdown-item pointer text-primary p-1"
+                                                        onClick={() => onPrevSelect(index)}
+                                                    >
+                                                        {tab?.jsonData?.dashboardName || `Level ${index + 1}`}
+                                                    </button>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </div>
+                                }
+                            </div>
+                        )}
 
-                    {/* <div className='session-timer' style={{ float: "right" }}>
+                        {/* <div className='session-timer' style={{ float: "right" }}>
                         <SessionClock />
                     </div> */}
 
-                    {/* {prevKpiTab?.length > 0 && (
-                        <div className="dropdown d-inline-block">
-                            <button
-                                className="btn btn-sm me-1 back-button-kpi dropdown-toggle"
-                                type="button"
-                                data-bs-toggle="dropdown"
-                                aria-expanded="false"
-                            >
-                                <FontAwesomeIcon icon={faArrowLeft} className="me-1" />
-                                {dt('Back')}
-                            </button>
+                        {(activeTab?.jsonData?.docJsonString && JSON.parse(activeTab?.jsonData?.docJsonString)?.length > 0) && (
+                            <>
 
-                            <ul className="dropdown-menu">
-                                {prevKpiTab.map((tab, index) => (
-                                    <li key={index}>
-                                        <button
-                                            className="dropdown-item"
-                                            onClick={() => onPrevSelect(index)}
-                                        >
-                                            {tab?.jsonData?.dashboardName || `Level ${index + 1}`}
-                                        </button>
-                                    </li>
-                                ))}
-                            </ul>
-                        </div>
-                    )} */}
-
-                    {(activeTab?.jsonData?.docJsonString && JSON.parse(activeTab?.jsonData?.docJsonString)?.length > 0) && (
-                        <>
-
-                            <div className='help-docs'>
-                                <Suspense
-                                    fallback={
-                                        <div className="pt-3 text-center">
-                                            {dt('Loading')}...
-                                        </div>
-                                    }
-                                >
-                                    <PdfDownload docJsonString={activeTab?.jsonData?.docJsonString} />
-                                </Suspense>
-                            </div>
-                        </>
-                    )}
-
-                    <h4 className='text-center' style={{ color: titleclr }}>{dt(activeTab?.jsonData?.dashboardName)}</h4>
-
-                    {activeTab?.jsonData?.isLayoutWithPreview && activeTab?.jsonData?.isLayoutWithPreview === "Yes" ?
-                        <>
-                            <CustomGrid
-                                layout={activeTab?.jsonData?.tabLayout}
-                                // layout={activeTab?.jsonData?.droppedComponents?.map((dt)=>dt?.layout)}
-                                cssClass={[theme?.at(1), theme?.at(2)]}
-
-                            >
-                                {paramsForPreview?.length > 0 && paramsForPreview?.map((param) => (
-                                    <div className='parameter-box' gridKey={param} key={param}>
-                                        <Suspense
-                                            fallback={
-                                                <div className="pt-3 text-center">
-                                                    {dt('Loading')}...
-                                                </div>
-                                            }
-                                        >
-                                            <Parameters params={param} dashFor={activeTab?.dashboardFor} scope={'tabParams'} isLayoutWithPreview={true} setTabParams={setTabParams} tabParams={tabParams} />
-                                        </Suspense>
-                                    </div>
-                                ))
-                                }
-                                {/* <div className='row mt-4'> */}
-
-                                {widWithoutLinked?.length > 0 && widWithoutLinked.map((widget, index) => (
-                                    <div gridKey={String(widget.rptId)} key={widget.rptId} style={{ height: "100%", width: "100%" }}>
-                                        {widget &&
-                                            <>
-                                                <Suspense
-                                                    fallback={
-                                                        <div className="pt-3 text-center">
-                                                            {dt('Loading')}...
-                                                        </div>
-                                                    }
-                                                >
-                                                    <WidgetDash widgetDetail={widget} presentWidgets={presentWidgets} presentTabs={presentTabs} isLayoutWithPreview={true} />
-                                                </Suspense>
-                                            </>
-                                        }
-                                    </div>
-                                ))
-                                }
-                                {/* </div> */}
-                            </CustomGrid>
-                        </>
-                        :
-                        <>
-                            {activeTab?.jsonData?.allParameters && (
-                                <div className='parameter-box'>
+                                <div className='help-docs'>
                                     <Suspense
                                         fallback={
                                             <div className="pt-3 text-center">
@@ -427,37 +336,99 @@ const TabDash = React.memo(() => {
                                             </div>
                                         }
                                     >
-                                        <Parameters params={activeTab?.jsonData?.allParameters} dashFor={activeTab?.dashboardFor} scope={'tabParams'} isLayoutWithPreview={false} setTabParams={setTabParams} tabParams={tabParams} />
+                                        <PdfDownload docJsonString={activeTab?.jsonData?.docJsonString} />
                                     </Suspense>
                                 </div>
-                            )}
+                            </>
+                        )}
 
-                            <div className='row mt-4'>
-                                {widWithoutLinked?.length > 0 && widWithoutLinked.map((widget, index) => (
-                                    <React.Fragment key={index}>
-                                        {widget &&
-                                            <>
-                                                <Suspense
-                                                    fallback={
-                                                        <div className="pt-3 text-center">
-                                                            {dt('Loading')}...
-                                                        </div>
-                                                    }
-                                                >
-                                                    <WidgetDash widgetDetail={widget} presentWidgets={presentWidgets} presentTabs={presentTabs} isLayoutWithPreview={false} />
-                                                </Suspense>
-                                            </>
-                                        }
-                                    </React.Fragment>
-                                ))
-                                }
-                            </div>
-                        </>
-                    }
+                        <h4 className='text-center' style={{ color: titleclr }}>{dt(activeTab?.jsonData?.dashboardName)}</h4>
 
-                    <FooterText footerText={footerText} />
-                </div>
-            )}
+                        {activeTab?.jsonData?.isLayoutWithPreview && activeTab?.jsonData?.isLayoutWithPreview === "Yes" ?
+                            <>
+                                <CustomGrid
+                                    layout={activeTab?.jsonData?.tabLayout}
+                                    // layout={activeTab?.jsonData?.droppedComponents?.map((dt)=>dt?.layout)}
+                                    cssClass={[theme?.at(1), theme?.at(2)]}
+
+                                >
+                                    {paramsForPreview?.length > 0 && paramsForPreview?.map((param) => (
+                                        <div className='parameter-box' gridKey={param} key={param}>
+                                            <Suspense
+                                                fallback={
+                                                    <div className="pt-3 text-center">
+                                                        {dt('Loading')}...
+                                                    </div>
+                                                }
+                                            >
+                                                <Parameters params={param} dashFor={activeTab?.dashboardFor} scope={'tabParams'} isLayoutWithPreview={true} setTabParams={setTabParams} tabParams={tabParams} />
+                                            </Suspense>
+                                        </div>
+                                    ))
+                                    }
+
+                                    {widWithoutLinked?.length > 0 && widWithoutLinked.map((widget, index) => (
+                                        <div gridKey={String(widget.rptId)} key={widget.rptId} style={{ height: "100%", width: "100%" }}>
+                                            {widget &&
+                                                <>
+                                                    <Suspense
+                                                        fallback={
+                                                            <div className="pt-3 text-center">
+                                                                {dt('Loading')}...
+                                                            </div>
+                                                        }
+                                                    >
+                                                        <WidgetDash widgetDetail={widget} presentWidgets={presentWidgets} presentTabs={presentTabs} isLayoutWithPreview={true} />
+                                                    </Suspense>
+                                                </>
+                                            }
+                                        </div>
+                                    ))
+                                    }
+                                </CustomGrid>
+                            </>
+                            :
+                            <>
+                                {activeTab?.jsonData?.allParameters && (
+                                    <div className='parameter-box'>
+                                        <Suspense
+                                            fallback={
+                                                <div className="pt-3 text-center">
+                                                    {dt('Loading')}...
+                                                </div>
+                                            }
+                                        >
+                                            <Parameters params={activeTab?.jsonData?.allParameters} dashFor={activeTab?.dashboardFor} scope={'tabParams'} isLayoutWithPreview={false} setTabParams={setTabParams} tabParams={tabParams} />
+                                        </Suspense>
+                                    </div>
+                                )}
+
+                                <div className='row mt-4'>
+                                    {widWithoutLinked?.length > 0 && widWithoutLinked.map((widget, index) => (
+                                        <React.Fragment key={index}>
+                                            {widget &&
+                                                <>
+                                                    <Suspense
+                                                        fallback={
+                                                            <div className="pt-3 text-center">
+                                                                {dt('Loading')}...
+                                                            </div>
+                                                        }
+                                                    >
+                                                        <WidgetDash widgetDetail={widget} presentWidgets={presentWidgets} presentTabs={presentTabs} isLayoutWithPreview={false} />
+                                                    </Suspense>
+                                                </>
+                                            }
+                                        </React.Fragment>
+                                    ))
+                                    }
+                                </div>
+                            </>
+                        }
+
+                        <FooterText footerText={footerText} />
+                    </div>
+                )}
         </>
     );
 });

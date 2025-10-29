@@ -204,7 +204,12 @@ const HISContextData = ({ children }) => {
 
   const getDashConfigData = async () => {
     try {
-      const isToken = localStorage.getItem('accessToken');
+      // const isToken = localStorage.getItem('accessToken');
+      const auth = searchParams.get("auth") || '';
+      if (auth) {
+        sessionStorage.setItem("accessToken", auth);
+      }
+      const isToken = sessionStorage.getItem('accessToken') || auth;
 
       let userName = "";
       const isGlobal = searchParams.get("isGlobal") || 0;
@@ -250,7 +255,8 @@ const HISContextData = ({ children }) => {
         const token = data?.headers?.authorization;
         setToken(token);
         if (token) {
-          localStorage.setItem("accessToken", token);
+          // localStorage.setItem("accessToken", token);
+          sessionStorage.setItem("accessToken", token);
         }
         return token;
       } else {

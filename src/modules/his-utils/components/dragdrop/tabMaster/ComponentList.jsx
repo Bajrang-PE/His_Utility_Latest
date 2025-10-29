@@ -115,7 +115,7 @@ export default function ComponentList() {
 }
 
 const dashboardAPI = axios.create({
-  baseURL: "http://10.226.26.247:8025",
+  baseURL: "/",
   withCredentials: true,
 });
 

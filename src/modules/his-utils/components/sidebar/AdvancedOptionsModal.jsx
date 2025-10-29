@@ -19,7 +19,8 @@ const AdvancedOptionsModal = ({
   onSortConfigChange,
   visibleColumns = [],
   onVisibleColumnsChange,
-  isFirstRowHeading
+  isFirstRowHeading,
+  widgetId
 }) => {
   const [localSortConfig, setLocalSortConfig] = React.useState([...sortConfig]);
   const [localVisibleColumns, setLocalVisibleColumns] = React.useState([...visibleColumns]);
@@ -110,6 +111,7 @@ const AdvancedOptionsModal = ({
       centered
       backdrop="static"
       className="advanced-options-modal"
+      key={widgetId}
     >
       <Modal.Header closeButton className="modal-header-custom">
         <Modal.Title className="fw-bold">

@@ -8,7 +8,7 @@ const GraphDash = lazy(() => import('./GraphDash'));
 const MapDash = lazy(() => import('./MapDash'));
 const IframeDash = lazy(() => import('./IframeDash'));
 
-const WidgetDash = React.memo(({ widgetDetail, presentWidgets, presentTabs, pk ,isLayoutWithPreview}) => {
+const WidgetDash = React.memo(({ widgetDetail, presentWidgets, presentTabs, pk, isLayoutWithPreview, isPopup = false }) => {
 
     const [widgetData, setWidgetData] = useState({});
     const [linkedWidget, setLinkedWidget] = useState();
@@ -20,8 +20,8 @@ const WidgetDash = React.memo(({ widgetDetail, presentWidgets, presentTabs, pk ,
     }
 
     useEffect(() => {
-        if (pk && pk !== '') {
-            handleSetPkColumn(pk)
+        if (pk?.pkValue && pk !== '') {
+            handleSetPkColumn(pk?.pkValue)
         }
     }, [pk])
 
@@ -46,13 +46,14 @@ const WidgetDash = React.memo(({ widgetDetail, presentWidgets, presentTabs, pk ,
     }, [widgetData])
 
 
+
     const renderWidget = (data) => {
         switch (data?.reportViewed) {
-            case 'KPI': return <KpiDash widgetData={data} presentTabs={presentTabs} isLayoutWithPreview={isLayoutWithPreview}/>;
+            case 'KPI': return <KpiDash widgetData={data} presentTabs={presentTabs} isLayoutWithPreview={isLayoutWithPreview} />;
 
-            case 'Tabular': return <TabularDash widgetData={data} setWidgetData={setWidgetData} levelData={levelData} setLevelData={setLevelData} pkColumn={pkColumn} setPkColumn={handleSetPkColumn} isLayoutWithPreview={isLayoutWithPreview} presentTabs={presentTabs}/>;
+            case 'Tabular': return <TabularDash widgetData={data} setWidgetData={setWidgetData} levelData={levelData} setLevelData={setLevelData} pkColumn={pkColumn} setPkColumn={handleSetPkColumn} isLayoutWithPreview={isLayoutWithPreview} presentTabs={presentTabs} isPopup={isPopup} pkConfig={pk}/>;
 
-            case 'Graph': return <GraphDash widgetData={data} setWidgetData={setWidgetData} pkColumn={pkColumn} setPkColumn={handleSetPkColumn} isLayoutWithPreview={isLayoutWithPreview} presentTabs={presentTabs}/>;
+            case 'Graph': return <GraphDash widgetData={data} setWidgetData={setWidgetData} pkColumn={pkColumn} setPkColumn={handleSetPkColumn} isLayoutWithPreview={isLayoutWithPreview} presentTabs={presentTabs} isPopup={isPopup} pkConfig={pk}/>;
 
             case 'Iframe': return <IframeDash widgetData={data} />;
 
@@ -69,7 +70,6 @@ const WidgetDash = React.memo(({ widgetDetail, presentWidgets, presentTabs, pk ,
         }
     };
 
-
     return (
         <Suspense fallback={<div>Loading...</div>}>
             <>
@@ -82,12 +82,12 @@ const WidgetDash = React.memo(({ widgetDetail, presentWidgets, presentTabs, pk ,
                                         const parsedChildren = JSON.parse(widgetData?.sqChildJsonString || '[]');
                                         const mainQuery = widgetData?.queryVO?.[0]?.mainQuery || '';
                                         const orderedChildren = presentWidgets
-                                            .filter(widget => parsedChildren.some(child => child.SQCHILDWidgetId === widget.rptId))
-                                            .map(widget => {
+                                            ?.filter(widget => parsedChildren?.some(child => child.SQCHILDWidgetId === widget.rptId))
+                                            ?.map(widget => {
                                                 const childWidgetId = widget.rptId;
                                                 const widgetWidth = presentTabs?.find(tab => tab?.rptId === childWidgetId)?.widgetWidth || 12;
 
-                                                const childMeta = parsedChildren.find(child => child.SQCHILDWidgetId === childWidgetId);
+                                                const childMeta = parsedChildren?.find(child => child.SQCHILDWidgetId === childWidgetId);
                                                 const columnIndexesParent = childMeta?.modeForSQCHILDColumnNo
                                                     ?.split(',')
                                                     ?.map(idx => parseInt(idx.trim()) - 1)
@@ -123,7 +123,7 @@ const WidgetDash = React.memo(({ widgetDetail, presentWidgets, presentTabs, pk ,
                             </>
                         ) : (
                             // Normal widget rendering with col class
-                             <div
+                            <div
                                 className={`${isLayoutWithPreview ? 'layouthw' : `col-sm-${presentTabs?.find(dt => dt?.rptId == widgetData?.rptId)?.widgetWidth || 12}`} `}
                                 style={{
                                     padding: "5px 3px"

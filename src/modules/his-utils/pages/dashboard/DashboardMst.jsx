@@ -1,39 +1,39 @@
-import React, { useContext, useEffect, useState, useMemo, useCallback, Suspense, lazy } from "react";
+import React, { useContext, useEffect, useState, useCallback, Suspense, lazy } from "react";
 import { HISContext } from "../../contextApi/HISContext";
 import { useSearchParams } from "react-router-dom";
 import { fetchData, fetchPostData } from "../../../../utils/HisApiHooks";
 import Parameters from "../../components/sidebar/Parameters";
-import { decryptData, encryptData } from "../../../../utils/SecurityConfig";
-import { getEncryptedParamValue } from "../../../../utils/Security";
 
 const DashSidebar = lazy(() => import("../../components/sidebar/Sidebar"));
 const TopBar = lazy(() => import("../../components/sidebar/TopBar"));
 const TabDash = lazy(() => import("../../components/sidebar/TabDash"));
 
 const DashboardMst = () => {
-    const { activeTab, setActiveTab, theme, setTheme, mainDashData, setMainDashData, setLoading, loading, singleConfigData, getDashConfigData, setParamsValues, setPrevKpiTab, dt, setPresentTabsDash } = useContext(HISContext);
+    const { activeTab, setActiveTab, theme, setTheme, mainDashData, setMainDashData, setLoading, loading, getDashConfigData, setParamsValues, setPrevKpiTab, dt, setPresentTabsDash } = useContext(HISContext);
 
     const [searchParams] = useSearchParams();
     const [presentTabs, setPresentTabs] = useState([]);
+    const [allTabIds, setAllTabIds] = useState([]);
 
     const groupId = atob(searchParams.get("groupId"));
     const dashboardFor = atob(searchParams.get("dashboardFor"));
     const isGlobal = searchParams.get("isGlobal") || 0;
 
 
+
     useEffect(() => {
         const initializeDashboard = async () => {
             setLoading(true);
             try {
-                // Step 1: First get the config data (which sets the token)
+                //  First get the config data (which sets the token)
                 await getDashConfigData();
 
-                // Step 2: Wait a moment to ensure token is stored in localStorage
+                //  Wait a moment to ensure token is stored in localStorage
                 await new Promise(resolve => setTimeout(resolve, 500));
 
-                // Step 3: Now call the dashboard data
+                //  Now call the dashboard data
                 if (dashboardFor && groupId) {
-                    await getDashboardData(groupId, dashboardFor);
+                    getDashboardData(groupId, dashboardFor);
                 }
 
             } catch (error) {
@@ -46,62 +46,67 @@ const DashboardMst = () => {
         initializeDashboard();
     }, [dashboardFor, groupId]);
 
-    const getDashboardData = useCallback(async (groupId, dashFor) => {
+    const getDashboardData = (groupId, dashFor) => {
         try {
-            const data = await fetchData(`/hisutils/singleDashboard/${groupId}/${dashFor}/DashboardGroupingMst?isGlobal=${isGlobal || 0}`);
-            if (data?.status === 1) {
-                setMainDashData(data?.data);
+            fetchData(`/hisutils/singleDashboard/${groupId}/${dashFor}/DashboardGroupingMst?isGlobal=${isGlobal || 0}`).then((data) => {
+                if (data?.status === 1) {
+                    setMainDashData(data?.data);
 
-                // Step 4: After main data is set, get available tabs
-                if (data?.data) {
-                    const ids = data.data.jsonData.dashboardIds.split(',').map(Number) || [];
-                    const themes = data.data?.jsonData?.dashboardTheme || 'Default';
-                    setTheme(themes);
-                    await getAllAvailableTabs(ids, dashboardFor);
+                    if (data?.data) {
+                        const ids = data.data.jsonData.dashboardIds.split(',').map(Number) || [];
+                        const themes = data.data?.jsonData?.dashboardTheme || 'Default';
+                        if (ids?.length > 0) {
+                            setAllTabIds(ids);
+                        } else {
+                            setAllTabIds([]);
+
+                        }
+                        setTheme(themes);
+                        // await getAllAvailableTabs(ids, dashboardFor);
+                    }
                 }
-            }
+            })
+
         } catch (error) {
             console.error("Error fetching dashboard data", error);
         }
-    }, [dashboardFor]);
+    };
 
-    const getAllAvailableTabs = useCallback(async (idArr, dashFor) => {
+
+    const getAllAvailableTabs = (idArr, dashFor) => {
         try {
             const val = {
                 "ids": idArr || [],
                 "dashboardFor": dashFor,
                 "masterName": "DashboardMst"
             };
-            const data = await fetchPostData(`/hisutils/gettabsMultipleData?isGlobal=${isGlobal || 0}`, val);
-            if (data?.status === 1) {
-                setPresentTabs(data?.data);
-                setPresentTabsDash(data?.data);
-            } else {
-                setPresentTabs([]);
-                setPresentTabsDash([]);
-            }
+            fetchPostData(`/hisutils/gettabsMultipleData?isGlobal=${isGlobal || 0}`, val).then((data) => {
+                if (data?.status === 1) {
+                    setPresentTabs(data?.data);
+                    setPresentTabsDash(data?.data);
+                    setLoading(false);
+                } else {
+                    setPresentTabs([]);
+                    setPresentTabsDash([]);
+                    setLoading(false);
+                };
+            })
         } catch (error) {
             console.error("Error fetching tabs data", error);
         }
-    }, []);
+    };
 
-    // Remove these separate useEffect hooks as they're now handled in the main initialization
-    // useEffect(() => {
-    //     if (dashboardFor && groupId) {
-    //         getDashboardData(groupId, dashboardFor);
-    //     }
-    // }, [dashboardFor, groupId]);
-
-    // useEffect(() => {
-    //     if (mainDashData) {
-    //         const ids = mainDashData.jsonData.dashboardIds.split(',').map(Number) || [];
-    //         const themes = mainDashData?.jsonData?.dashboardTheme || 'Default'
-    //         setTheme(themes);
-    //         getAllAvailableTabs(ids, dashboardFor).finally(() => setLoading(false));
-    //     } else {
-    //         setLoading(false)
-    //     }
-    // }, [mainDashData]);
+    useEffect(() => {
+        if (allTabIds?.length > 0) {
+            // const ids = mainDashData.jsonData.dashboardIds.split(',').map(Number) || [];
+            // const themes = mainDashData?.jsonData?.dashboardTheme || 'Default'
+            // setTheme(themes);
+            getAllAvailableTabs(allTabIds, dashboardFor);
+        }
+        // else {
+        //     setNoTabErr('no tabs')
+        // }
+    }, [allTabIds]);
 
     const isTopBarLayout = mainDashData?.jsonData?.tabDisplayStyle === 'TOP';
     const parameters = mainDashData?.jsonData?.allSelectedParaList || '';
@@ -109,73 +114,6 @@ const DashboardMst = () => {
     const handleSetParamsValues = useCallback((values) => {
         setParamsValues(values);
     }, []);
-
-
-    // useEffect(() => {
-    //     const init = async () => {
-    //         await getDashConfigData();
-    //     };
-
-    //     init();
-    // }, [])
-
-    // const getDashboardData = useCallback((groupId, dashFor) => {
-    //     setLoading(true);
-    //     fetchData(`/hisutils/singleDashboard/${groupId}/${dashFor}/DashboardGroupingMst`)
-    //         .then((data) => {
-    //             if (data?.status === 1) setMainDashData(data?.data);
-    //         });
-    // }, []);
-
-    // const getAllAvailableTabs = useCallback(async (idArr, dashFor) => {
-    //     try {
-
-    //         const val = {
-    //             "ids": idArr || [],
-    //             "dashboardFor": dashFor,
-    //             "masterName": "DashboardMst"
-    //         };
-    //         const data = await fetchPostData("/hisutils/gettabsMultipleData", val);
-    //         if (data?.status === 1) {
-    //             setPresentTabs(data?.data);
-    //             setPresentTabsDash(data?.data);
-    //         } else {
-    //             setPresentTabs([]);
-    //             setPresentTabsDash([]);
-    //         }
-    //     } catch (error) {
-    //         console.error("Error fetching tabs data", error);
-    //     }
-    // }, []);
-
-
-    // useEffect(() => {
-    //     if (dashboardFor && groupId) {
-    //         getDashboardData(groupId, dashboardFor);
-    //         // getAllWidgetData(dashboardFor);
-    //     }
-
-    // }, [dashboardFor, groupId]);
-
-
-    // useEffect(() => {
-    //     if (mainDashData) {
-    //         const ids = mainDashData.jsonData.dashboardIds.split(',').map(Number) || [];
-    //         const themes = mainDashData?.jsonData?.dashboardTheme || 'Default'
-    //         setTheme(themes);
-    //         getAllAvailableTabs(ids, dashboardFor).finally(() => setLoading(false));
-    //     } else {
-    //         setLoading(false)
-    //     }
-    // }, [mainDashData]);
-
-    // const isTopBarLayout = mainDashData?.jsonData?.tabDisplayStyle === 'TOP';
-    // const parameters = mainDashData?.jsonData?.allSelectedParaList || '';
-
-
-    // const handleSetParamsValues = useCallback((values) => {
-    //     setParamsValues(values);
-    // }, []);
 
 
     return (
@@ -239,6 +177,7 @@ const DashboardMst = () => {
                             >
                                 <TabDash />
                             </Suspense>
+                            // <p className="text-center text-danger"> {noTabErr}</p>
                             // : <>
                             //     <h2 className="text-danger">Internal Error!!!! </h2>
                             // </>

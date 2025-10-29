@@ -1,17 +1,31 @@
 import React, { useEffect, useState } from "react";
 import { Menu, MenuItem, SubMenu, Sidebar } from "react-pro-sidebar";
-import { FaAtom, FaBars } from "react-icons/fa";
+import {  FaBars } from "react-icons/fa";
 import * as SolidIcons from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import * as FaIcons from "react-icons/fa";
+import useImageWithFallback from "../../hooks/useImageWithFallback";
 
+
+const DynamicImage = React.memo(({ iconName }) => {
+    const imageSrc = useImageWithFallback(iconName);
+
+    return (
+        <img
+            src={imageSrc}
+            alt="menu-icon"
+            className="menu-icon-image"
+            style={{ width: '16px', height: '16px' }}
+        />
+    );
+});
 
 const DashSidebar = ({ data, setActiveTab, activeTab, dashboardData, setPrevKpiTab, dt }) => {
 
     const [collapsed, setCollapsed] = useState(false);
     const [openSubMenu, setOpenSubMenu] = useState(null);
 
-    const rootTabs = data?.filter(dt=>dt?.jsonData?.isTabUsedForDrillDown === "No")?.filter(tab => !tab.jsonData.parentTabId || tab.jsonData.parentTabId === "0");
+    const rootTabs = data?.filter(dt => dt?.jsonData?.isTabUsedForDrillDown === "No")?.filter(tab => !tab.jsonData.parentTabId || tab.jsonData.parentTabId === "0");
 
     // Fetch child tabs with memoization
     const getChildTabs = (parentId) => {
@@ -53,6 +67,7 @@ const DashSidebar = ({ data, setActiveTab, activeTab, dashboardData, setPrevKpiT
         return <Cmp />;
     };
 
+
     useEffect(() => {
         if (rootTabs.length > 0) {
             setActiveTab(rootTabs[0]);
@@ -75,7 +90,6 @@ const DashSidebar = ({ data, setActiveTab, activeTab, dashboardData, setPrevKpiT
         }
     };
 
-
     return (
         <Sidebar width="270px" style={{ minHeight: "100vh", color: "#ECF0F1" }} collapsed={collapsed} toggled backgroundColor="#071b2f">
             <Menu iconShape="square">
@@ -97,8 +111,7 @@ const DashSidebar = ({ data, setActiveTab, activeTab, dashboardData, setPrevKpiT
                             <SubMenu
                                 key={tab.id}
                                 label={!collapsed && tab?.jsonData?.dashboardActualName}
-                                // icon={<FontAwesomeIcon icon={getDynamicIcon(tab?.jsonData?.iconName)} />}
-                                icon={getDynamicIcon(tab?.jsonData?.iconName)}
+                                icon={tab?.jsonData?.isCSSTabIconRequired === "No" ? <DynamicImage iconName={tab?.jsonData?.iconImageName} /> : getDynamicIcon(tab?.jsonData?.iconName)}
                                 className={`submenu-tab-side ${isActive ? 'activeSideTab' : ''}`}
                                 open={activeTab?.jsonData?.parentTabId == tab.id || openSubMenu == tab.id}
                                 onClick={() => { handleSubMenuClick(tab.id); setActiveTab(tab); setPrevKpiTab([]); }}
@@ -112,7 +125,6 @@ const DashSidebar = ({ data, setActiveTab, activeTab, dashboardData, setPrevKpiT
                                         key={child.id}
                                         onClick={() => { setActiveTab(child); setPrevKpiTab([]) }}
                                         className={`menu-tab-item ${activeTab?.jsonData?.dashboardId === child?.jsonData?.dashboardId ? 'activeSideTab' : ''}`}
-                                        // icon={<FontAwesomeIcon icon={getDynamicIcon(child?.jsonData?.iconName)} />}
                                         icon={getDynamicIcon(child?.jsonData?.iconName)}
                                         id={`menu-tab-item${child.id}`}
                                         onMouseOver={() => handleHover(`menu-tab-item${child.id}`, true)}
@@ -129,9 +141,10 @@ const DashSidebar = ({ data, setActiveTab, activeTab, dashboardData, setPrevKpiT
                     return (
                         <MenuItem
                             key={tab.id}
-                            icon={getDynamicIcon(tab?.jsonData?.iconName)}
-                            // icon={<FontAwesomeIcon icon={getDynamicIcon(tab?.jsonData?.iconName)} />}
-                            // icon={<FaAtom />}
+                            // icon={getDynamicIcon(tab?.jsonData?.iconName)}
+                            icon={tab?.jsonData?.isCSSTabIconRequired === "No" ?
+                                <DynamicImage iconName={tab?.jsonData?.iconImageName} />
+                                : getDynamicIcon(tab?.jsonData?.iconName)}
                             onClick={() => { setActiveTab(tab); handleSubMenuClick(''); setPrevKpiTab([]) }}
                             className={`menu-tab-item ${isActive ? 'activeSideTab' : ''}`}
                             id={`menu-tab-item${tab.id}`}

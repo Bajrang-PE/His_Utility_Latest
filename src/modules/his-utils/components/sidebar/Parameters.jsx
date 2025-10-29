@@ -2,13 +2,11 @@ import React, { useCallback, useContext, useEffect, useRef, useState } from "rea
 import { HISContext } from "../../contextApi/HISContext";
 import InputField from "../commons/InputField";
 import Select from "react-select";
-import { convertToISODate, formatDate1, formatParams } from "../../utils/commonFunction";
+import { convertToISODate, formatDate1 } from "../../utils/commonFunction";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEyeSlash, faReply, faSearch } from "@fortawesome/free-solid-svg-icons";
 import { useSearchParams } from "react-router-dom";
 import { fetchPostData } from "../../../../utils/HisApiHooks";
-import { decryptData } from "../../../../utils/SecurityConfig";
-import { getEncryptedParamValue } from "../../../../utils/Security";
 
 const usePrevious = (value) => {
     const ref = useRef();
@@ -58,17 +56,6 @@ const Parameters = ({ params, scope, widgetId = null, isLayoutWithPreview, setWi
                     },
                 },
             }));
-
-            // setWidgetParams((prev) => ({
-            //     ...prev,
-            //     widgetParams: {
-            //         ...prev.widgetParams,
-            //         [widgetId]: {
-            //             ...(prev.widgetParams?.[widgetId] || {}),
-            //             ...values,
-            //         },
-            //     },
-            // }));
         }
     }, []);
 
@@ -222,12 +209,6 @@ const Parameters = ({ params, scope, widgetId = null, isLayoutWithPreview, setWi
                 jndi: jndiS,
                 strGroupParaId: paraId,
                 strGroupParaValue: paraValue ?? null
-                // strGroupParaValue:
-                //     scope === 'tabParams'
-                //         ? paramsValuesPro?.tabParams?.[paraId] ?? null
-                //         : scope === 'widgetParams'
-                //             ? paramsValuesPro?.widgetParams?.[paraId] ?? null
-                //             : null,
             };
             const response = await fetchPostData(`/hisutils/GenericApiQry?isGlobal=${isGlobal || 0}`, val);
 
@@ -321,79 +302,6 @@ const Parameters = ({ params, scope, widgetId = null, isLayoutWithPreview, setWi
             }
         });
     }, [paramsValuesPro, presentParams]);
-
-
-    // useEffect(() => {
-    //     if (!presentParams?.length || !prevParams) return;
-
-    //     const changedKeys = [];
-
-    //     // check tabParams
-    //     for (const key in paramsValuesPro?.tabParams) {
-    //         if (paramsValuesPro.tabParams[key] !== prevParams.tabParams?.[key]) {
-    //             changedKeys.push(key);
-    //         }
-    //     }
-
-    //     for (const widgetId in paramsValuesPro?.widgetParams) {
-    //         const currentWidget = paramsValuesPro.widgetParams[widgetId] || {};
-    //         const prevWidget = prevParams.widgetParams?.[widgetId] || {};
-
-    //         for (const key in currentWidget) {
-    //             if (currentWidget[key] !== prevWidget[key]) {
-    //                 changedKeys.push(key); 
-    //             }
-    //         }
-    //     }
-
-    //     if (!changedKeys.length) return;
-
-    //     presentParams.forEach((param) => {
-    //         const query = param?.jsonData?.parameterQuery;
-    //         if (!query) return;
-
-    //         const regex = /#PARA#(\d+)#PARA#/g;
-    //         const match = regex.exec(query);
-    //         const paraId = match ? match[1] : null;
-
-    //         if (paraId && changedKeys.includes(paraId)) {
-    //             fetchDropdownData(
-    //                 query,
-    //                 param.jsonData.parameterName,
-    //                 param?.jndiIdForGettingData
-    //             );
-    //         }
-    //     });
-    // }, [paramsValuesPro, presentParams]);
-
-    // useEffect(() => {
-    //     if (!presentParams?.length) return;
-
-    //     presentParams.forEach((param) => {
-    //         const query = param?.jsonData?.parameterQuery;
-    //         if (!query) return;
-
-    //         const regex = /#PARA#(\d+)#PARA#/g;
-    //         const match = regex.exec(query);
-    //         const paraId = match ? match[1] : null;
-
-    //         if (paraId && parentId.includes(paraId)) {
-    //             const newValue =
-    //                 scope === "tabParams"
-    //                     ? paramsValuesPro?.tabParams?.[paraId]
-    //                     : paramsValuesPro?.widgetParams?.[paraId];
-
-    //             // Run only if value is defined (or you can add extra checks here)
-    //             if (newValue !== undefined) {
-    //                 fetchDropdownData(
-    //                     query,
-    //                     param.jsonData.parameterName,
-    //                     param?.jndiIdForGettingData
-    //                 );
-    //             }
-    //         }
-    //     });
-    // }, [paramsValuesPro, parentId, presentParams, scope]);
 
 
     const resetParams = () => {
