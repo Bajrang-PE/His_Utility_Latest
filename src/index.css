@@ -1,0 +1,47 @@
+body {
+  margin: 0;
+  /* font-family: 'Open Sans', sans-serif !important; */
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+.datepicker {
+  cursor: pointer;
+}
+
+.react-datepicker-wrapper{
+  display: block !important;
+}
+
+.version-tag {
+  position: fixed;
+  bottom: 0px;
+  right: 10px;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  padding: 3px 8px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(6px);
+  transition: all 0.3s ease-in-out;
+  z-index: 9999;
+}
+
+/* .version-tag:hover {
+  transform: translateY(-2px);
+  background: rgba(0, 0, 0, 0.8);
+} */

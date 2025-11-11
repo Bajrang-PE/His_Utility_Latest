@@ -1,0 +1,64 @@
+@use '../Util/variables' as *;
+
+.Table__wrapper {
+  overflow-x: scroll;
+  overflow-y: scroll;
+  margin-top: 1rem;
+  height: 40rem;
+  border-radius: 2rem;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background-color: rgba(255, 255, 255, 0.05); // Add this if it's missing
+
+  &--table {
+    width: 100%;
+    background-color: rgba(255, 255, 255, 0.1);
+
+    box-shadow:
+      0 8px 32px rgba(31, 38, 135, 0.37),
+      inset 0 0 1px rgba(255, 255, 255, 0.2);
+    overflow: hidden;
+    font-family: $secondary-font;
+    font-size: 1.5rem;
+    font-weight: 400;
+
+    color: #fff;
+
+    thead {
+      background-color: rgba(0, 72, 92, 0.8);
+      color: $pure-white;
+    }
+
+    th,
+    td {
+      text-align: left;
+      padding: 2rem;
+      white-space: nowrap;
+    }
+
+    th {
+      font-weight: 300;
+      letter-spacing: 1px;
+      position: sticky;
+      top: 0;
+      backdrop-filter: blur(5%);
+      -webkit-backdrop-filter: blur(40px) saturate(180%);
+      background-color: rgba(0, 72, 92, 0.9);
+      z-index: 10;
+    }
+
+    tbody tr:nth-child(even) {
+      background-color: rgba(255, 255, 255, 0.05);
+    }
+
+    tbody tr {
+      z-index: 1;
+    }
+
+    tbody tr:hover {
+      background-color: rgba(0, 150, 200, 0.3);
+      color: #ffffff;
+      font-weight: 500;
+      transition: background-color 0.2s ease-in-out;
+    }
+  }
+}

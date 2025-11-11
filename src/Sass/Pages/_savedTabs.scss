@@ -1,0 +1,132 @@
+@use '../Util/variables' as *;
+
+.SavedTabs {
+  height: 100vh;
+  &__heading {
+    display: flex;
+    padding: 2rem 1rem;
+    align-itrems: center;
+    gap: 2rem;
+    border-bottom: 1px solid rgba($color: $underline-color, $alpha: 0.4);
+  }
+  &__title {
+    font-size: 3rem;
+    font-family: $primary-font;
+    font-weight: 500;
+    letter-spacing: 1px;
+  }
+
+  &__Container {
+    display: flex;
+    height: 100%;
+
+    &--Navbar {
+      overflow-x: hidden;
+      box-shadow: $box-shadow-minimal;
+      height: 100%;
+      padding: 1rem;
+
+      &-icon {
+        position: relative;
+        height: 5rem;
+        width: 5rem;
+        border-radius: 50%;
+        margin-bottom: 3rem;
+        padding: 1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        &:hover {
+          box-shadow: $box-spherical-light-shadow;
+        }
+        &:active {
+          transform: scale(0.97);
+        }
+
+        & > img {
+          position: absolute;
+          height: 60%;
+          top: 50%;
+          opacity: 0.7;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          width: 60%;
+        }
+      }
+
+      &-List {
+        flex: 0 1 15%;
+        list-style: none;
+
+        &--itrems {
+          padding: 1.5rem 1rem;
+          font-family: $secondary-font;
+          font-size: 1.5rem;
+          cursor: pointer;
+          font-weight: 400;
+          transition: all 0.3s ease;
+          &:hover {
+            background-color: $Teal-Blue;
+            color: $pure-white;
+            font-weight: 600;
+          }
+        }
+      }
+    }
+
+    &--layout {
+      flex: 1;
+      padding: 1rem 0;
+      position: relative;
+
+      &-box {
+        position: absolute;
+        right: 2%;
+        z-index: 9999;
+      }
+      &-icon {
+        position: relative;
+        border-radius: 50%;
+        display: block;
+        height: 5rem;
+        width: 5rem;
+        padding: 1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+
+        &:not(:first-of-type) {
+          margin-top: 1.5rem;
+        }
+
+        & > img {
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          height: 70%;
+          width: 70%;
+          opacity: 0.8;
+        }
+
+        &:hover {
+          box-shadow: $box-spherical-light-shadow;
+        }
+      }
+    }
+  }
+}
+
+.active {
+  background-color: $Teal-Blue;
+  color: $pure-white;
+  font-weight: 600;
+}
+
+.editing {
+  box-shadow: none;
+  background-color: $dim-black;
+}
+
+.editing__img {
+  filter: invert(100%);
+  opacity: 1;
+}

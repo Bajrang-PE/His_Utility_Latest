@@ -1,0 +1,122 @@
+@use '../Util/variables' as *;
+
+.Wrapper {
+  display: flex;
+  flex-direction: column;
+  font-family: $secondary-font;
+  margin: 1rem 0;
+  position: relative;
+
+  &__search {
+    border-radius: 1.5rem;
+    border: 1px solid $Light-Teal;
+    font-family: $secondary-font;
+    font-weight: 400;
+    padding: 1rem;
+    font-size: 1.5rem;
+    width: 100%;
+    opacity: 0.7;
+    transition:
+      opacity 0.4s ease,
+      box-shadow 0.6s ease;
+
+    &:focus {
+      opacity: 1;
+      box-shadow: $box-shadow-text-fields;
+      outline: none;
+    }
+  }
+
+  &__label {
+    margin-bottom: 1rem;
+    color: $Dark-Teal;
+    font-size: 1.7rem;
+    font-weight: 500;
+    letter-spacing: 2px;
+  }
+
+  &__select {
+    appearance: none;
+    width: 24rem;
+    cursor: pointer;
+    user-select: none;
+    background-color: rgba($dim-white, 0.85);
+    backdrop-filter: blur(8px);
+    border-radius: 2rem;
+    border: none;
+    outline: none;
+    padding: 1rem 2rem;
+    box-shadow: $box-shadow-text-fields;
+    font-size: 1.3rem;
+    font-family: $secondary-font;
+    font-weight: 400;
+    transition:
+      border-color 0.3s ease,
+      box-shadow 0.3s ease;
+    background-image: url("data:image/svg+xml;utf8,<svg fill='%23008080' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 2rem;
+
+    &:focus {
+      border: 1px solid $indigo-color;
+      box-shadow: none;
+    }
+
+    &--menu {
+      position: absolute;
+      z-index: 9999;
+      top: 100%;
+      left: 0;
+      right: 0;
+      height: 24rem;
+      overflow: hidden;
+      font-family: $secondary-font;
+      font-size: 1.5rem;
+      border-radius: 1.5rem;
+      font-weight: 400;
+      background-image: $snow-gradient;
+      backdrop-filter: blur(6px);
+    }
+
+    &--option {
+      padding: 1rem;
+      cursor: pointer;
+      transition:
+        background-color 0.1s ease-in,
+        color 0.3s ease-in-out;
+      &:hover {
+        background-color: $Teal-Green;
+        color: $pure-white;
+      }
+    }
+  }
+
+  &__input {
+    font-family: $secondary-font;
+    padding: 0.75rem 1rem;
+    width: 30rem;
+    font-size: 1.5rem;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 0.5rem;
+    outline: none;
+    background-color: $dim-white;
+    letter-spacing: 2px;
+    color: #222;
+    transition:
+      border 0.2s ease,
+      box-shadow 0.2s ease;
+
+    &::placeholder {
+      color: #aaa;
+      opacity: 0.7;
+      font-family: $secondary-font;
+    }
+
+    &:focus {
+      border: 1px solid $Teal-Green;
+      box-shadow: $box-shadow-text-fields;
+      background-color: $pure-white;
+    }
+  }
+}

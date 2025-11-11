@@ -1,0 +1,205 @@
+.navbar-header-his {
+    /* background: linear-gradient(135deg, #2c3e50, #34495e);  */
+    background: linear-gradient(135deg, #05396c, #05213c);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+    padding: 5px 5px !important;
+}
+
+.his-brand.navbar-brand {
+    font-size: 1.7rem !important;
+    font-weight: 700 !important;
+    color: #FBC02D !important;
+}
+
+.his-brand.navbar-brand:hover {
+    color: #FFEB3B !important;
+}
+
+.topbar-brand {
+    font-size: 1rem !important;
+    font-weight: 700 !important;
+    color: #FFEB3B !important;
+}
+
+/* Style for the dropdown anchor link */
+.dropdownAnchor {
+    font-size: 1rem;
+    font-weight: 500;
+    color: #FBC02D !important;
+    transition: background-color 0.3s ease, color 0.3s ease;
+    padding: 2px !important;
+}
+
+.dropdownAnchor:hover {
+    background-color: #FFEB3B;
+    color: #1e1e1e !important;
+    border-radius: 5px;
+    padding: 2px !important;
+}
+
+.navbar-nav .drpb-menu {
+    background-color: #2C2C2C;
+    border-radius: 5px;
+    animation: slideInFromRight 0.5s ease-in-out;
+    margin-top: 10px;
+    transform-origin: right top;
+}
+
+
+/* Keyframes for sliding in from the right */
+@keyframes slideInFromRight {
+    0% {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+
+    100% {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* Style for each item inside the dropdown menu */
+.drpb-menu .dropdown-item {
+    font-size: 0.95rem;
+    color: #E0E0E0;
+    padding: 10px 20px;
+    transition: all 0.3s ease;
+}
+
+.drpb-menu .dropdown-item:hover {
+    background-color: #FBC02D;
+    color: #2C2C2C !important;
+    transform: translateX(8px);
+    font-weight: bold;
+    width: 100%;
+}
+
+/* Gear icon in the dropdown */
+.dropdown-gear-icon {
+    transition: color 0.3s ease, transform 0.3s ease;
+}
+
+.dropdown-item:hover .dropdown-gear-icon {
+    color: #2C2C2C;
+    transform: rotate(360deg);
+}
+
+/* Adding a fade-in effect for dropdown menu */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+
+.scrollable-navbar-container {
+    overflow-x: auto;
+    overflow-y: hidden;
+    white-space: nowrap;
+    position: relative;
+}
+
+.scrollable-navbar {
+    display: flex;
+    flex-wrap: nowrap;
+    position: relative;
+    overflow: hidden;
+    /* This ensures scrolling works */
+}
+
+.scrollable-navbar::-webkit-scrollbar {
+    display: none;
+    /* Hide scrollbar for Chrome, Safari */
+}
+
+.scroll-button {
+    z-index: 1;
+    background: white;
+    border: 1px solid #ccc;
+    border-radius: 50%;
+    padding: 4px 10px;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.scroll-button.left {
+    left: 0;
+}
+
+.scroll-button.right {
+    right: 0;
+}
+
+
+/* Hide scroll buttons on mobile */
+@media (max-width: 768px) {
+    .scroll-button {
+        display: none !important;
+    }
+}
+
+/* Dropdown styling */
+.navbar-nav .dropdown-menu {
+    position: absolute !important;
+    /* z-index: 1000; */
+    min-width: 200px;
+}
+
+.nav-item.dropdown {
+    position: relative;
+    align-content: center;
+}
+
+.dropdown-menu.show-tab-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    /* z-index: 9; */
+    display: block;
+    min-width: 200px;
+    box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.15);
+    background-color: #2C2C2C;
+    border-radius: 5px;
+    animation: slideInFromRight 0.5s ease-in-out;
+    margin-top: 10px;
+    transform-origin: right top;
+}
+
+.tab-divider {
+    /* width: 1px; */
+    background-color: rgba(255, 255, 255, 0.5);
+    margin: 0 8px;
+    height: 25px;
+    align-self: center;
+    padding: .5px;
+    opacity: .6;
+}
+
+.header-image-his {
+    border: 2px solid #f38933 !important;
+    border-radius: 10px !important;
+    color: white !important;
+    opacity: 1 !important;
+    cursor: pointer !important;
+    pointer-events: all !important;
+    background-color: #03325e;
+}
+
+.header-image-his:hover {
+    color: #FBC02D !important;
+    background-color: #03325e;
+    border: 2px solid #ce960a !important;
+    animation: blink 1s infinite;
+}
+
+.header-image-his:hover .translate {
+    animation: blink 1s infinite;
+}

@@ -1,0 +1,91 @@
+@use '../Util/variables' as *;
+
+.widgitMaster {
+  padding-top: $global-top-padding;
+  width: 90%;
+  height: auto;
+
+  &__title {
+    width: 100%;
+    display: flex;
+    gap: 2rem;
+    align-itrems: center;
+  }
+
+
+  &__config {
+    width: 85%;
+    display: flex;
+    align-itrems: center;
+    gap: 3rem;
+    margin-bottom: 2.5rem;
+    flex-wrap: wrap;
+  }
+
+  &__sqlEditor {
+    height: 35rem;
+    width: 90%;
+    box-shadow: $box-spherical-shadow;
+    overflow: hidden;
+    border-radius: 2rem;
+  }
+
+  &__type {
+    font-family: $secondary-font;
+    font-size: 2.2rem;
+    font-weight: 500;
+    letter-spacing: 2px;
+    margin-bottom: 2rem;
+  }
+
+  &__paramConfig {
+    margin-top: 3rem;
+    padding-bottom: 5rem;
+
+    &--warning {
+      font-family: $secondary-font;
+      font-size: 1.8rem;
+      letter-spacing: 1px;
+      font-weight: 700;
+      font-style: oblique;
+      color: $indigo-color;
+      margin: 3rem;
+
+      &-bold {
+        font-weight: 900;
+      }
+    }
+  }
+
+  &__graph {
+    display: flex;
+    gap: 3rem;
+    flex-wrap: wrap;
+    align-itrems: center;
+  }
+
+  &__controlBox {
+    padding-bottom: 2rem;
+    display: flex;
+    gap: 2rem;
+    margin-top: 3rem;
+  }
+
+  &__preview {
+    background-image: $gradient-success;
+    width: 90%;
+    height: auto;
+    border-radius: 2rem;
+    box-shadow: $box-spherical-light-shadow;
+    padding: 2rem 4rem;
+
+    &--heading {
+      font-family: $secondary-font;
+      font-size: 3rem;
+      font-weight: 600;
+      text-align: center;
+      margin: 1rem;
+      color: $pure-white;
+    }
+  }
+}

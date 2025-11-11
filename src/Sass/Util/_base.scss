@@ -1,0 +1,44 @@
+// *,
+// *::before,
+// *::after {
+//   margin: 0;
+//   padding: 0;
+//   box-sizing: inherit;
+// }
+
+.dragdroplayout {
+  font-size: 62.5% !important;
+  scroll-behavior: smooth;
+}
+.dragdroplayout * {
+  font-size: medium;
+}
+
+// body {
+//   box-sizing: border-box;
+//   -webkit-font-smoothing: antialiased;
+//   -moz-osx-font-smoothing: grayscale;
+
+//   &::-webkit-scrollbar {
+//     height: 8px;
+//     background: transparent;
+//   }
+
+//   &::-webkit-scrollbar-thumb {
+//     background: rgba(0, 0, 0, 0.2);
+//     border-radius: 8px;
+//     transition: background 0.3s ease-in-out;
+//   }
+
+//   &::-webkit-scrollbar-thumb:hover {
+//     background: rgba(0, 0, 0, 0.35);
+//   }
+
+//   // Firefox
+//   scrollbar-width: thin;
+//   scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+// }
+
+.portal__container {
+  margin-left: 14rem;
+}
