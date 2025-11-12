@@ -249,7 +249,7 @@ const HISContextData = ({ children }) => {
         setSingleConfigData(null);
       }
 
-      if (data?.headers && !isToken) {
+      if (data?.headers) {
         const token = data?.headers?.authorization;
         setToken(token);
         if (token) {

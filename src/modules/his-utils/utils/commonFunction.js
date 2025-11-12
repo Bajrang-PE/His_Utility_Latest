@@ -58,7 +58,7 @@ export const convertToISODate = (dateStr) => {
   return `${formattedYear}-${formattedMonth}-${day}`;
 };
 
-export const fetchQueryData = async (queryVO = [], jndiServer, params, pkColumn, isGlobal) => {
+export const fetchQueryData = async (queryVO = [], jndiServer, params, pkColumn, isGlobal, setJndiName) => {
 
   if (!Array.isArray(queryVO) || queryVO.length === 0) {
     console.error("Invalid or empty queryVO array provided.");
@@ -95,6 +95,9 @@ export const fetchQueryData = async (queryVO = [], jndiServer, params, pkColumn,
     console.log(query, response);
 
     if (response?.status === 1) {
+      if (setJndiName) {
+        setJndiName(response?.serverSource);
+      }
       return response?.data || [];
     } else {
       return [];
@@ -106,7 +109,7 @@ export const fetchQueryData = async (queryVO = [], jndiServer, params, pkColumn,
   }
 };
 
-export const fetchProcedureData = async (procedure, params, jndiServer, signal = null, isGlobal) => {
+export const fetchProcedureData = async (procedure, params, jndiServer, signal = null, isGlobal, setJndiName) => {
   if (!procedure) {
     return [];
   }
@@ -118,8 +121,12 @@ export const fetchProcedureData = async (procedure, params, jndiServer, signal =
       "jndi": jndiServer
     };
     const response = await fetchPostData(`/hisutils/procedures/execute?isGlobal=${isGlobal || 0}`, requestBody, null, signal);
-    
-    console.log(procedure, response);
+
+    console.log(requestBody, response);
+
+    if (setJndiName) {
+      setJndiName(response?.serverSource);
+    }
 
     return response?.data || [];
   } catch (error) {

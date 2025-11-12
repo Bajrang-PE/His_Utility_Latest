@@ -372,14 +372,6 @@ const DbConfigMaster = () => {
     setIsDbConnReq('1');
   }
 
-  const dtf = {
-    "iv": "6UKzrIC1d1AeRuvXDd1xRw\u003d\u003d",
-    "k": "QkEv2tlzxQz/J+ssXVtnE4Z0iLbzrpj87nxoNS6Nvnhi36Y7d3JORjO6uaVSmPhLBNCEH3Fr0+2EjWtbhSIoA4wZgRTSpB/DjZ1dEQjIgcshUbU7ExWI31pp1NjhRQNJbWPeX8KqOuUGJZH3ZrJNdiHTtDXCpVPdDMWvco9oOHVYfHLSKOOyC3M7aoSpgsP50Aw+U1VqJgux3+Gjc5JdnB8jKMvnPAbXKd7iI0iCFFbtSt2D7wzR7bVGhd1R9cGdOc8arYtnWynLqjX26oQUqdaEni/yP6tnIaRabhWFB/oDkTcyDekzSspLRJiHWBR6e4EtM8IapAi4hntStConMQ\u003d\u003d",
-    "alg": 2,
-    "data": "zL5ijFq452oGGsyvGHZqBCvT6EMo4BEdlMJZwK7QloojchAw9TRBPQ8d3vK4heumKzb944Pt7DhUB/RPwrvEiWHBQzn7LUtqTWUxy2cmspKyeB4mcq+xvVOB4fOCNYRt"
-}
-
-  console.log('first', decryptAesOrRsa(dtf));
 
 
   return (

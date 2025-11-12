@@ -30,6 +30,7 @@ const GraphDash = ({ widgetData, setWidgetData, pkColumn, setPkColumn, isLayoutW
   const [fetching, setFetching] = useState(false);
   const [statusMessage, setStatusMessage] = useState('');
   const [currentLevel, setCurrentLevel] = useState(0);
+  const [jndiName, setJndiName] = useState('');
 
   const is3D = widgetData.is3d === "true" || widgetData.is3d === "Yes";
   const xAxisLabel = widgetData.xAxisLabel || "X Axis";
@@ -246,7 +247,7 @@ const GraphDash = ({ widgetData, setWidgetData, pkColumn, setPkColumn, isLayoutW
       const results = await Promise.all(
         queries.map(async (q) => {
           const params = getOrderedParamValues(q?.mainQuery, paramsValues, widget?.rptId);
-          const data = await fetchQueryData([q], widgetData?.JNDIid, params, pkColumn, isGlobal);
+          const data = await fetchQueryData([q], widgetData?.JNDIid, params, pkColumn, isGlobal, setJndiName);
           let filteredData = data;
 
           if (widget?.isQuerychild && widget?.isQuerychild === "1") {
@@ -371,7 +372,7 @@ const GraphDash = ({ widgetData, setWidgetData, pkColumn, setPkColumn, isLayoutW
     }
   };
 
-  const formatProcedureDataForGraph = (data) => {
+  const formatProcedureDataForGraph = (data, query) => {
     if (!data || data.length === 0) return { categories: [], seriesData: [] };
 
     const [firstItem] = data;
@@ -397,7 +398,7 @@ const GraphDash = ({ widgetData, setWidgetData, pkColumn, setPkColumn, isLayoutW
       colorByPoint: valueKeys.length === 1
     }));
 
-    return { categories, seriesData };
+    return { categories, seriesData, queryName: query };
   };
 
   const fetchProcedure = async (widget) => {
@@ -426,7 +427,7 @@ const GraphDash = ({ widgetData, setWidgetData, pkColumn, setPkColumn, isLayoutW
           formatDateFullYear(new Date()) // to values
         ]
         setStatusMessage("Executing Query...");
-        const data = await fetchProcedureData(widget?.procedureMode, params, widgetData?.JNDIid, null, isGlobal);
+        const data = await fetchProcedureData(widget?.procedureMode, params, widgetData?.JNDIid, null, isGlobal, setJndiName);
         setStatusMessage("Prepairing Data...")
         const limit = widgetLimit
           ? parseInt(widgetLimit)
@@ -435,7 +436,7 @@ const GraphDash = ({ widgetData, setWidgetData, pkColumn, setPkColumn, isLayoutW
             : data?.data?.length;
         const limitedData = data?.data?.slice(0, limit);
 
-        const formattedData = formatProcedureDataForGraph(limitedData);
+        const formattedData = formatProcedureDataForGraph(limitedData, data?.query);
         setGraphData([formattedData]);
         setIsSearchQuery(false)
         setSearchScope({ scope: "", id: "" })
@@ -451,12 +452,41 @@ const GraphDash = ({ widgetData, setWidgetData, pkColumn, setPkColumn, isLayoutW
   }
 
   useEffect(() => {
-    if (widgetData && widgetData?.modeOfQuery === "Procedure" && !isSearchQuery && widgetData?.widgetLoadOption !== "ONGOBUTTONCLICK") {
-      fetchProcedure(widgetData)
-    } else if (widgetData && !isSearchQuery && widgetData?.widgetLoadOption !== "ONGOBUTTONCLICK") {
-      fetchDataQry(widgetData);
+    let intervalId;
+
+    const shouldFetchData = widgetData && widgetData?.widgetLoadOption !== "ONGOBUTTONCLICK";
+
+    if (shouldFetchData) {
+      const refreshTime = widgetData?.widgetRefreshTime || '0';
+      const shouldSetInterval = refreshTime && parseInt(refreshTime) > 0;
+
+      const handleFetchWithInterval = async () => {
+        try {
+          if (widgetData?.modeOfQuery === "Procedure" && !isSearchQuery) {
+            await fetchProcedure(widgetData);
+          } else if (!isSearchQuery) {
+            await fetchDataQry(widgetData);
+          }
+
+        } catch (error) {
+        }
+      };
+
+      // Initial call
+      handleFetchWithInterval();
+      if (shouldSetInterval && !intervalId) {
+        intervalId = setInterval(() => {
+          handleFetchWithInterval();
+        }, parseInt(refreshTime));
+      }
     }
-  }, [paramsValues, widgetData]);
+
+    return () => {
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+    };
+  }, [widgetData, paramsValues, isSearchQuery]);
 
   useEffect(() => {
     if (isSearchQuery && searchScope?.scope === "widgetParams" && searchScope?.id == widgetData?.rptId) {
@@ -561,9 +591,6 @@ const GraphDash = ({ widgetData, setWidgetData, pkColumn, setPkColumn, isLayoutW
     setColumns(headerWithName);
     setShowAdvancedOptions(true);
   }
-
-  console.log('graphData', graphData);
-  console.log('widgetData', widgetData);
 
   const handleColumnClick = (point) => {
     if (isChildPresent && childId) {
@@ -971,23 +998,24 @@ const GraphDash = ({ widgetData, setWidgetData, pkColumn, setPkColumn, isLayoutW
               {(widgetData?.modeOfQuery === 'Query' && isPrev == 1) &&
                 <>
                   <h4 style={{ fontWeight: "500", fontSize: "20px" }}>{dt('Query')} :</h4>
-                  <span>{`${gdata?.queryName}---- JNDI Name ---${widgetData?.JNDIid}`}</span>
+                  <span>{`${gdata?.queryName}---- JNDI Name ---${jndiName || 'null'}`}</span>
                 </>
               }
 
               {(widgetData?.modeOfQuery === "Procedure" && isPrev == 1) &&
-                <span>{`${widgetData?.procedureMode}---- JNDI Name ---${widgetData?.JNDIid}`}</span>
+                // <span>{`${widgetData?.procedureMode}---- JNDI Name ---${widgetData?.JNDIid}`}</span>
+                <span>{`Procedure-----${widgetData?.procedureMode}-----${gdata?.queryName}---- JNDI Name ---${jndiName || 'null'}`}</span>
               }
 
             </div>
             <div className="high-chart-box">
               {(fetching || statusMessage) ? (
                 <>
-                  <h6 className="text-center">{statusMessage}</h6>
                   <div className="text-center">
                     <div className="spinner-border text-primary" role="status">
                       <span className="sr-only">Loading...</span>
                     </div>
+                    <h6 className="text-center">{statusMessage}</h6>
                   </div>
                 </>
               ) : (

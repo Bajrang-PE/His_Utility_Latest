@@ -5,7 +5,7 @@ import { faArrowCircleLeft, faCog, faFileExcel, faFilePdf, faRefresh, faSliders,
 import { fetchProcedureData, fetchQueryData, formatDateFullYear, formatParams, getOrderedParamValues, getWidgetParametersOnly, ToastAlert } from "../../utils/commonFunction";
 import { HISContext } from "../../contextApi/HISContext";
 import InputField from "../commons/InputField";
-import { generateCSV, generatePDF } from "../commons/advancedPdf";
+import { generateCSV, generatePDF, generatePDFWorkers } from "../commons/advancedPdf";
 import { getAuthUserData } from "../../../../utils/CommonFunction";
 import { useSearchParams } from "react-router-dom";
 import PopUpWidget from "./PopUpWidget";
@@ -632,7 +632,7 @@ const TabularDash = (props) => {
 
         return {
           name: key,
-          title: (<span title={key}>{key}</span>),
+          title: (<span style={{overflowWrap:"anywhere"}} title={key}>{key}</span>),
           selector: row => getFirstValue(row[key]),
           sortable: true,
           wrap: true,
@@ -790,7 +790,7 @@ const TabularDash = (props) => {
           widget.queryVO?.map(async (queryObj) => {
             const params = getOrderedParamValues(queryObj?.mainQuery, paramsValues, widget?.rptId);
             setStatusMessage("Executing Query...")
-            const data = await fetchQueryData([queryObj], widget?.JNDIid, params, pkColumn, isGlobal,setJndiName);
+            const data = await fetchQueryData([queryObj], widget?.JNDIid, params, pkColumn, isGlobal, setJndiName);
             return { queryObj, data };
           })
         );
@@ -836,44 +836,43 @@ const TabularDash = (props) => {
       }
     }
   }
+  useEffect(() => {
+    if (widgetData && !isSearchQuery && (widgetData?.widgetLoadOption !== "ONGOBUTTONCLICK" || !paramsData)) {
+      fetchData(widgetData);
+    }
+  }, [widgetData, paramsValues]);
 
   // useEffect(() => {
-  //   if (widgetData && !isSearchQuery && (widgetData?.widgetLoadOption !== "ONGOBUTTONCLICK" || !paramsData)) {
-  //     fetchData(widgetData);
+  //   let intervalId;
+
+  //   if (widgetData && (widgetData?.widgetLoadOption !== "ONGOBUTTONCLICK" || !paramsData)) {
+
+  //     const refreshTime = widgetData?.widgetRefreshTime || '0';
+  //     const shouldSetInterval = refreshTime && parseInt(refreshTime) > 0;
+
+  //     const fetchDataWithInterval = async () => {
+  //       try {
+  //         if (!isSearchQuery) {
+  //           await fetchData(widgetData);
+  //         }
+  //       } catch (error) {
+  //       }
+  //     };
+
+  //     fetchDataWithInterval();
+  //     if (shouldSetInterval && !intervalId && !fetching) {
+  //       intervalId = setInterval(() => {
+  //         fetchDataWithInterval();
+  //       }, parseInt(refreshTime));
+  //     }
   //   }
-  // }, [widgetData, paramsValues]);
 
-    useEffect(() => {
-    let intervalId;
-
-    if (widgetData && (widgetData?.widgetLoadOption !== "ONGOBUTTONCLICK" || !paramsData)) {
-
-      const refreshTime = widgetData?.widgetRefreshTime || '0';
-      const shouldSetInterval = refreshTime && parseInt(refreshTime) > 0;
-
-      const fetchDataWithInterval = async () => {
-        try {
-          if (!isSearchQuery) {
-            await fetchData(widgetData);
-          }
-        } catch (error) {
-        }
-      };
-
-      fetchDataWithInterval();
-      if (shouldSetInterval && !intervalId && !fetching) {
-        intervalId = setInterval(() => {
-          fetchDataWithInterval();
-        }, parseInt(refreshTime));
-      }
-    }
-
-    return () => {
-      if (intervalId) {
-        clearInterval(intervalId);
-      }
-    }
-  }, [widgetData, paramsValues, isSearchQuery]);
+  //   return () => {
+  //     if (intervalId) {
+  //       clearInterval(intervalId);
+  //     }
+  //   }
+  // }, [widgetData, paramsValues, isSearchQuery]);
 
 
   useEffect(() => {
@@ -1078,7 +1077,7 @@ const TabularDash = (props) => {
             </>)}
 
             {isDirectDownloadRequired === "Yes" && (<>
-              <button className="small-box-btn-dwn" onClick={() => generatePDF(widgetData, multipleTables, singleConfigData?.databaseConfigVO,
+              <button className="small-box-btn-dwn" onClick={() => generatePDFWorkers(widgetData, multipleTables, singleConfigData?.databaseConfigVO,
                 // filterColumns(multipleTables[0]?.columns, visibleColumns, isFirstRowHeading),
                 multipleTables?.map((tbl, idx) =>
                   filterColumns(tbl?.columns, visibleColumns, isFirstRowHeading)
@@ -1213,13 +1212,12 @@ const TabularDash = (props) => {
                 <div className="px-2 py-2" >
                   {(widgetData?.modeOfQuery === 'Query' && isPrev == 1) && <>
                     <h4 style={{ fontWeight: "500", fontSize: "20px" }}>{dt('Query')} :</h4>
-                    <span>{table?.queryObj?.mainQuery}</span>
-                     <span>{`${table?.queryObj?.mainQuery}---- JNDI Name ---${jndiName}`}</span>
+                    <span>{`${table?.queryObj?.mainQuery}---- JNDI Name ---${jndiName || "null"}`}</span>
                   </>
                   }
                   {(widgetData?.modeOfQuery === "Procedure" && isPrev == 1) &&
                     // <span>{widgetData?.procedureMode}</span>
-                      <span>{`${table?.queryObj}---- JNDI Name ---${jndiName}`}</span>
+                    <span>{`Procedure-----${widgetData?.procedureMode}-----${table?.queryObj}---- JNDI Name ---${jndiName || 'null'}`}</span>
                   }
                   {isDataSearchReq &&
                     <div className="d-flex align-items-center">

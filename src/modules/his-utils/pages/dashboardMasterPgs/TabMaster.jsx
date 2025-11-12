@@ -16,7 +16,7 @@ import GlobalDataTable from '../../components/commons/GlobalDataTable';
 import { ToastAlert } from '../../utils/commonFunction';
 import { fetchPostData } from '../../../../utils/HisApiHooks';
 import { useDispatch, useSelector } from 'react-redux';
-import { setPopupData } from '../../Features/Popup/popupSlice';
+import { setPopupData ,resetDefaultState} from '../../Features/Popup/popupSlice';
 
 const TabMaster = () => {
 
@@ -34,7 +34,6 @@ const TabMaster = () => {
     (state) => state.popupData.parametersData
   );
   const dispatch = useDispatch();
-
 
   const [values, setValues] = useState({
     "tabFor": "", "tabNameDisplay": "", "tabNameInternal": "", "parentTab": "", "ellipseInDisplay": "",
@@ -66,7 +65,7 @@ const TabMaster = () => {
   const [availableOptions, setAvailableOptions] = useState([]);
   const [selectedOptions, setSelectedOptions] = useState([]);
 
-  const [errors, setErrors] = useState({ tabForErr: "", tabNameDisplayErr: "", tabNameInternalErr: "", tabNameFontWeightErr: "", tabNameFontSizeErr: "", tabNameTxtDecoratErr: "", showTabNameInDetailErr: "", displayOrderErr: "", widgetWidthErr: "", widgetHeightErr: "", fileNameForManualDocumentErr: "", displayNameForManualDocumentErr: "",tabLayoutErr: "" });
+  const [errors, setErrors] = useState({ tabForErr: "", tabNameDisplayErr: "", tabNameInternalErr: "", tabNameFontWeightErr: "", tabNameFontSizeErr: "", tabNameTxtDecoratErr: "", showTabNameInDetailErr: "", displayOrderErr: "", widgetWidthErr: "", widgetHeightErr: "", fileNameForManualDocumentErr: "", displayNameForManualDocumentErr: "", tabLayoutErr: "" });
 
 
   useEffect(() => {
@@ -311,12 +310,15 @@ const TabMaster = () => {
 
       })
       setTablayout(jsonData.tabLayout ? (jsonData?.tabLayout) : []);
-      if (droppedComponents?.length === 0) {
+      // if (droppedComponents?.length >o) {
         dispatch(setPopupData(jsonData?.droppedComponents ? jsonData?.droppedComponents : []));
-      }
+      // }
       setLoading(false)
     }
   }, [singleData]);
+
+  console.log('singleData', singleData)
+  console.log('dropp', droppedComponents)
 
 
   const saveTabData = () => {
@@ -385,6 +387,7 @@ const TabMaster = () => {
         reset();
         setConfirmSave(false);
         setLoading(false)
+        dispatch(resetDefaultState([]));
       } else {
         ToastAlert(data?.message, "error");
         setConfirmSave(false);
@@ -460,6 +463,7 @@ const TabMaster = () => {
         setConfirmSave(false);
         setSelectedOption([])
         setLoading(false)
+        dispatch(resetDefaultState([]));
       } else {
         ToastAlert(data?.message, "error");
         setConfirmSave(false);
@@ -521,7 +525,7 @@ const TabMaster = () => {
       newErrors.showTabNameInDetailErr = "tab name in detail is required";
       isValid = false;
     }
-  if (radioValues?.isLayout === 'Yes' && droppedComponents?.length === 0) {
+    if (radioValues?.isLayout === 'Yes' && droppedComponents?.length === 0) {
       newErrors.tabLayoutErr = "Can not save empty tab";
       isValid = false;
     } else if (radioValues?.isLayout === 'Yes' && droppedComponents?.length > 0) {
@@ -598,7 +602,7 @@ const TabMaster = () => {
       //tab details
       "showTabNameInDetail": "Yes", "widgetMaxMin": "",
       //footer detail
-      "isLegendCollapes": "Yes", "isMarqueeReq": "No", "isLegendBorderReq": "Yes","isLayout":"No"
+      "isLegendCollapes": "Yes", "isMarqueeReq": "No", "isLegendBorderReq": "Yes", "isLayout": "No"
     })
     setActionMode('home');
     setShowTabsTable(false);
@@ -606,14 +610,15 @@ const TabMaster = () => {
     setTabIndex(1);
     // setTabName({ value: 1, label: "About Widget" })
     setTabName({ value: 1, label: "About Tab" });
-    setErrors({ tabForErr: "", tabNameDisplayErr: "", tabNameInternalErr: "", tabNameFontWeightErr: "", tabNameFontSizeErr: "", tabNameTxtDecoratErr: "", showTabNameInDetailErr: "",tabLayoutErr:"" });
+    setErrors({ tabForErr: "", tabNameDisplayErr: "", tabNameInternalErr: "", tabNameFontWeightErr: "", tabNameFontSizeErr: "", tabNameTxtDecoratErr: "", showTabNameInDetailErr: "", tabLayoutErr: "" });
     localStorage.removeItem('values');
     localStorage.removeItem('radio');
     setLoading(false)
     setRows([{ rptId: "", displayOrder: "", widgetWidth: "", widgetHeight: "0", widgetColor: "", widgetDisplay: "", sectionId: "1", animation: "" }])
     // setIsInputChanged(false)
-        setTablayout([]);
-    dispatch(setPopupData([]));
+    setTablayout([]);
+    dispatch(resetDefaultState([]));
+    setSingleData([]);
   }
 
   const column = [
@@ -687,7 +692,7 @@ const TabMaster = () => {
               <TabDetails handleValueChange={handleValueChange} handleRadioChange={handleRadioChange} radioValues={radioValues} values={values} errors={errors} dt={dt} />
             }
             {tabName?.value === 3 &&
-              <WidgetMapping handleValueChange={handleValueChange} handleRadioChange={handleRadioChange} radioValues={radioValues} values={values} widgetDrpData={widgetDrpData} setValues={setValues} rows={rows} setRows={setRows} errors={errors} setErrors={setErrors} dt={dt} setTablayout={setTablayout} tabLayout={tabLayout}/>
+              <WidgetMapping handleValueChange={handleValueChange} handleRadioChange={handleRadioChange} radioValues={radioValues} values={values} widgetDrpData={widgetDrpData} setValues={setValues} rows={rows} setRows={setRows} errors={errors} setErrors={setErrors} dt={dt} setTablayout={setTablayout} tabLayout={tabLayout} />
             }
             {tabName?.value === 4 &&
               <ParamsDetail handleValueChange={handleValueChange} values={values} parameterDrpData={parameterDrpData} pageName={'tab'} availableOptions={availableOptions} setAvailableOptions={setAvailableOptions} selectedOptions={selectedOptions} setSelectedOptions={setSelectedOptions} dt={dt} />

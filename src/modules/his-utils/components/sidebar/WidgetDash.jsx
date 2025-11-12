@@ -137,7 +137,7 @@ const WidgetDash = React.memo(({ widgetDetail, presentWidgets, presentTabs, pk, 
                 )}
 
                 {/* Render linked widgets if available */}
-                {linkedWidget && linkedWidget.map((id) => {
+                {!isLayoutWithPreview && linkedWidget && linkedWidget.map((id) => {
 
                     const linked = presentWidgets?.find(w => w.rptId === id);
                     return linked ?

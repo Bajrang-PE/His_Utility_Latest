@@ -92,6 +92,7 @@ export default function DragDropTabMaster({ setTablayout, tabLayout }) {
         }
     }, [layout,handleWidgitClose])
 
+
     useEffect(() => {
         if (!activeWidget) return;
 

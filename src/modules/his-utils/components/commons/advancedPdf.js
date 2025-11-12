@@ -399,7 +399,7 @@ export const generatePDFff = async (widgetData, data, config, visibleColumns, is
 
 export const generatePDF = async (widgetData, multipleTables, config, visibleColumns, isH2, filters = []) => {
   if (!widgetData) return;
-  if (!Array.isArray(multipleTables) || multipleTables.length === 0) {
+  if (!Array.isArray(multipleTables) || multipleTables.length === 0 || !multipleTables[0]?.data?.length) {
     ToastAlert('No data available to download.', 'warning');
     return;
   }
@@ -498,24 +498,6 @@ export const generatePDF = async (widgetData, multipleTables, config, visibleCol
     const columnDefinitions = Array.isArray(visibleColumns[tableIndex])
       ? visibleColumns[tableIndex]
       : visibleColumns;
-
-    // if (isH2 === 'Yes') {
-    //   const columnDefinitions = visibleColumns;
-    //   const columnNames = columnDefinitions?.map(col => col.name?.trim() ? `${col?.mainHeader}_${col?.name}` : col?.mainHeader);
-    //   tableData = data?.data?.map(row => {
-    //     const filteredRow = {};
-    //     columnNames.forEach(key => { if (row.hasOwnProperty(key)) filteredRow[key] = row[key]; });
-    //     return filteredRow;
-    //   });
-    // } else {
-    //   const columnDefinitions = visibleColumns;
-    //   const columnNames = columnDefinitions?.map(col => col.name);
-    //   tableData = data?.data?.map(row => {
-    //     const filteredRow = {};
-    //     columnNames.forEach(key => { if (row.hasOwnProperty(key)) filteredRow[key] = row[key]; });
-    //     return filteredRow;
-    //   });
-    // }
 
     if (isH2 === 'Yes') {
       // 🔹 For H2 headers
@@ -638,11 +620,6 @@ export const generatePDF = async (widgetData, multipleTables, config, visibleCol
         if (pageNumber === 1 && tableIndex === 0) { //FOR PAGE BREAK   && start === 0
           drawHeader(pdf);
         }
-        // if (isPdfHeaderReqInAllPages === 'Yes') {
-        //   drawHeader(pdf);
-        // } else if (pageNumber === 1 && tableIndex === 0) {
-        //   drawHeader(pdf);
-        // }
         if (isReportPrintDateRequired === 'Yes') {
           pdf.setFontSize(9);
           const reportDate = `Print Date: ${new Date().toLocaleDateString()}`;
@@ -655,10 +632,7 @@ export const generatePDF = async (widgetData, multipleTables, config, visibleCol
     yPosition = pdf.lastAutoTable.finalY + 10; // spacing between tables
 
   });
-  // CHANGE END
 
-
-  // if (isDirectDownloadRequired === 'Yes') {
   const filterLabels = filters?.map(f => f.val).join("--") || "report";
   pdf.save(`${rptDisplayName}--${filterLabels}.pdf`);
   ToastAlert('Report Downloaded', 'success');
@@ -1437,3 +1411,51 @@ export const generateGraphCSV = (widgetData, data, config, visibleColumns, sortC
   document.body.removeChild(link);
 };
 
+export const generatePDFWorkers = (widgetData, multipleTables, config, visibleColumns, isH2, filters = []) => {
+
+  if (!widgetData) {
+    ToastAlert("No configuration available to download.", "warning");
+    return;
+  }
+
+  if (!Array.isArray(multipleTables) || multipleTables.length === 0 || !multipleTables[0]?.data?.length) {
+    ToastAlert("No data available to download.", "warning");
+    return;
+  }
+
+  return new Promise((resolve, reject) => {
+    const worker = new Worker(
+      new URL("../../workers/pdfWorkers.js", import.meta.url),
+      { type: "module" }
+    );
+
+    const safeData = {
+      widgetData: JSON.parse(JSON.stringify(widgetData)),
+      multipleTables: JSON.parse(JSON.stringify(multipleTables)),
+      config: JSON.parse(JSON.stringify(config)),
+      visibleColumns: JSON.parse(JSON.stringify(visibleColumns)),
+      isH2,
+      filters: JSON.parse(JSON.stringify(filters))
+    };
+    confirm('Your report will be downloaded, press ok and wait sometime');
+    worker.postMessage(safeData);
+
+    worker.onmessage = (e) => {
+      const { success, blob, fileName, error } = e.data;
+      if (success) {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = fileName;
+        a.click();
+        URL.revokeObjectURL(url);
+        resolve();
+        ToastAlert('Report Downloaded', 'success');
+      } else {
+        console.error("PDF generation failed:", error);
+        reject(error);
+      }
+      worker.terminate();
+    };
+  });
+};

@@ -51,7 +51,6 @@ const DBConnection = (props) => {
         }
     ];
 
-    console.log('connectionCards', connectionCards);
 
     useEffect(() => {
         if (selectedDbType) {

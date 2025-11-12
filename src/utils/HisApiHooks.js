@@ -62,7 +62,7 @@ apiHis.interceptors.response.use(
     async (error) => {
         if (error.response) {
             const { status, data } = error.response;
-            if (status === 401 || status === 403) {
+            if (status === 401) {
                 // Token is expired or unauthorized
                 ToastAlert("Network Exception!!!", 'error');
                 sessionStorage.clear();
