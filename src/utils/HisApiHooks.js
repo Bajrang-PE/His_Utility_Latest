@@ -62,7 +62,7 @@ apiHis.interceptors.response.use(
     async (error) => {
         if (error.response) {
             const { status, data } = error.response;
-            if (status === 401 || status === 403) {
+            if (status === 401) {
                 // Token is expired or unauthorized
                 ToastAlert("Network Exception!!!", 'error');
                 sessionStorage.clear();
@@ -103,14 +103,15 @@ apiHis.interceptors.response.use(
 export const fetchData = async (url, params = null) => {
     try {
         const response = await apiHis.get(url, { params: params || "" });
-
+        
         const rawToken = response.headers['authorization'] ||
-            response.headers['Authorization'] ||
-            response.headers?.get?.('authorization') ||
-            response.headers?.get?.('Authorization');
-
+        response.headers['Authorization'] ||
+        response.headers?.get?.('authorization') ||
+        response.headers?.get?.('Authorization');
+        
         const decryptedData = decryptAesOrRsa(response?.data);
         const jsonData = JSON.parse(decryptedData);
+        console.log('response?.data', decryptedData)
 
         // const jsonData = response?.data;
 
@@ -184,10 +185,10 @@ export const fetchData = async (url, params = null) => {
 
 export const fetchPostData = async (url, data, rtblob, options = {}) => {
     try {
-        const { signal } = options;
+        // const { signal } = options;
         
         if (rtblob) {
-            const config = signal ? { signal } : {};
+            const config = {};
             const response = await apiHis.post(url, data, rtblob, config);
             return response;
         } else {
@@ -199,9 +200,9 @@ export const fetchPostData = async (url, data, rtblob, options = {}) => {
             };
             
             // Add signal to config if provided
-            if (signal) {
-                config.signal = signal;
-            }
+            // if (signal) {
+            //     config.signal = signal;
+            // }
             
             const response = await apiHis.post(url, requestData, config);
 

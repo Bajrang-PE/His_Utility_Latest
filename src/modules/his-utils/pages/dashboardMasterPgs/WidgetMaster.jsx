@@ -51,7 +51,7 @@ const WidgetMaster = () => {
 
     isTableHeadingReq: 'Yes',
     tableHeadingAlign: "0", isFirstRowHeading: 'No', isDataTblReq: 'Yes', isIndexNumReq: 'Yes',
-    isPaginationReq: 'Yes', isSearchReq: 'Yes', isHeadingFixed: 'Yes', isLastRowTotal: 'Yes', isCardViewMobile: 'Yes', isShowPrntHeadChild: 'Yes', isShowPrntParamsChild: 'Yes', printPdfIn: 'Landscape', pdfTheme: 'grid', isPdfHeadReqAllPgs: 'Yes', showFilterDtlsInPdf: 'Yes', isReportByJsPdfPlug: 'Yes', isReportPrintDtReq: 'Yes', isGlobalHeaderReq: 'Yes', isTableBorderReq: 'Yes', isPositiveWidget: 'Yes', isDirectDownloadBtn: 'Yes', isPopupBasedReq: 'No', isTreeChildReq: 'No', treeChildDataBy: "Query", dataDisplay: "horizontal", isDataTblReqTree: 'Yes', isPaginationReqTree: 'Yes', isSearchReqTree: 'Yes',
+    isPaginationReq: 'Yes', isSearchReq: 'Yes', isHeadingFixed: 'No', isLastRowTotal: 'Yes', isCardViewMobile: 'Yes', isShowPrntHeadChild: 'Yes', isShowPrntParamsChild: 'Yes', printPdfIn: 'Landscape', pdfTheme: 'grid', isPdfHeadReqAllPgs: 'Yes', showFilterDtlsInPdf: 'Yes', isReportByJsPdfPlug: 'Yes', isReportPrintDtReq: 'Yes', isGlobalHeaderReq: 'Yes', isTableBorderReq: 'Yes', isPositiveWidget: 'Yes', isDirectDownloadBtn: 'Yes', isPopupBasedReq: 'No', isTreeChildReq: 'No', treeChildDataBy: "Query", dataDisplay: "horizontal", isDataTblReqTree: 'Yes', isPaginationReqTree: 'Yes', isSearchReqTree: 'Yes',
     //graphs fields
     isDisplayGraphPlugin: "Yes", isColorByPoint: "Yes", isShowLegendOnExport: "Yes", isFullLabelReq: "Yes", isGraphScrollBarReq: "Yes", isShowLegend: "Yes", isDataLabels: "Yes", isThree3D: "Yes", isDirectDownloadBtnGraph: 'Yes', isFirstClmGraphHeading: 'Yes', isShowPrntHeadChildGraph: 'Yes', isHideParent: 'Yes', isRowClickable: "No",
     //kpi
@@ -309,7 +309,7 @@ const WidgetMaster = () => {
 
       isTableHeadingReq: 'Yes',
       tableHeadingAlign: "0", isFirstRowHeading: 'No', isDataTblReq: 'Yes', isIndexNumReq: 'Yes',
-      isPaginationReq: 'Yes', isSearchReq: 'Yes', isHeadingFixed: 'Yes', isLastRowTotal: 'Yes', isCardViewMobile: 'Yes', isShowPrntHeadChild: 'Yes', isShowPrntParamsChild: 'Yes', printPdfIn: 'Landscape', pdfTheme: 'grid', isPdfHeadReqAllPgs: 'Yes', showFilterDtlsInPdf: 'Yes', isReportByJsPdfPlug: 'Yes', isReportPrintDtReq: 'Yes', isGlobalHeaderReq: 'Yes', isTableBorderReq: 'Yes', isPositiveWidget: 'Yes', isDirectDownloadBtn: 'Yes', isPopupBasedReq: 'No', isTreeChildReq: 'No', treeChildDataBy: "Query", dataDisplay: "horizontal", isDataTblReqTree: 'Yes', isPaginationReqTree: 'Yes', isSearchReqTree: 'Yes',
+      isPaginationReq: 'Yes', isSearchReq: 'Yes', isHeadingFixed: 'No', isLastRowTotal: 'Yes', isCardViewMobile: 'Yes', isShowPrntHeadChild: 'Yes', isShowPrntParamsChild: 'Yes', printPdfIn: 'Landscape', pdfTheme: 'grid', isPdfHeadReqAllPgs: 'Yes', showFilterDtlsInPdf: 'Yes', isReportByJsPdfPlug: 'Yes', isReportPrintDtReq: 'Yes', isGlobalHeaderReq: 'Yes', isTableBorderReq: 'Yes', isPositiveWidget: 'Yes', isDirectDownloadBtn: 'Yes', isPopupBasedReq: 'No', isTreeChildReq: 'No', treeChildDataBy: "Query", dataDisplay: "horizontal", isDataTblReqTree: 'Yes', isPaginationReqTree: 'Yes', isSearchReqTree: 'Yes',
       //graphs fields
       isDisplayGraphPlugin: "Yes", isColorByPoint: "Yes", isShowLegendOnExport: "Yes", isFullLabelReq: "Yes", isGraphScrollBarReq: "Yes", isShowLegend: "Yes", isDataLabels: "Yes", isThree3D: "Yes", isDirectDownloadBtnGraph: 'Yes', isFirstClmGraphHeading: 'Yes', isShowPrntHeadChildGraph: 'Yes', isHideParent: 'Yes',
       //kpi
@@ -768,7 +768,7 @@ const WidgetMaster = () => {
         isIndexNumberRequired: isIndexNumReq,
         isPaginationReq: isPaginationReq,
         isDataSearchReq: isSearchReq,
-        isHeadingFixed: isHeadingFixed,
+        isHeadingFixed: isPaginationReq === "No" ? isHeadingFixed : 'No',
         isLastRowTotal: isLastRowTotal,
         isCardViewMobile: isCardViewMobile,
         showParentDetailsinChild: isShowPrntHeadChild,
@@ -999,7 +999,7 @@ const WidgetMaster = () => {
         isIndexNumberRequired: isIndexNumReq,
         isPaginationReq: isPaginationReq,
         isDataSearchReq: isSearchReq,
-        isHeadingFixed: isHeadingFixed,
+        isHeadingFixed: isPaginationReq === "No" ? isHeadingFixed : 'No',
         isLastRowTotal: isLastRowTotal,
         isCardViewMobile: isCardViewMobile,
         showParentDetailsinChild: isShowPrntHeadChild,

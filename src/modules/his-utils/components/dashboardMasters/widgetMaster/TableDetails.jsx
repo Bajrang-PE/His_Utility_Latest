@@ -281,7 +281,7 @@ const TableDetails = (props) => {
                             </div>
                         </div>
                     }
-                    {radioValues?.isDataTblReq === 'Yes' &&
+                    {(radioValues?.isDataTblReq === 'Yes' && radioValues?.isPaginationReq === 'No') &&
                         <div className="form-group row">
                             <label className="col-sm-5 col-form-label pe-0">
                                 {dt('Is Heading Fixed')} :
@@ -318,7 +318,7 @@ const TableDetails = (props) => {
                             </div>
                         </div>
                     }
-                    {(radioValues?.isDataTblReq === 'Yes' && radioValues?.isHeadingFixed === 'Yes') &&
+                    {(radioValues?.isDataTblReq === 'Yes' && radioValues?.isHeadingFixed === 'Yes' && radioValues?.isPaginationReq === 'No') &&
                         <div className="form-group row">
                             <label className="col-sm-5 col-form-label pe-0">{dt('Data Scroll Height')} : </label>
                             <div className="col-sm-7 ps-0 align-content-center">
@@ -460,7 +460,9 @@ const TableDetails = (props) => {
                             </div>
                         </div>
                     }
-                    <div className="form-group row">
+
+                    {/* MOBILE vIEW */}
+                    {/* <div className="form-group row">
                         <label className="col-sm-5 col-form-label pe-0">
                             {dt('Is Card view(for Mobile)')} :
                         </label>
@@ -494,7 +496,7 @@ const TableDetails = (props) => {
                                 </label>
                             </div>
                         </div>
-                    </div>
+                    </div> */}
                 </div>
             </div>
 
@@ -1314,7 +1316,7 @@ const TableDetails = (props) => {
                                     <tr className='table-row-form text-start' key={index}>
                                         <td>{row.modeForOpeningPopup || "---"}</td>
                                         <td>{row.drillDownType || "---"}</td>
-                                        <td>{row.drillDownType === 'Tab' ? row?.drillTabName :row.drillWidgetName || "---"}</td>
+                                        <td>{row.drillDownType === 'Tab' ? row?.drillTabName : row.drillWidgetName || "---"}</td>
                                         <td>{row.titleMsg || "Click To View Details"}</td>
                                         <td className=''>
                                             <div className='text-center'>

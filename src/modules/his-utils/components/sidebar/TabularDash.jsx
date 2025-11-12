@@ -35,6 +35,7 @@ const TabularDash = (props) => {
   const [allDrpDtParams, setAllDrpDtParams] = useState([]);
   const [fetching, setFetching] = useState(false);
   const [statusMessage, setStatusMessage] = useState('');
+  const [jndiName, setJndiName] = useState('');
 
   const getParametersWithValues = (widgetParams, paramsValues, widgetId, allDrpDtParams) => {
     let allParams = [...widgetParams];
@@ -759,7 +760,7 @@ const TabularDash = (props) => {
     }
   };
 
-
+  console.log('multipleTables', multipleTables)
   const fetchData = async (widget) => {
     if (widget?.modeOfQuery === "Procedure") {
       if (!widget?.procedureMode) return;
@@ -781,10 +782,13 @@ const TabularDash = (props) => {
           formatDateFullYear(new Date()) // to values
         ]
         setStatusMessage("Executing Query...")
-        const response = await fetchProcedureData(widget?.procedureMode, params, widget?.JNDIid, null, isGlobal);
+        const response = await fetchProcedureData(widget?.procedureMode, params, widget?.JNDIid, null, isGlobal, setJndiName);
         // if (response?.data?.length > 0) {
         setStatusMessage("Prepairing Data...")
         let filteredData = response.data;
+
+        console.log('filteredData', filteredData);
+        console.log('response', response);
 
         if (widget?.isQuerychild && widget?.isQuerychild === "1") {
           const columnIndexes = widget?.columnIndexesParent || [];
@@ -802,12 +806,12 @@ const TabularDash = (props) => {
         if (widget?.isFirstRowColumnName === 'Yes') {
           const { headers, datafor, isH2 } = formatData(filteredData, widget?.isFirstRowColumnName);
           const { columns, mainHeaders } = generateColumns(datafor, isChildPresent, widget?.isFirstRowColumnName, headers, isH2);
-          setMultipleTables([{ columns, mainHeaders, data: datafor, queryObj: widget?.procedureMode }])
+          setMultipleTables([{ columns, mainHeaders, data: datafor, queryObj: response?.query }])
 
         } else {
           const { datafor } = formatData(filteredData, widget?.isFirstRowColumnName);
           const columns = generateColumns(datafor, isChildPresent, widget?.isFirstRowColumnName);
-          setMultipleTables([{ columns, mainHeaders: [], data: datafor, queryObj: widget?.procedureMode }])
+          setMultipleTables([{ columns, mainHeaders: [], data: datafor, queryObj: response?.query }])
         }
 
         setIsSearchQuery(false);
@@ -830,7 +834,7 @@ const TabularDash = (props) => {
           widget.queryVO?.map(async (queryObj) => {
             const params = getOrderedParamValues(queryObj?.mainQuery, paramsValues, widget?.rptId);
             setStatusMessage("Executing Query...")
-            const data = await fetchQueryData([queryObj], widget?.JNDIid, params, pkColumn, isGlobal);
+            const data = await fetchQueryData([queryObj], widget?.JNDIid, params, pkColumn, isGlobal, setJndiName);
             return { queryObj, data };
           })
         );
@@ -877,12 +881,39 @@ const TabularDash = (props) => {
     }
   }
 
+
   useEffect(() => {
-    if (widgetData && !isSearchQuery && (widgetData?.widgetLoadOption !== "ONGOBUTTONCLICK" || !paramsData)) {
-      fetchData(widgetData);
+    let intervalId;
+
+    if (widgetData && (widgetData?.widgetLoadOption !== "ONGOBUTTONCLICK" || !paramsData)) {
+
+      const refreshTime = widgetData?.widgetRefreshTime || '0';
+      const shouldSetInterval = refreshTime && parseInt(refreshTime) > 0;
+
+      const fetchDataWithInterval = async () => {
+        try {
+          if (!isSearchQuery) {
+            await fetchData(widgetData);
+          }
+        } catch (error) {
+        }
+      };
+
+      fetchDataWithInterval();
+      if (shouldSetInterval && !intervalId && !fetching) {
+        intervalId = setInterval(() => {
+          fetchDataWithInterval();
+        }, parseInt(refreshTime));
+      }
     }
-  }, [widgetData, paramsValues]);
-  
+
+    return () => {
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+    }
+  }, [widgetData, paramsValues, isSearchQuery]);
+
 
   useEffect(() => {
     if (isSearchQuery && searchScope?.scope === "widgetParams" && searchScope?.id == widgetData?.rptId) {
@@ -905,7 +936,7 @@ const TabularDash = (props) => {
   const isHeadingFixed = widgetData?.isHeadingFixed === 'Yes' ? true : false;
   const recordPerPage = widgetData?.recordPerPage || 5;
   const scrollHeight = widgetData?.scrollYValue;
-  const isDirectDownloadRequired = widgetData?.isDirectDownloadRequired || 'No';
+  const isDirectDownloadRequired = widgetData?.isDirectDownloadRequired || 'Yes';
   const isActionButtonReq = widgetData?.isActionButtonReq;
   const paramsData = widgetData.selFilterIds || "";
   const footerText = widgetData.footerText || "";
@@ -1003,6 +1034,7 @@ const TabularDash = (props) => {
     }));
   };
 
+  console.log('jndiName', jndiName)
   return (
     <>
       {/* {currentLevel == 0 && */}
@@ -1217,11 +1249,12 @@ const TabularDash = (props) => {
                 <div className="px-2 py-2" >
                   {(widgetData?.modeOfQuery === 'Query' && isPrev == 1) && <>
                     <h4 style={{ fontWeight: "500", fontSize: "20px" }}>{dt('Query')} :</h4>
-                    <span>{table?.queryObj?.mainQuery}</span>
+                    <span>{`${table?.queryObj?.mainQuery}---- JNDI Name ---${jndiName || "null"}`}</span>
+
                   </>
                   }
                   {(widgetData?.modeOfQuery === "Procedure" && isPrev == 1) &&
-                    <span>{widgetData?.procedureMode}</span>
+                    <span>{`Procedure-----${widgetData?.procedureMode}-----${table?.queryObj}---- JNDI Name ---${jndiName || 'null'}`}</span>
                   }
                   {isDataSearchReq &&
                     <div className="d-flex align-items-center">

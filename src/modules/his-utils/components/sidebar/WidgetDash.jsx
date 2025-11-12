@@ -51,9 +51,9 @@ const WidgetDash = React.memo(({ widgetDetail, presentWidgets, presentTabs, pk, 
         switch (data?.reportViewed) {
             case 'KPI': return <KpiDash widgetData={data} presentTabs={presentTabs} isLayoutWithPreview={isLayoutWithPreview} />;
 
-            case 'Tabular': return <TabularDash widgetData={data} setWidgetData={setWidgetData} levelData={levelData} setLevelData={setLevelData} pkColumn={pkColumn} setPkColumn={handleSetPkColumn} isLayoutWithPreview={isLayoutWithPreview} presentTabs={presentTabs} isPopup={isPopup} pkConfig={pk}/>;
+            case 'Tabular': return <TabularDash widgetData={data} setWidgetData={setWidgetData} levelData={levelData} setLevelData={setLevelData} pkColumn={pkColumn} setPkColumn={handleSetPkColumn} isLayoutWithPreview={isLayoutWithPreview} presentTabs={presentTabs} isPopup={isPopup} pkConfig={pk} />;
 
-            case 'Graph': return <GraphDash widgetData={data} setWidgetData={setWidgetData} pkColumn={pkColumn} setPkColumn={handleSetPkColumn} isLayoutWithPreview={isLayoutWithPreview} presentTabs={presentTabs} isPopup={isPopup} pkConfig={pk}/>;
+            case 'Graph': return <GraphDash widgetData={data} setWidgetData={setWidgetData} pkColumn={pkColumn} setPkColumn={handleSetPkColumn} isLayoutWithPreview={isLayoutWithPreview} presentTabs={presentTabs} isPopup={isPopup} pkConfig={pk} />;
 
             case 'Iframe': return <IframeDash widgetData={data} />;
 
@@ -137,7 +137,7 @@ const WidgetDash = React.memo(({ widgetDetail, presentWidgets, presentTabs, pk, 
                 )}
 
                 {/* Render linked widgets if available */}
-                {linkedWidget && linkedWidget.map((id) => {
+                {!isLayoutWithPreview && linkedWidget && linkedWidget.map((id) => {
 
                     const linked = presentWidgets?.find(w => w.rptId === id);
                     return linked ?

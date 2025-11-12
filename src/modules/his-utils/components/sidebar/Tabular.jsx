@@ -27,6 +27,8 @@ const Tabular = ({
 
     const [sortedData, setSortedData] = useState([]);
 
+    
+
     // Helper: Detect date strings like "23-Jul-2025"
     const isDateString = (value) => {
         if (typeof value !== 'string') return false;
@@ -172,87 +174,91 @@ const Tabular = ({
     };
 
     return (
-        <div style={{
-            position: 'relative',
-            width: '100%',
-            overflow: 'hidden'
-        }}>
-            <div
-                ref={scrollContainerRef}
-                style={{
-                    overflowX: 'auto',
-                    width: '100%',
-                    position: 'relative'
-                }}
-            >
-                {mainHeaders?.length > 0 &&
-                    <div
-                        className='first-head'
-
-
-                    >
+        <>
+            <div style={{
+                position: 'relative',
+                width: '100%',
+                overflow: 'hidden'
+            }}>
+                <div
+                    ref={scrollContainerRef}
+                    style={{
+                        overflowX: 'auto',
+                        width: '100%',
+                        position: 'relative'
+                    }}
+                >
+                    {mainHeaders?.length > 0 &&
                         <div
-                            ref={headerRef}
-                            className='second-head'
+                            className='first-head'
+
 
                         >
-                            <CustomTableHeading
-                                mainHeaders={mainHeaders}
-                                headingBgColor={headingBgColor}
-                                headingFontColor={headingFontColor}
-                                tableWidth={tableWidth}
-                                columns={columns}
-                            />
-                        </div>
-                    </div>}
+                            <div
+                                ref={headerRef}
+                                className='second-head'
 
-                <DataTable
-                    ref={tableRef}
-                    persistTableHead={true}
-                    dense
-                    // columns={columns}
-                    columns={columns?.map(col => ({
-                        ...col,
-                        name: col.title || col.name
-                    }))}
-                    // data={data}
-                    data={sortedData}
-                    sortServer
-                    onSort={handleSort}
-                    pagination={pagination}
-                    fixedHeader={fixedHeader}
-                    fixedHeaderScrollHeight={scrollHeight + 'px'}
-                    paginationPerPage={recordsPerPage}
-                    paginationRowsPerPageOptions={recordsPerPageOptions}
-                    highlightOnHover
-                    striped
-                    customStyles={customStyles}
-                    responsive={false}
-                    noTableHead={isTableHeadingRequired}
-                    theme={theme === 'Dark' ? 'dark' : 'default'}
-                    noDataComponent={columns?.length > 0 && sortedData?.length === 0 ?
-
-                        <div className="text-center">
-                                 <p className="text-center">{'Prepairing data...'}</p>
-                            <div className="spinner-border text-primary" role="status">
-                                <span className="sr-only">Loading...</span>
+                            >
+                                <CustomTableHeading
+                                    mainHeaders={mainHeaders}
+                                    headingBgColor={headingBgColor}
+                                    headingFontColor={headingFontColor}
+                                    tableWidth={tableWidth}
+                                    columns={columns}
+                                />
                             </div>
-                        </div>
-                        : noDataComponent}
-                />
-            </div>
+                        </div>}
 
-            {!pagination && (
-                <div style={{ textAlign: 'right', marginTop: '8px', fontSize: '12px' }}>
-                    {`Showing 1 to ${data?.length} of ${data?.length} entries`}<br />
+                    <DataTable
+                        ref={tableRef}
+                        persistTableHead={true}
+                        dense
+                        // columns={columns}
+                        columns={columns?.map(col => ({
+                            ...col,
+                            name: col.title || col.name
+                        }))}
+                        // data={data}
+                        data={sortedData}
+                        sortServer
+                        onSort={handleSort}
+                        pagination={pagination}
+                        // fixedHeader={fixedHeader}
+                        fixedHeader={pagination ? false : fixedHeader}
+                        fixedHeaderScrollHeight={`${scrollHeight}px`}
+                        paginationPerPage={recordsPerPage}
+                        paginationRowsPerPageOptions={recordsPerPageOptions}
+                        highlightOnHover
+                        striped
+                        customStyles={customStyles}
+                        responsive={false}
+                        noTableHead={isTableHeadingRequired}
+                        theme={theme === 'Dark' ? 'dark' : 'default'}
+                        noDataComponent={columns?.length > 0 && sortedData?.length === 0 ?
+
+                            <div className="text-center">
+                                <p className="text-center">{'Prepairing data...'}</p>
+                                <div className="spinner-border text-primary" role="status">
+                                    <span className="sr-only">Loading...</span>
+                                </div>
+                            </div>
+                            : noDataComponent}
+                    />
                 </div>
-            )}
-            {(allData?.length > data?.length) && (
-                <div style={{ textAlign: 'right', marginTop: '8px', fontSize: '12px' }}>
-                    {`*Records limited to ${limit} out of ${allData?.length}`}<br />
-                </div>
-            )}
-        </div>
+            </div>
+            <div>
+                {!pagination && (
+                    <div style={{ textAlign: 'right', marginTop: '8px', fontSize: '12px' }}>
+                        {`Showing 1 to ${data?.length} of ${data?.length} entries`}<br />
+                    </div>
+                )}
+                {(allData?.length > data?.length) && (
+                    <div style={{ textAlign: 'right', marginTop: '8px', fontSize: '12px' }}>
+                        {`*Records limited to ${limit} out of ${allData?.length}`}<br />
+                    </div>
+                )}
+            </div>
+        </>
     );
 };
 

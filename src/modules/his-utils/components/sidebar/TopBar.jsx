@@ -4,6 +4,20 @@ import * as SolidIcons from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import DropdownPortal from '../commons/DropdownPortal';
 import useImageWithFallback from '../../hooks/useImageWithFallback';
+import * as FaIcons from "react-icons/fa";
+
+const DynamicImage = React.memo(({ iconName }) => {
+    const imageSrc = useImageWithFallback(iconName);
+
+    return (
+        <img
+            src={imageSrc}
+            alt="menu-icon"
+            className="me-1 menu-icon-image"
+            style={{ width: '16px', height: '16px' }}
+        />
+    );
+});
 
 const TopBar = ({ data, setActiveTab, dashboardData, setPrevKpiTab, dt }) => {
     const [openSubMenu, setOpenSubMenu] = useState(null);
@@ -24,24 +38,34 @@ const TopBar = ({ data, setActiveTab, dashboardData, setPrevKpiTab, dt }) => {
         return data?.filter(tab => tab.jsonData.parentTabId == parentId) || [];
     }, [data]);
 
-    // Memoize icon lookup
-    const iconCache = useMemo(() => {
-        const cache = {};
-        (data || []).forEach(tab => {
-            const iconName = tab?.jsonData?.iconName;
-            if (iconName && !cache[iconName]) {
-                let formattedIconName = "fa" + iconName.replace(/-o$/, "")
-                    .replace("fa-", "")
-                    .replace(/-([a-z])/g, (match, letter) => letter.toUpperCase());
-                let iconKey = Object.keys(SolidIcons).find(key => key.toLowerCase() === formattedIconName.toLowerCase())
-                    || Object.keys(SolidIcons).find(key => key.toLowerCase().includes(formattedIconName.toLowerCase().replace(/[^a-zA-Z]/g, "")));
-                cache[iconName] = iconKey ? SolidIcons[iconKey] : SolidIcons.faBarChart;
-            }
-        });
-        return cache;
-    }, [data]);
+    const getDynamicIcon = (iconName) => {
+        if (!iconName) return <FontAwesomeIcon className="me-2 dropdown-gear-icon" icon={SolidIcons.faBarChart} />;
 
-    const getDynamicIcon = (iconName) => iconCache[iconName] || SolidIcons.faBarChart;
+        if (iconName?.includes("_") || iconName?.includes("-")) {
+            const formattedIconName =
+                "fa" +
+                iconName
+                    .replace(/-o$/, "")
+                    .replace(/^fa-/, "")
+                    .replace(/-([a-z])/g, (_, letter) => letter.toUpperCase());
+
+            const iconKey = Object.keys(SolidIcons).find(
+                (key) =>
+                    key.toLowerCase() === formattedIconName.toLowerCase() ||
+                    key
+                        .toLowerCase()
+                        .includes(
+                            formattedIconName.replace(/[^a-zA-Z]/g, "").toLowerCase()
+                        )
+            );
+
+            const IconDef = iconKey ? SolidIcons[iconKey] : SolidIcons.faBarChart;
+            return <FontAwesomeIcon className="me-2 dropdown-gear-icon" icon={IconDef} />;
+        }
+
+        const Cmp = FaIcons[iconName] || FaBars;
+        return <Cmp className="me-2 dropdown-gear-icon" />;
+    };
 
     // Initial active tab setup — run only when `data` changes significantly
     useEffect(() => {
@@ -57,19 +81,6 @@ const TopBar = ({ data, setActiveTab, dashboardData, setPrevKpiTab, dt }) => {
             checkScroll();
         }
     }, [rootTabs]);
-
-    const DynamicImage = ({ iconName }) => {
-        const imageSrc = useImageWithFallback(iconName);
-
-        return (
-            <img
-                src={imageSrc}
-                alt="menu-icon"
-                className="menu-icon-image me-2"
-                style={{ width: '16px', height: '16px' }}
-            />
-        );
-    }
 
     // Scroll logic
     const checkScroll = useCallback(() => {
@@ -127,7 +138,7 @@ const TopBar = ({ data, setActiveTab, dashboardData, setPrevKpiTab, dt }) => {
 
                                                 <DynamicImage iconName={tab?.jsonData?.iconImageName} />
                                                 :
-                                                <FontAwesomeIcon icon={getDynamicIcon(tab?.jsonData?.iconName)} className="me-2 dropdown-gear-icon" />
+                                                getDynamicIcon(tab?.jsonData?.iconName)
                                             }
 
 
@@ -153,7 +164,7 @@ const TopBar = ({ data, setActiveTab, dashboardData, setPrevKpiTab, dt }) => {
 
                                                                     <DynamicImage iconName={child?.jsonData?.iconImageName} />
                                                                     :
-                                                                    <FontAwesomeIcon icon={getDynamicIcon(child?.jsonData?.iconName)} className="me-2 dropdown-gear-icon" />
+                                                                    getDynamicIcon(child?.jsonData?.iconName)
                                                                 }
 
                                                                 {dt(child?.jsonData?.dashboardName)}

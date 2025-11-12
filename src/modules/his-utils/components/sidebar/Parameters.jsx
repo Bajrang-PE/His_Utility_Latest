@@ -432,7 +432,6 @@ const Parameters = ({ params, scope, widgetId = null, isLayoutWithPreview, setWi
         initializeParams();
     }, [presentParams, widgetId, dropdownData[presentParams?.find(prm => prm?.jsonData?.parameterName)?.jsonData?.parameterName]]);
 
-
     const renderInputField = (param) => {
         const {
             parameterType, parameterDisplayName, parameterName, lstOption, isMandatory, defaultOption,
@@ -477,6 +476,7 @@ const Parameters = ({ params, scope, widgetId = null, isLayoutWithPreview, setWi
                                 value={selectedValues[parameterName] || []}
                                 onChange={(selectedOptions) => handleMultiSelectChange(parameterName, selectedOptions, parameterId)}
                                 isDisabled={hideParams}
+                                menuPlacement="auto"
                             />
                             {errors[parameterId] &&
                                 <div className="required-input">
@@ -493,10 +493,6 @@ const Parameters = ({ params, scope, widgetId = null, isLayoutWithPreview, setWi
                                     id={parameterId}
                                     name={parameterName}
                                     menuPortalTarget={document.body}
-                                    // options={[
-                                    //     ...(defaultOption?.optionText ? [defaultOption] : []),
-                                    //     ...(options?.length > 0 ? options : [])
-                                    // ]}
                                     options={
                                         (() => {
                                             const allOptions = options?.length > 0 ? options : [];
@@ -524,6 +520,7 @@ const Parameters = ({ params, scope, widgetId = null, isLayoutWithPreview, setWi
                                     styles={{
                                         menuPortal: base => ({ ...base, zIndex: 9999 }),
                                     }}
+                                    // menuPlacement="auto"
                                 />
                                 :
                                 <span className="fw-medium">

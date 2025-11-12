@@ -35,11 +35,11 @@ const TabDash = React.memo(() => {
 
     const getAllAvailableWidgets = (idArr, dashFor) => {
 
-        if (abortControllerRef.current) {
-            abortControllerRef.current.abort();
-        }
+        // if (abortControllerRef.current) {
+        //     abortControllerRef.current.abort();
+        // }
 
-        abortControllerRef.current = new AbortController();
+        // abortControllerRef.current = new AbortController();
 
         try {
             const val = {
@@ -47,9 +47,11 @@ const TabDash = React.memo(() => {
                 dashboardFor: dashFor || 'CENTRAL DASHBOARD',
                 masterName: "DashboardWidgetMst"
             };
-            return fetchPostData(`/hisutils/getWdgtMultipleData?isGlobal=${isGlobal || 0}`, val, '', {
-                signal: abortControllerRef.current.signal
-            }).then((data) => {
+            return fetchPostData(`/hisutils/getWdgtMultipleData?isGlobal=${isGlobal || 0}`, val,
+                //      '', {
+                //     signal: abortControllerRef.current.signal
+                // }
+            ).then((data) => {
                 if (data?.status === 1) {
                     setAllWidgetData(data?.data);
                     return data?.data;
@@ -160,7 +162,12 @@ const TabDash = React.memo(() => {
                         && widget.widgetType !== "singleQueryChild"
                 );
 
-                setWidWithoutLinked(standaloneAndParentsOnly);
+                if (activeTab?.jsonData?.isLayoutWithPreview === "Yes") {
+                    setWidWithoutLinked(uniqueWidgets);
+                } else {
+                    setWidWithoutLinked(standaloneAndParentsOnly);
+                }
+                // setWidWithoutLinked(standaloneAndParentsOnly);
                 setPresentWidgets(uniqueWidgets);
                 setPresentTabs(sortedWidgets);
                 if (isCurrent) {
@@ -277,6 +284,12 @@ const TabDash = React.memo(() => {
 
     const bgclr = activeTab?.jsonData?.tabBackgroundColor || "#ffffff";
     const titleclr = activeTab?.jsonData?.tabTitleFontColor || "#000000";
+    const tabNameReq = activeTab?.jsonData?.tabNameInReportRequired || "Yes";
+    const tabNameFontWeight = activeTab?.jsonData?.tabnameFontWeight || "500";
+    const tabTopPadding = activeTab?.jsonData?.tabTopPadding || "10";
+    const tabNameMarginBottom = activeTab?.jsonData?.marginBottom || "5";
+    const tabNameFontSize = activeTab?.jsonData?.tabnameFontSize || "150";
+    const tabNameDecoration = activeTab?.jsonData?.tabnameDecoration || "none";
 
     return (
         <>
@@ -291,10 +304,10 @@ const TabDash = React.memo(() => {
                         style={{
                             height: "100%",
                             background: bgclr,
-                            padding: "10px 20px"
+                            padding: `${tabTopPadding}px 20px`
                         }}
                     >
-                        
+
                         {prevKpiTab?.length > 0 && (
                             <div className="btn-group" role="group" aria-label="Button group with nested dropdown">
                                 <button className='btn btn-sm back-button-kpi' onClick={onPrevClick}>
@@ -342,7 +355,15 @@ const TabDash = React.memo(() => {
                             </>
                         )}
 
-                        <h4 className='text-center' style={{ color: titleclr }}>{dt(activeTab?.jsonData?.dashboardName)}</h4>
+                        <h4 className='text-center'
+                            style={{
+                                color: titleclr,
+                                fontWeight: tabNameFontWeight,
+                                fontSize: `${tabNameFontSize}%`,
+                                marginBottom: `${tabNameMarginBottom}px`,
+                                textDecoration: `${tabNameDecoration}`
+                            }}
+                        >{dt(activeTab?.jsonData?.dashboardName)}</h4>
 
                         {activeTab?.jsonData?.isLayoutWithPreview && activeTab?.jsonData?.isLayoutWithPreview === "Yes" ?
                             <>

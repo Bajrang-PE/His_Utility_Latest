@@ -3,7 +3,6 @@ import { DrpDataValLab, ToastAlert } from '../utils/commonFunction';
 import { fetchData, fetchPostData } from '../../../utils/HisApiHooks';
 import axios from 'axios';
 import { useSearchParams } from 'react-router-dom';
-import { getEncryptedParamValue } from '../../../utils/Security';
 
 export const HISContext = createContext();
 
@@ -64,7 +63,6 @@ const HISContextData = ({ children }) => {
 
 
   //language provider
-
   const [extractedTexts, setExtractedTexts] = useState([]);
   const [showTranslateModal, setShowTranslateModal] = useState(false);
   const [language, setLanguage] = useState('english');
@@ -251,7 +249,7 @@ const HISContextData = ({ children }) => {
         setSingleConfigData(null);
       }
 
-      if (data?.headers && !isToken) {
+      if (data?.headers) {
         const token = data?.headers?.authorization;
         setToken(token);
         if (token) {
