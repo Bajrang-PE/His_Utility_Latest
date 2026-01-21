@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { FixedSizeList as List } from 'react-window';
 
-const ITEM_HEIGHT = 50;
+const ITEM_HEIGHT = 40;
 const DROPDOWN_HEIGHT = 180;
 
 function Dropdown({ options = [], value, onChange, label }) {
@@ -99,6 +99,7 @@ function InputField({
   value,
   onChange,
   placeholder = 'Enter Here',
+  name=""
 }) {
   return (
     <div className="Wrapper">
@@ -109,6 +110,7 @@ function InputField({
         onChange={onChange}
         type={fieldType}
         placeholder={placeholder}
+        name={name}
       />
     </div>
   );
@@ -117,7 +119,7 @@ function InputField({
 function Label({ labelText }) {
   return (
     <div className="Wrapper">
-      <label className="Wrapper__label">{labelText}</label>
+      <span className="Wrapper__label">{labelText}</span>
     </div>
   );
 }

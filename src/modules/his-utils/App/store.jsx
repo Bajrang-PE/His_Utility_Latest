@@ -4,6 +4,7 @@ import paramMstReducer from '../Features/ParameterMaster/ParameterMstSlice';
 import widgitViewerReducer from '../Features/WidgitEngine/WidgitViewerSlice';
 import dndReducer from '../Features/Drag&Drop/DnDSlice';
 import popupDataReducer from '../Features/Popup/popupSlice';
+import drilldownConfigReducer from '../Features/Drilldown/drilldownSlice';
 
 const store = configureStore({
   reducer: {
@@ -12,6 +13,7 @@ const store = configureStore({
     widgitViewer: widgitViewerReducer,
     dnd: dndReducer,
     popupData: popupDataReducer,
+    drilldownConfig: drilldownConfigReducer,
   },
 });
 

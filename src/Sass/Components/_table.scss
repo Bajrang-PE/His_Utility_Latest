@@ -4,61 +4,58 @@
   overflow-x: scroll;
   overflow-y: scroll;
   margin-top: 1rem;
-  height: 40rem;
-  border-radius: 2rem;
+  height: 30rem;
+  border-radius: 1rem;
   border: 1px solid rgba(255, 255, 255, 0.25);
-  background-color: rgba(255, 255, 255, 0.05); // Add this if it's missing
+  background-color: rgba($underline-color, 0.05);
 
   &--table {
     width: 100%;
-    background-color: rgba(255, 255, 255, 0.1);
-
-    box-shadow:
-      0 8px 32px rgba(31, 38, 135, 0.37),
-      inset 0 0 1px rgba(255, 255, 255, 0.2);
+    border-radius: 1rem;
     overflow: hidden;
     font-family: $secondary-font;
-    font-size: 1.5rem;
+    font-size: 1rem;
     font-weight: 400;
-
-    color: #fff;
+    color: $dim-black;
 
     thead {
-      background-color: rgba(0, 72, 92, 0.8);
-      color: $pure-white;
+      background-color: $dim-black;
+      position: sticky;
+      top: 0;
     }
 
     th,
     td {
       text-align: left;
-      padding: 2rem;
+      padding: 1rem;
       white-space: nowrap;
     }
 
     th {
       font-weight: 300;
       letter-spacing: 1px;
-      position: sticky;
-      top: 0;
-      backdrop-filter: blur(5%);
-      -webkit-backdrop-filter: blur(40px) saturate(180%);
-      background-color: rgba(0, 72, 92, 0.9);
-      z-index: 10;
+      color: $pure-white;
+      border-bottom: 1px solid rgba($dim-white, 0.15);
+      background-color: $dim-black;
     }
 
-    tbody tr:nth-child(even) {
-      background-color: rgba(255, 255, 255, 0.05);
+    tbody {
+      tr {
+        border-bottom: 1px solid $smoky-white;
+        z-index: 1;
+
+        &:nth-child(even) {
+          background-color: $pure-white !important;
+        }
+
+        &:hover {
+          background-color: rgba($underline-color, 0.7) !important;
+          font-weight: 800;
+          box-shadow: 0 0 12px rgba(184, 244, 255, 0.2);
+          transition: all 0.2s ease-in-out;
+        }
+      }
     }
 
-    tbody tr {
-      z-index: 1;
-    }
-
-    tbody tr:hover {
-      background-color: rgba(0, 150, 200, 0.3);
-      color: #ffffff;
-      font-weight: 500;
-      transition: background-color 0.2s ease-in-out;
-    }
   }
 }

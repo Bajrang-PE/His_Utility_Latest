@@ -7,7 +7,7 @@ import { backToParentWidget, fetchProcedureData, fetchQueryData, formatDateFullY
 import { HISContext } from "../../contextApi/HISContext";
 import { highchartGraphOptions } from "../../localData/DropDownData";
 import { getAuthUserData } from "../../../../utils/CommonFunction";
-import { generateGraphCSV, generateGraphPDF } from "../commons/advancedPdf";
+import { generateGraphCSV, generateGraphCSVWorkers, generateGraphPDF, generateGraphPDFWorkers } from "../commons/advancedPdf";
 import { useSearchParams } from "react-router-dom";
 import AdvancedOptionsModal from "./AdvancedOptionsModal";
 
@@ -45,7 +45,7 @@ const GraphDash = ({ widgetData, setWidgetData, pkColumn, setPkColumn, isLayoutW
   const xAxisFontSize = parseInt(widgetData?.XAxisFontSize, 10) || 10;
   const yAxisFontSize = parseInt(widgetData?.YAxisFontSize, 10) || 10;
   const annotationFontSize = parseInt(widgetData?.annotationFontSize, 10) || 12;
-  const isDirectDownloadRequired = widgetData?.isDirectDownloadRequired || 'No';
+  const isDirectDownloadRequired = widgetData?.isDirectDownloadRequired || 'Yes';
 
   const minAxisValue = widgetData?.minValueOfAxis && widgetData?.minValueOfAxis !== '0' ? parseInt(widgetData.minValueOfAxis, 10) : undefined;
   const maxAxisValue = widgetData?.maxValueOfAxis && widgetData?.maxValueOfAxis !== '0' ? parseInt(widgetData.maxValueOfAxis, 10) : undefined;
@@ -79,18 +79,10 @@ const GraphDash = ({ widgetData, setWidgetData, pkColumn, setPkColumn, isLayoutW
   const isChildPresent = widgetData?.children && widgetData?.children?.length > 0;
   const childId = widgetData?.children?.length > 0 ? widgetData?.children[0] : '';
 
-  // const getParametersWithValues = (parameters, paramsData, widgetId, allDrpDtParams) => {
-  //   return parameters.map(param => {
-  //     const value = paramsData?.widgetParams?.[widgetId]?.[param?.id] || null;
-  //     const val = allDrpDtParams?.[param?.paraName] || null;
 
-  //     return {
-  //       ...param,
-  //       value: value,
-  //       val: val?.find(dt => dt?.optionValue == value)?.optionText || value
-  //     };
-  //   });
-  // }
+  const isQueryDataPreview = widgetData?.isQueryDataPreview || 'No';
+  const widgetGraphPreviewData = widgetData?.widgetGraphPreviewData || {};
+
 
   const getParametersWithValues = (widgetParams, paramsValues, widgetId, allDrpDtParams) => {
     let allParams = [...widgetParams];
@@ -282,58 +274,153 @@ const GraphDash = ({ widgetData, setWidgetData, pkColumn, setPkColumn, isLayoutW
           }
 
           // NEW: Detect data structure and process accordingly
+          // const processChartData = (dataToProcess) => {
+          //   if (!dataToProcess.length) {
+          //     return { categories: [], seriesData: [], originalData: [] };
+          //   }
+
+          //   const columnNames = Object.keys(dataToProcess[0]).filter(key => key !== 'pkcolumn');
+
+          //   // Case 1: Single row with multiple metrics (your example)
+          //   if (dataToProcess.length === 1 && columnNames.length > 1) {
+          //     const singleRow = dataToProcess[0];
+          //     const categories = columnNames;
+          //     const seriesData = [{
+          //       name: 'Values',
+          //       // data: columnNames.map(key => singleRow[key]),
+          //       data: columnNames.map((key, index) => ({
+          //         y: singleRow[key],
+          //         pkcolumn: singleRow.pkcolumn,
+          //         lebel: columnNames[0]
+          //       })),
+          //       colorByPoint: true,
+          //       lebel: columnNames[0]
+          //     }];
+          //     return { categories, seriesData, originalData: dataToProcess };
+          //   }
+          //   // Case 2: Multiple rows with category-series structure
+          //   else if (columnNames.length >= 2) {
+          //     const categoriesKey = columnNames[0];
+          //     const seriesKeys = columnNames.slice(1);
+
+          //     const categories = dataToProcess.map(item => item[categoriesKey]);
+          //     const seriesData = seriesKeys.map(key => ({
+          //       name: key,
+          //       // data: dataToProcess.map(item => item[key]),
+          //       data: dataToProcess.map((item, index) => ({
+          //         y: item[key],
+          //         pkcolumn: item.pkcolumn,
+          //         lebel: columnNames[0]
+          //       })),
+          //       colorByPoint: true,
+          //       lebel: columnNames[0]
+          //     }));
+          //     return { categories, seriesData, originalData: dataToProcess };
+          //   }
+          //   // Case 3: Fallback for unexpected structure
+          //   else {
+          //     console.warn('Unexpected data structure:', dataToProcess);
+          //     return { categories: [], seriesData: [], originalData: dataToProcess };
+          //   }
+          // };
+
           const processChartData = (dataToProcess) => {
             if (!dataToProcess.length) {
               return { categories: [], seriesData: [], originalData: [] };
             }
 
-            const columnNames = Object.keys(dataToProcess[0]).filter(key => key !== 'pkcolumn');
+            const columnNames = Object.keys(dataToProcess[0]).filter(
+              key => key !== 'pkcolumn'
+            );
 
-            // Case 1: Single row with multiple metrics (your example)
+            /* =========================
+               PREVIEW MODE (USER INPUT)
+               ========================= */
+            if (isQueryDataPreview === 'Yes') {
+              const xAxisKey = widgetGraphPreviewData?.selectedXAxisPreview?.[0];
+              const yAxisKeys = widgetGraphPreviewData?.selectedYAxisPreview || [];
+
+              // Safety check
+              if (!xAxisKey || !yAxisKeys.length) {
+                console.warn('Preview axis not properly selected');
+                return { categories: [], seriesData: [], originalData: dataToProcess };
+              }
+
+              // X-axis categories
+              const categories = dataToProcess.map(item => item[xAxisKey]);
+
+              // Y-axis series
+              const seriesData = yAxisKeys.map(key => ({
+                name: key,
+                type: widgetGraphPreviewData?.chartTypesPreview?.[key] || 'column',
+                color: widgetGraphPreviewData?.chartColorsPreview?.[key],
+                data: dataToProcess.map(item => ({
+                  y: item[key],
+                  pkcolumn: item.pkcolumn,
+                  label: xAxisKey,
+                  color: widgetGraphPreviewData?.chartColorsPreview?.[key],
+                }))
+              }));
+
+              return { categories, seriesData, originalData: dataToProcess };
+            }
+
+            /* =========================
+               NORMAL MODE (UNCHANGED)
+               ========================= */
+
+            // Case 1: Single row with multiple metrics
             if (dataToProcess.length === 1 && columnNames.length > 1) {
               const singleRow = dataToProcess[0];
               const categories = columnNames;
+
               const seriesData = [{
                 name: 'Values',
-                // data: columnNames.map(key => singleRow[key]),
-                data: columnNames.map((key, index) => ({
+                data: columnNames.map(key => ({
                   y: singleRow[key],
                   pkcolumn: singleRow.pkcolumn,
-                  lebel: columnNames[0]
+                  label: columnNames[0]
                 })),
                 colorByPoint: true,
-                lebel: columnNames[0]
+                label: columnNames[0]
               }];
+
               return { categories, seriesData, originalData: dataToProcess };
             }
-            // Case 2: Multiple rows with category-series structure
+
+            // Case 2: Multiple rows (default behavior)
             else if (columnNames.length >= 2) {
               const categoriesKey = columnNames[0];
               const seriesKeys = columnNames.slice(1);
 
               const categories = dataToProcess.map(item => item[categoriesKey]);
+
               const seriesData = seriesKeys.map(key => ({
                 name: key,
-                // data: dataToProcess.map(item => item[key]),
-                data: dataToProcess.map((item, index) => ({
+                data: dataToProcess.map(item => ({
                   y: item[key],
                   pkcolumn: item.pkcolumn,
-                  lebel: columnNames[0]
+                  label: categoriesKey
                 })),
                 colorByPoint: true,
-                lebel: columnNames[0]
+                label: categoriesKey
               }));
+
               return { categories, seriesData, originalData: dataToProcess };
             }
-            // Case 3: Fallback for unexpected structure
+
+            // Fallback
             else {
               console.warn('Unexpected data structure:', dataToProcess);
               return { categories: [], seriesData: [], originalData: dataToProcess };
             }
           };
 
+
           const limitedProcessed = processChartData(limitedData);
           const allProcessed = processChartData(data);
+
+
 
           return {
             limited: {
@@ -377,6 +464,7 @@ const GraphDash = ({ widgetData, setWidgetData, pkColumn, setPkColumn, isLayoutW
 
     const [firstItem] = data;
     const keys = Object.keys(firstItem);
+    // const keys = Object.keys(dataToProcess[0]).filter(key => key !== 'pkcolumn');
 
     // 1. Find the key with string value (to use as category)
     const categoryKey = keys.find(k => typeof firstItem[k] === 'string');
@@ -387,14 +475,19 @@ const GraphDash = ({ widgetData, setWidgetData, pkColumn, setPkColumn, isLayoutW
 
     // 2. Get numeric value keys (series)
     const valueKeys = keys.filter(k =>
-      k !== categoryKey && typeof firstItem[k] === 'number'
+      k !== categoryKey && typeof firstItem[k] === 'number' && k !== 'pkcolumn'
     );
 
     // 3. Format categories and series
     const categories = data.map(item => item[categoryKey]);
     const seriesData = valueKeys.map(valueKey => ({
       name: valueKey,
-      data: data.map(item => parseFloat(item[valueKey]) || 0),
+      // data: data.map(item => parseFloat(item[valueKey]) || 0),
+      data: data.map((item, index) => ({
+        y: item[valueKey],
+        pkcolumn: item.pkcolumn || '',
+        lebel: valueKeys[0]
+      })),
       colorByPoint: valueKeys.length === 1
     }));
 
@@ -437,7 +530,9 @@ const GraphDash = ({ widgetData, setWidgetData, pkColumn, setPkColumn, isLayoutW
         const limitedData = data?.data?.slice(0, limit);
 
         const formattedData = formatProcedureDataForGraph(limitedData, data?.query);
+        const formattedDataAll = formatProcedureDataForGraph(data?.data, data?.query);
         setGraphData([formattedData]);
+        setAllGraphData([formattedDataAll]);
         setIsSearchQuery(false)
         setSearchScope({ scope: "", id: "" })
         setFetching(false);
@@ -486,7 +581,17 @@ const GraphDash = ({ widgetData, setWidgetData, pkColumn, setPkColumn, isLayoutW
         clearInterval(intervalId);
       }
     };
-  }, [widgetData, paramsValues, isSearchQuery]);
+  }, [widgetData]);
+
+  useEffect(() => {
+    if (paramsValues?.widgetParams[widgetData?.rptId] && !isSearchQuery && widgetData) {
+      if (widgetData?.modeOfQuery === "Procedure") {
+        fetchProcedure(widgetData);
+      } else {
+        fetchDataQry(widgetData);
+      }
+    }
+  }, [paramsValues?.widgetParams[widgetData?.rptId]]);
 
   useEffect(() => {
     if (isSearchQuery && searchScope?.scope === "widgetParams" && searchScope?.id == widgetData?.rptId) {
@@ -619,7 +724,6 @@ const GraphDash = ({ widgetData, setWidgetData, pkColumn, setPkColumn, isLayoutW
     }
   }
 
-
   return (
     <div className={`widget_id_${widgetData?.rptId} high-chart-main ${theme === 'Dark' ? 'dark-theme' : ""}`}
       style={{
@@ -661,13 +765,13 @@ const GraphDash = ({ widgetData, setWidgetData, pkColumn, setPkColumn, isLayoutW
 
               {(isActionButtonReq === 'Yes' || isActionButtonReq === 'pdf' || isActionButtonReq === 'pdfAndcsv') &&
                 <li className="p-1 dropdown-item text-primary" style={{ cursor: "pointer" }}
-                  onClick={() => generateGraphPDF(widgetData, graphData, singleConfigData?.databaseConfigVO, filterColumns(visibleColumns), sortConfig, getParametersWithValues(widgetParams, paramsValues, widgetData?.rptId, allDrpDtParams))} title="pdf">
+                  onClick={() => generateGraphPDFWorkers(widgetData, graphData, singleConfigData?.databaseConfigVO, filterColumns(visibleColumns), sortConfig, getParametersWithValues(widgetParams, paramsValues, widgetData?.rptId, allDrpDtParams))} title="pdf">
                   <FontAwesomeIcon icon={faFilePdf} className="dropdown-gear-icon me-2" />{dt('Download PDF')}
                 </li>
               }
 
               {(isActionButtonReq === 'Yes' || isActionButtonReq === 'csv' || isActionButtonReq === 'pdfAndcsv') &&
-                <li className="p-1 dropdown-item text-primary" style={{ cursor: "pointer" }} onClick={() => generateGraphCSV(widgetData, graphData, singleConfigData?.databaseConfigVO, filterColumns(visibleColumns), sortConfig, getParametersWithValues(widgetParams, paramsValues, widgetData?.rptId, allDrpDtParams))}>
+                <li className="p-1 dropdown-item text-primary" style={{ cursor: "pointer" }} onClick={() => generateGraphCSVWorkers(widgetData, graphData, singleConfigData?.databaseConfigVO, filterColumns(visibleColumns), sortConfig, getParametersWithValues(widgetParams, paramsValues, widgetData?.rptId, allDrpDtParams))}>
                   <FontAwesomeIcon icon={faFileExcel} className="dropdown-gear-icon me-2" />{dt('Download CSV')}
                 </li>
               }
@@ -682,14 +786,14 @@ const GraphDash = ({ widgetData, setWidgetData, pkColumn, setPkColumn, isLayoutW
 
           {isDirectDownloadRequired === "Yes" && (<>
             <button type="button" className="small-box-btn-dwn"
-              onClick={() => generateGraphPDF(widgetData, allGraphData, singleConfigData?.databaseConfigVO, filterColumns(visibleColumns), sortConfig, getParametersWithValues(widgetParams, paramsValues, widgetData?.rptId, allDrpDtParams))}
+              onClick={() => generateGraphPDFWorkers(widgetData, allGraphData, singleConfigData?.databaseConfigVO, filterColumns(visibleColumns), sortConfig, getParametersWithValues(widgetParams, paramsValues, widgetData?.rptId, allDrpDtParams))}
               title="PDF"
             >
               <FontAwesomeIcon icon={faFilePdf} className="dropdown-gear-icon" />
             </button>
 
             <button type="button" className="small-box-btn-dwn"
-              onClick={() => generateGraphCSV(widgetData, allGraphData, singleConfigData?.databaseConfigVO, filterColumns(visibleColumns), sortConfig, getParametersWithValues(widgetParams, paramsValues, widgetData?.rptId, allDrpDtParams))}
+              onClick={() => generateGraphCSVWorkers(widgetData, allGraphData, singleConfigData?.databaseConfigVO, filterColumns(visibleColumns), sortConfig, getParametersWithValues(widgetParams, paramsValues, widgetData?.rptId, allDrpDtParams))}
               title="CSV"
             >
               <FontAwesomeIcon icon={faFileCsv} className="dropdown-gear-icon" />
@@ -771,7 +875,7 @@ const GraphDash = ({ widgetData, setWidgetData, pkColumn, setPkColumn, isLayoutW
 
         const options = {
           chart: {
-            type: chartTypeMapping[chartType],
+            type: isQueryDataPreview !== "Yes" && chartTypeMapping[chartType],
             height: parseInt(widgetData.graphHeight, 10) || 350,
             backgroundColor: isDarkTheme ? "#1f1f1f" : "#ffffff",
             options3d: {
@@ -850,7 +954,9 @@ const GraphDash = ({ widgetData, setWidgetData, pkColumn, setPkColumn, isLayoutW
                   color: isDarkTheme ? "#ffffff" : "#000000"
                 }
               },
-              colorByPoint: chartType === "PIE_CHART" || chartType === "BAR_GRAPH",
+              colorByPoint:
+                isQueryDataPreview !== "Yes" &&
+                (chartType === "PIE_CHART" || chartType === "BAR_GRAPH"),
               ...(isChildPresent && {
                 point: {
                   events: {
@@ -916,6 +1022,7 @@ const GraphDash = ({ widgetData, setWidgetData, pkColumn, setPkColumn, isLayoutW
               })
             },
             line: {
+              colors: colorList,
               marker: {
                 enabled: true,
                 fillColor: "red",
@@ -932,6 +1039,7 @@ const GraphDash = ({ widgetData, setWidgetData, pkColumn, setPkColumn, isLayoutW
               }
             },
             area: {
+              colors: colorList,
               stacking: chartType === "AREA_STACKED_GRAPH" ? "normal" : undefined,
               point: {
                 events: {
@@ -943,7 +1051,9 @@ const GraphDash = ({ widgetData, setWidgetData, pkColumn, setPkColumn, isLayoutW
             }
           },
           tooltip: {
-            shared: true,
+            shared: false,
+            // shared: !(chartType === "PIE_CHART" || chartType === "DONUT_CHART"),
+            // useHTML: true,
             valueSuffix: " units",
             backgroundColor: isDarkTheme ? "rgba(0, 0, 0, 0.85)" : "#ffffff",
             style: {
@@ -951,7 +1061,7 @@ const GraphDash = ({ widgetData, setWidgetData, pkColumn, setPkColumn, isLayoutW
             },
           },
           exporting: exportingOptions,
-          series: getSeriesForType(gdata?.categories, gdata?.seriesData, gdata?.originalData),
+          series: isQueryDataPreview === "Yes" ? gdata?.seriesData : getSeriesForType(gdata?.categories, gdata?.seriesData, gdata?.originalData),
           lang: {
             noData: customMessage || "No data available for this graph",
           },
@@ -1026,7 +1136,7 @@ const GraphDash = ({ widgetData, setWidgetData, pkColumn, setPkColumn, isLayoutW
         )
       })}
 
-      {filteredGraphOptions?.length > 0 &&
+      {(filteredGraphOptions?.length > 0 && widgetData?.isQueryDataPreview !== 'Yes') &&
         <select
           value={chartType}
           onChange={(e) => setChartType(e.target.value)}

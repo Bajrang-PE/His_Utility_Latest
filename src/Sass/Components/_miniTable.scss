@@ -1,0 +1,42 @@
+@use '../Util/variables' as *;
+
+.mini-table {
+  &__wrapper {
+    padding: 1rem;
+    background-color: $pure-white;
+    box-shadow: $box-shadow-text-fields;
+    margin-top: 1rem;
+    border-radius: 8px;
+    width: 99%;
+    overflow-x: scroll;
+  }
+
+  &__table {
+    width: 100%;
+    font-family: $secondary-font;
+    font-size: 1rem;
+    color: $dim-black;
+
+    thead {
+      background-color: $Dark-Teal;
+      color: $pure-white;
+    }
+
+    th,
+    td {
+      text-align: left;
+      padding: .5rem;
+    }
+
+    tbody tr:nth-child(even) {
+      background-color: #dddddd4b;
+    }
+
+    tbody tr:hover {
+      background-color: $Teal-Blue;
+      color: $pure-white;
+      font-weight: 500;
+      transition: background-color 0.2s ease-in-out;
+    }
+  }
+}

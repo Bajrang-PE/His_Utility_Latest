@@ -1,4 +1,5 @@
 @use '../Util/variables' as *;
+@use '../Util/mixins' as *;
 
 .react-grid-placeholder {
   background: rgba(255, 255, 255, 0.15) !important;
@@ -11,36 +12,37 @@
 .dragDrop {
   height: 25rem;
   overflow: scroll;
-  padding: 1rem 2rem;
+  padding: .6rem 1rem;
   background-image: $menu-gradient;
-  border-radius: 1rem;
+  border-radius: .5rem;
   box-shadow: $box-spherical-light-shadow;
 
   &__container {
     display: flex;
-    width: 90%;
-    gap: 1.6rem;
+    width: 99%;
+    gap: 1rem;
+    justify-content: center;
 
-    &--itrem {
-      flex: 0 1 50%;
+    &--item {
+      flex: 0 1 40%;
     }
 
     &--lable {
-      margin-top: 3rem;
+      margin-top: 2rem;
     }
   }
 
-  &__itrem {
-    padding: 1.5rem;
+  &__item {
+    padding: .5rem;
     font-family: $secondary-font;
-    font-size: 1.5rem;
+    font-size: 1rem;
     font-weight: 500;
     color: $pure-white;
     backdrop-filter: blur(25px) saturate(180%);
     -webkit-backdrop-filter: blur(25px) saturate(180%);
     background-color: rgba(255, 255, 255, 0.15);
     border: 1px solid rgba(255, 255, 255, 0.25);
-    border-radius: 2rem;
+    border-radius: 1rem;
 
     box-shadow:
       0 8px 32px 0 rgba(31, 38, 135, 0.37),
@@ -53,7 +55,8 @@
       color 0.3s ease,
       box-shadow 0.3s ease;
 
-    margin: 1rem;
+    margin: .6rem;
+
     &:hover {
       color: $dim-black;
       background-color: $pure-white;
@@ -64,18 +67,131 @@
 
 .dndZone {
   border-bottom: 3px dashed $underline-color;
-  padding: 1rem;
+  padding: .6rem;
   background-image: $tab-master-gradient;
-  border-radius: 1rem;
+  border-radius: .6rem;
 
   &__placeholder {
     font-family: $secondary-font;
     letter-spacing: 8px;
     font-weight: 300;
-    font-size: 1.5rem;
+    font-size: 1rem;
     color: $dim-black;
     text-align: center;
     user-select: none;
     // margin-bottom: 5rem;
+  }
+}
+
+.graphConfig {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  margin-bottom: 1rem;
+  gap: 1rem;
+  padding: 1rem;
+  height: 20rem;
+  overflow: scroll;
+
+  &__dnd-zone {
+    padding: 1rem;
+    border-radius: 1rem;
+    border: 1px solid rgba(0, 0, 0, 0.3);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
+  }
+
+  &__data {
+    padding: 1rem;
+    grid-row: span 2;
+    border-radius: 1rem;
+    border: 1px solid rgba(0, 0, 0, 0.3);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
+    overflow: scroll;
+
+    &--placeholder {
+      font-family: $secondary-font;
+      letter-spacing: 3px;
+      font-weight: 400;
+      font-size: 1.2rem;
+      text-align: center;
+      user-select: none;
+      margin-bottom: 1rem;
+    }
+
+    &--types {
+      display: flex;
+      gap: 3rem;
+      flex-wrap: wrap;
+      margin: 3rem 0;
+    }
+  }
+}
+
+.dndContainer {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 3rem;
+  padding: 4rem 0;
+
+  &__search {
+    @include primaryFormInput;
+    margin-bottom: 5px;
+  }
+
+  &__heading {
+    font-family: $secondary-font;
+    font-size: 1.7rem;
+    font-weight: 500;
+    color: $Dark-Teal;
+    margin-bottom: 2rem;
+  }
+
+  &__controls {
+    padding: 1rem 1.2rem;
+    border: 1px solid #ddd;
+    font-size: 1.6rem;
+    cursor: pointer;
+    font-family: $primary-font;
+    border-radius: 4px;
+    font-weight: bold;
+    transition: all 0.2s ease;
+
+    &:hover {
+      background-color: $Teal-Blue;
+      color: white;
+    }
+  }
+
+  &__left,
+  &__right {
+    background-color: whitesmoke;
+    border: 1px solid #ddd;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    border-radius: 7px;
+    padding: 2rem;
+    height: 30rem;
+    overflow-y: auto;
+    flex: 0 1 32%;
+
+    &--item {
+      font-family: $secondary-font;
+      font-size: 1.4rem;
+      padding: 1rem;
+      cursor: pointer;
+      user-select: none;
+      margin: 8px auto;
+      border-radius: 6px;
+      border: 1px solid #ddd;
+      transition: all 0.2s ease;
+
+      &:hover {
+        background-color: $Teal-Blue !important;
+        color: white !important;
+        font-weight: 500;
+        border: none;
+      }
+    }
   }
 }

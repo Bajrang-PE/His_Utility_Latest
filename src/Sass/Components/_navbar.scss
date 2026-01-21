@@ -1,0 +1,62 @@
+@use '../Util/variables' as *;
+
+.navigationBar {
+  width: 10%;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  padding-right: 2rem;
+  position: fixed;
+  top: 0;
+  left: 0;
+
+  &__container {
+    height: 100%;
+    width: 10rem;
+    display: flex;
+    border-top-right-radius: 1.2rem;
+    border-bottom-right-radius: 1.2rem;
+    background-color: $pure-white;
+    box-shadow: $box-shadow-minimal;
+    flex-direction: column;
+    align-items: center;
+    padding: 4rem 0;
+    user-select: none;
+    gap: 3rem;
+
+    &-link-container {
+      border-radius: 1rem;
+      position: relative;
+      cursor: pointer;
+      background-color: transparent;
+      display: block;
+      height: 5rem;
+      width: 5rem;
+      overflow: hidden;
+      padding: 5px;
+      transition: all 0.2s ease;
+
+      &.active {
+        background-color: $orange-color;
+        .navigationBar__container-link-container--image {
+          filter: none;
+        }
+      }
+
+      &:hover {
+        border: 1px solid $orange-color;
+      }
+
+      &--image {
+        position: absolute;
+        top: 50%;
+        filter: invert(100%);
+        left: 50%;
+        transform: translate(-50%, -50%);
+
+        height: 3rem;
+        width: 3rem;
+      }
+    }
+  }
+}

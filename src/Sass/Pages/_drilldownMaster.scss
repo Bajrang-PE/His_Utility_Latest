@@ -1,0 +1,53 @@
+@use '../Util/variables' as *;
+@use '../Util/mixins' as *;
+
+.drilldownMaster {
+  padding-top: $global-top-padding;
+  width: 90%;
+
+  &__title {
+    width: 100%;
+    display: flex;
+    gap: 2rem;
+    align-items: center;
+    @include pageTitleUnderline;
+  }
+
+  &__heading {
+    @include primaryTitle;
+  }
+
+  &__config,
+  &__styles {
+    width: 90%;
+    align-items: center;
+    gap: 3rem;
+    margin-bottom: 3rem;
+    flex-wrap: wrap;
+  }
+
+  &__styles {
+    display: flex;
+  }
+
+  &__type {
+    font-family: $secondary-font;
+    font-size: 2.2rem;
+    font-weight: 500;
+    letter-spacing: 2px;
+    margin-bottom: 2rem;
+  }
+
+  &__sqlEditor {
+    height: 30rem;
+    width: 80%;
+    box-shadow: $box-spherical-shadow;
+    overflow: hidden;
+    border-radius: 2rem;
+  }
+
+  &__controlBox {
+    margin-top: 3rem;
+    padding-bottom: 2rem;
+  }
+}

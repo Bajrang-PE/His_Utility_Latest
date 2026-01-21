@@ -15,20 +15,21 @@ import { fetchPostData } from '../../../../utils/HisApiHooks'
 
 const ParameterMaster = () => {
 
-  const { parameterData, getAllParameterData, selectedOption, setSelectedOption, setShowDataTable, dashboardForDt, getDashboardForDrpData, actionMode, setActionMode, parameterDrpData, getAllServiceData, dataServiceData, setLoading, setShowConfirmSave, confirmSave, setConfirmSave, jndiServerDrpData, getDashConfigData, singleConfigData, dt } = useContext(HISContext);
+  const { parameterData, getAllParameterData, selectedOption, setSelectedOption, setShowDataTable, dashboardForDt, getDashboardForDrpData, actionMode, setActionMode, parameterDrpData, getAllServiceData, dataServiceData, setLoading, setShowConfirmSave, confirmSave, setConfirmSave, jndiServerDrpData, getDashConfigData, singleConfigData, dt, dbConnectionDrpData } = useContext(HISContext);
 
   const [rows, setRows] = useState([{ optionValue: "", optionText: "" }]);
   const [showAsLabel, setShowAsLabel] = useState('No');
   const [isMultiSelectReq, setIsMultiSelectReq] = useState('No');
   const [singleData, setSingleData] = useState([]);
   const [values, setValues] = useState({
-    "parameterFor": "", "parameterType": "1", "parameterInternal": "", "parameterDisplay": "", "placeHolder": "", "parameterWidth": "", "parameterAlignment": "", "paraLabelWidth": "", "paraLabelAlignment": "", "paraControlWidth": "", "paraControlAlignment": "", "mandatory": "", "defaultValueIfLeft": "", "defaultValue": "", "validation": "1", "maxLength": "", "minLength": "", "parentID": [], "modeForQuery": 'query', "query": "", "defaultOptValue": "", "defaultOptText": "", "defOptFilterVal": "", "defOptFilterTxt": "", "jndiSavingData": "1", "stmtTimeOut": "5", "id": "", "shouldBeLess": "", "shouldBeGreater": "", "minDaysBefore": "", "maxDaysAfter": "", "parameterQueryForDate": ""
+    "parameterFor": "", "parameterType": "1", "parameterInternal": "", "parameterDisplay": "", "placeHolder": "", "parameterWidth": "", "parameterAlignment": "", "paraLabelWidth": "", "paraLabelAlignment": "", "paraControlWidth": "", "paraControlAlignment": "", "mandatory": "", "defaultValueIfLeft": "", "defaultValue": "", "validation": "1", "maxLength": "", "minLength": "", "parentID": [], "modeForQuery": 'query', "query": "", "defaultOptValue": "", "defaultOptText": "", "defOptFilterVal": "", "defOptFilterTxt": "", "jndiSavingData": "1", "stmtTimeOut": "5", "id": "", "shouldBeLess": "", "shouldBeGreater": "", "minDaysBefore": "", "maxDaysAfter": "", "parameterQueryForDate": "", "softDbType": ''
   })
 
   const [searchInput, setSearchInput] = useState('');
   const [showParamsTable, setShowParamsTable] = useState(false);
   const [showWebServiceTable, setShowWebServiceTable] = useState(false);
-  const [filterData, setFilterData] = useState(parameterData)
+  const [filterData, setFilterData] = useState(parameterData);
+  const [isDbConnReq, setIsDbConnReq] = useState('No');
 
   const [errors, setErrors] = useState({ parameterForErr: "", parameterTypeErr: "", parameterInternalErr: "", parameterDisplayErr: "", mandatoryErr: "", queryErr: "", parameterQueryForDateErr: "", defaultOptValueErr: "", defaultOptTextErr: "", defOptFilterValErr: "", defOptFilterTxtErr: "", listOptValErr: "", listOptTxtErr: "" });
 
@@ -154,7 +155,7 @@ const ParameterMaster = () => {
     setLoading(true)
     const {
       parameterFor, parameterType, parameterInternal, parameterDisplay, placeHolder, parameterWidth, parameterAlignment, paraLabelWidth, paraLabelAlignment, paraControlWidth, paraControlAlignment, mandatory, defaultValueIfLeft, defaultValue, validation, maxLength, minLength, parentID, modeForQuery, query, defaultOptValue, defaultOptText, defOptFilterVal, defOptFilterTxt, jndiSavingData, stmtTimeOut,
-      shouldBeLess, shouldBeGreater, minDaysBefore, maxDaysAfter, parameterQueryForDate
+      shouldBeLess, shouldBeGreater, minDaysBefore, maxDaysAfter, parameterQueryForDate, softDbType
     } = values;
 
     const val = {
@@ -178,7 +179,7 @@ const ParameterMaster = () => {
         defaultValue: defaultValue, textBoxValidation: validation, textboxMaxlength: maxLength,
         textboxMinlength: minLength, isMultipleSelectionRequired: isMultiSelectReq,
 
-        lstOption: rows
+        lstOption: rows, isSoftDbConnReq: isDbConnReq || "No", softDbType: softDbType
       }
     };
 
@@ -201,7 +202,7 @@ const ParameterMaster = () => {
   const updateParametersData = () => {
     setLoading(false)
     const {
-      parameterFor, parameterType, parameterInternal, parameterDisplay, placeHolder, parameterWidth, parameterAlignment, paraLabelWidth, paraLabelAlignment, paraControlWidth, paraControlAlignment, mandatory, defaultValueIfLeft, defaultValue, validation, maxLength, minLength, parentID, modeForQuery, query, defaultOptValue, defaultOptText, defOptFilterVal, defOptFilterTxt, jndiSavingData, stmtTimeOut, id, shouldBeLess, shouldBeGreater, minDaysBefore, maxDaysAfter, parameterQueryForDate
+      parameterFor, parameterType, parameterInternal, parameterDisplay, placeHolder, parameterWidth, parameterAlignment, paraLabelWidth, paraLabelAlignment, paraControlWidth, paraControlAlignment, mandatory, defaultValueIfLeft, defaultValue, validation, maxLength, minLength, parentID, modeForQuery, query, defaultOptValue, defaultOptText, defOptFilterVal, defOptFilterTxt, jndiSavingData, stmtTimeOut, id, shouldBeLess, shouldBeGreater, minDaysBefore, maxDaysAfter, parameterQueryForDate, softDbType
     } = values;
 
     const val = {
@@ -223,7 +224,7 @@ const ParameterMaster = () => {
         defaultValue: defaultValue, textBoxValidation: validation, textboxMaxlength: maxLength,
         textboxMinlength: minLength, isMultipleSelectionRequired: isMultiSelectReq,
 
-        lstOption: rows
+        lstOption: rows, isSoftDbConnReq: isDbConnReq || "No", softDbType: softDbType
       }
     };
 
@@ -367,9 +368,11 @@ const ParameterMaster = () => {
         shouldBeGreater: jsonData?.shouldBeGreaterThanField || "",
         shouldBeLess: jsonData?.shouldBeLessThanField || "",
         parameterQueryForDate: jsonData?.parameterQueryForDate || "",
+        softDbType: jsonData?.softDbType || "",
       });
       setRows(jsonData?.lstOption?.length > 0 ? jsonData?.lstOption : [])
       setShowAsLabel(jsonData?.showAsLableIfOneData || 'No')
+      setIsDbConnReq(jsonData?.isSoftDbConnReq)
 
     }
   }, [singleData]);
@@ -1201,23 +1204,80 @@ const ParameterMaster = () => {
             <div iv className='row role-theme user-form' style={{ paddingBottom: "1px" }}>
               {/* //left columns */}
               <div className='col-sm-6'>
+
                 <div className="form-group row">
-                  <label className="col-sm-5 col-form-label pe-0">{dt("JNDI For Saving Data")} : </label>
+                  <label className="col-sm-5 col-form-label pe-0">
+                    {dt("Is DB connection required")} :
+                  </label>
                   <div className="col-sm-7 ps-0 align-content-center">
-                    <InputSelect
-                      id="jndiSavingData"
-                      name="jndiSavingData"
-                      // placeholder={dt("Select")}
-                      options={jndiServerDrpData}
-                      className="backcolorinput"
-                      onChange={handleValueChange}
-                      value={values?.jndiSavingData}
-                    />
+                    <div className="form-check form-check-inline">
+                      <input
+                        className="form-check-input"
+                        type="radio"
+                        name="isDbConnReq"
+                        id="isDbConnReqYes"
+                        value={'Yes'}
+                        onChange={(e) => setIsDbConnReq('Yes')}
+                        checked={isDbConnReq === 'Yes'}
+                      />
+                      <label className="form-check-label" htmlFor="dbYes">
+                        {dt("Yes")}
+                      </label>
+                    </div>
+                    <div className="form-check form-check-inline">
+                      <input
+                        className="form-check-input"
+                        type="radio"
+                        name="isDbConnReq"
+                        id="isDbConnReqNo"
+                        value={'No'}
+                        onChange={(e) => setIsDbConnReq("No")}
+                        checked={isDbConnReq === 'No'}
+                      />
+                      <label className="form-check-label" htmlFor="dbNo">
+                        {dt("No")}
+                      </label>
+                    </div>
                   </div>
                 </div>
+                {isDbConnReq !== "Yes" &&
+                  <div className="form-group row">
+                    <label className="col-sm-5 col-form-label pe-0">{dt("JNDI For Saving Data")} : </label>
+                    <div className="col-sm-7 ps-0 align-content-center">
+                      <InputSelect
+                        id="jndiSavingData"
+                        name="jndiSavingData"
+                        // placeholder={dt("Select")}
+                        options={jndiServerDrpData}
+                        className="backcolorinput"
+                        onChange={handleValueChange}
+                        value={values?.jndiSavingData}
+                      />
+                    </div>
+                  </div>
+                }
+                {isDbConnReq === "Yes" &&
+                  <div className="form-group row">
+                    <label className="col-sm-5 col-form-label pe-0">{dt("Database for fetch data")} : </label>
+                    <div className="col-sm-7 ps-0 align-content-center">
+                      <InputSelect
+                        id="softDbType"
+                        name="softDbType"
+                        // placeholder={dt("Select")}
+                        options={dbConnectionDrpData}
+                        className="backcolorinput"
+                        onChange={handleValueChange}
+                        value={values?.softDbType}
+                      />
+                    </div>
+                  </div>
+                }
+
               </div>
               {/* right columns */}
               <div className='col-sm-6'>
+
+
                 <div className="form-group row">
                   <label className="col-sm-5 col-form-label pe-0">{dt("Statement Time Out")} : </label>
                   <div className="col-sm-7 ps-0 align-content-center">
@@ -1232,6 +1292,7 @@ const ParameterMaster = () => {
                     />
                   </div>
                 </div>
+
               </div>
             </div>
           </div>

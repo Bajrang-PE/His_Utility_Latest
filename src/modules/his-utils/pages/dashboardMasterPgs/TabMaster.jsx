@@ -16,7 +16,7 @@ import GlobalDataTable from '../../components/commons/GlobalDataTable';
 import { ToastAlert } from '../../utils/commonFunction';
 import { fetchPostData } from '../../../../utils/HisApiHooks';
 import { useDispatch, useSelector } from 'react-redux';
-import { setPopupData ,resetDefaultState} from '../../Features/Popup/popupSlice';
+import { setPopupData, resetDefaultState } from '../../Features/Popup/popupSlice';
 
 const TabMaster = () => {
 
@@ -35,6 +35,7 @@ const TabMaster = () => {
   );
   const dispatch = useDispatch();
 
+
   const [values, setValues] = useState({
     "tabFor": "", "tabNameDisplay": "", "tabNameInternal": "", "parentTab": "", "ellipseInDisplay": "",
     "tabIconImage": "", "iconName": "", "id": '',
@@ -44,7 +45,7 @@ const TabMaster = () => {
     //parameter detail
     "parameterOption": "1", "loadOption": "ONWINDOWLOAD", "paraComboBgColor": "", "paraComboFontColor": "", "paraLabelFontColor": "", "paraRemark": "", 'allParameters': "",
     //jndi
-    "jndiSavingData": "", "stmtTimeOut": "5",
+    "jndiSavingData": "", "stmtTimeOut": "5", "softDbType": '',
     //footer
     "footerAlignment": "", "footerQuery": "", "footerText": "", "webRefName": "", "webServiceName": "",
     //helpDocs
@@ -58,7 +59,7 @@ const TabMaster = () => {
     //tab details
     "showTabNameInDetail": "Yes", "widgetMaxMin": "No",
     //footer detail
-    "isLegendCollapes": "Yes", "isMarqueeReq": "No", "isLegendBorderReq": "Yes", "isLayout": 'No'
+    "isLegendCollapes": "Yes", "isMarqueeReq": "No", "isLegendBorderReq": "Yes", "isLayout": 'No', "isSoftDbConnReq": "No"
   })
 
   //multi params
@@ -97,8 +98,6 @@ const TabMaster = () => {
       setValues({ ...values, "tabFor": dashFor })
     }
   }, [dashFor])
-
-
 
   useEffect(() => {
     if (values?.tabFor) {
@@ -153,12 +152,114 @@ const TabMaster = () => {
   const handleRadioChange = (e) => {
     const { name, value, type, checked } = e.target;
     const error = name + 'Err'
-    setRadioValues((prev) => ({
-      ...prev,
-      [name]: type === "checkbox" ? checked : value,
-    }));
-    if (error && name) {
-      setErrors({ ...errors, [error]: '' })
+    if (name === "isLayout") {
+      if (value === 'Yes' && values?.widgetMappingDetail?.length > 0) {
+        const mappedWidgets = values?.widgetMappingDetail || [];
+        const mappedParams = values?.allParameters || '';
+        const sortedWidgets = [...mappedWidgets].sort((a, b) =>
+          parseInt(a.displayOrder) - parseInt(b.displayOrder)
+        );
+
+        const gridLayoutData = [];
+        let currentY = 0;
+        let currentRowHeight = 0;
+
+        if (mappedParams) {
+          const paramIds = mappedParams.split(',').map(id => id.trim()).filter(id => id);
+          paramIds.forEach((paramId, index) => {
+            const w = 12;
+            const h = 2;
+            let x = 0;
+            let y = currentY;
+            gridLayoutData.push({
+              dataSet: {
+                "str_id": paramId?.toString(),
+                "str_name": parameterDrpData?.find(item => item.value == paramId)?.label,
+                "str_type": "Parameter"
+              },
+              id: paramId?.toString(),
+              itemId: paramId?.toString(),
+              type: "Parameter",
+              layout: {
+                h: h,
+                i: paramId?.toString(),
+                w: w,
+                x: x,
+                y: y,
+                moved: false,
+                static: false
+              }
+            });
+            currentY = y;
+          });
+        }
+
+        sortedWidgets.forEach((widget) => {
+          const w = parseInt(widget.widgetWidth) || 6;
+          const h = Math.max(2, Math.floor(parseInt(widget.widgetHeight) / 120)) || 4;
+
+          let x = 0;
+          let y = currentY;
+
+          if (gridLayoutData.length > 0) {
+            const lastItem = gridLayoutData[gridLayoutData.length - 1];
+            if (lastItem.layout.x + lastItem.layout.w >= 12) {
+              x = 0;
+              y = currentY + currentRowHeight;
+              currentRowHeight = h;
+            } else {
+              x = lastItem.layout.x + lastItem.layout.w;
+              currentRowHeight = Math.max(currentRowHeight, h);
+            }
+          } else {
+            currentRowHeight = h;
+          }
+
+          gridLayoutData.push({
+            dataSet: {
+              "str_id": widget.rptId.toString(),
+              "str_name": widgetDrpData?.find((dt) => dt?.value == widget?.rptId)?.label,
+              "str_type": "Widgit"
+            },
+            id: widget.rptId.toString(),
+            itemId: widget.rptId.toString(),
+            type: "Widgit",
+            layout: {
+              h: h,
+              i: widget.rptId.toString(),
+              w: w,
+              x: x,
+              y: y,
+              moved: false,
+              static: false
+            }
+          });
+
+          currentY = y;
+        });
+
+        setTablayout(gridLayoutData?.map((dt) => (dt?.layout)) || []);
+        dispatch(setPopupData(gridLayoutData ? gridLayoutData : []));
+      } else if (values?.widgetMappingDetail?.length > 0 && value === 'No') {
+        setTablayout([]);
+        dispatch(resetDefaultState([]));
+      }
+      setRadioValues((prev) => ({
+        ...prev,
+        [name]: type === "checkbox" ? checked : value,
+      }));
+      if (error && name) {
+        setErrors({ ...errors, [error]: '' })
+      }
+
+    } else {
+      setRadioValues((prev) => ({
+        ...prev,
+        [name]: type === "checkbox" ? checked : value,
+      }));
+      if (error && name) {
+        setErrors({ ...errors, [error]: '' })
+      }
     }
     // setIsInputChanged(true)
   };
@@ -282,6 +383,7 @@ const TabMaster = () => {
         // jndi
         jndiSavingData: jsonData?.JNDIid,//
         stmtTimeOut: jsonData?.statementTimeOut,//
+        softDbType: jsonData?.softDbType,//
         // footer
         footerAlignment: jsonData?.footerAlign,//
         footerQuery: jsonData?.lastUpdatedQuery,//
@@ -306,19 +408,17 @@ const TabMaster = () => {
         isLegendCollapes: jsonData?.isLegendCollapes,//
         isMarqueeReq: jsonData?.isMarqueeRequired,//
         isLegendBorderReq: jsonData?.isLegendBorderRequired,//
-        isLayout: jsonData?.isLayoutWithPreview || 'No'
+        isLayout: jsonData?.isLayoutWithPreview || 'No',
+        isSoftDbConnReq: jsonData?.isSoftDbConnReq,//
 
       })
       setTablayout(jsonData.tabLayout ? (jsonData?.tabLayout) : []);
       // if (droppedComponents?.length >o) {
-        dispatch(setPopupData(jsonData?.droppedComponents ? jsonData?.droppedComponents : []));
+      dispatch(setPopupData(jsonData?.droppedComponents ? jsonData?.droppedComponents : []));
       // }
       setLoading(false)
     }
   }, [singleData]);
-
-  console.log('singleData', singleData)
-  console.log('dropp', droppedComponents)
 
 
   const saveTabData = () => {
@@ -335,13 +435,13 @@ const TabMaster = () => {
       helpDocs,
       // widget
       widgetMappingDetail,
-      jndiSavingData, stmtTimeOut
+      jndiSavingData, stmtTimeOut, softDbType
     } = values;
 
     const {
       isTabUsedForDrill, isTabNameInReportReq, isCssTabIconReq,
       showTabNameInDetail, widgetMaxMin, isLegendCollapes,
-      isMarqueeReq, isLegendBorderReq, isLayout } = radioValues;
+      isMarqueeReq, isLegendBorderReq, isLayout, isSoftDbConnReq } = radioValues;
 
     const selectedIdParams = selectedOptions?.length > 0 ? selectedOptions?.map(option => option?.value).join(",") : '';
 
@@ -361,7 +461,7 @@ const TabMaster = () => {
         parameterOptions: parameterOption, tabLoadOption: loadOption, tabParameterComboBGColor: paraComboBgColor, tabParameterComboFontColor: paraComboFontColor, tabParameterLabelFontColor: paraLabelFontColor, parameterRemarks: paraRemark,
         allParameters: selectedIdParams,
         //jndi
-        statementTimeOut: stmtTimeOut, JNDIid: jndiSavingData,
+        statementTimeOut: stmtTimeOut, JNDIid: jndiSavingData, isSoftDbConnReq: isSoftDbConnReq, softDbType: softDbType,
         //footer and list
         footerAlign: footerAlignment, lastUpdatedQuery: footerQuery, footerText: footerText, footerserviceReferenceNo: webRefName, footerwebserviceUrl: webServiceName, docJsonString: JSON.stringify(helpDocs),
         lstDashboardWidgetMapping: widgetMappingDetail,
@@ -410,13 +510,13 @@ const TabMaster = () => {
       helpDocs,
       // widget
       widgetMappingDetail,
-      jndiSavingData, stmtTimeOut
+      jndiSavingData, stmtTimeOut, softDbType
     } = values;
 
     const {
       isTabUsedForDrill, isTabNameInReportReq, isCssTabIconReq,
       showTabNameInDetail, widgetMaxMin, isLegendCollapes,
-      isMarqueeReq, isLegendBorderReq, isLayout } = radioValues;
+      isMarqueeReq, isLegendBorderReq, isLayout, isSoftDbConnReq } = radioValues;
     const selectedIdParams = selectedOptions?.length > 0 ? selectedOptions?.map(option => option?.value).join(",") : '';
 
     const val = {
@@ -435,7 +535,7 @@ const TabMaster = () => {
         //params
         parameterOptions: parameterOption, tabLoadOption: loadOption, tabParameterComboBGColor: paraComboBgColor, tabParameterComboFontColor: paraComboFontColor, tabParameterLabelFontColor: paraLabelFontColor, parameterRemarks: paraRemark, allParameters: selectedIdParams,
         //jndi
-        statementTimeOut: stmtTimeOut, JNDIid: jndiSavingData,
+        statementTimeOut: stmtTimeOut, JNDIid: jndiSavingData, isSoftDbConnReq: isSoftDbConnReq, softDbType: softDbType,
         //footer and list
         footerAlign: footerAlignment, lastUpdatedQuery: footerQuery, footerText: footerText, footerserviceReferenceNo: webRefName, footerwebserviceUrl: webServiceName, docJsonString: JSON.stringify(helpDocs),
         lstDashboardWidgetMapping: widgetMappingDetail,
@@ -665,6 +765,8 @@ const TabMaster = () => {
       sortable: true,
     },
   ]
+
+
 
 
   return (

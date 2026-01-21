@@ -26,6 +26,8 @@ self.onmessage = async (e) => {
         const pdf = new jsPDF(orientation, 'mm', 'a4');
         const pageWidth = pdf.internal.pageSize.getWidth();
 
+        let isTotal = false;
+
         const drawHeader = (doc) => {
             const logoWidth = 15, logoHeight = 18, margin = 10, textMargin = 10;
             const alignment = headingAlignment?.toLowerCase() || 'center';
@@ -89,6 +91,58 @@ self.onmessage = async (e) => {
             // yPosition += 5;
         }
         const maxColsPerPage = 10;
+
+        // ============ CHANGE START: Helper function to calculate totals ============
+        const calculateTotals = (tableData, headers) => {
+            // Initialize column totals
+            const columnTotals = {};
+            headers.forEach(header => {
+                columnTotals[header.dataKey] = 0;
+            });
+
+            // Calculate row totals and column totals
+            const rowsWithTotals = tableData.map(row => {
+                let rowTotal = 0;
+                let hasNumericValues = false;
+                const newRow = { ...row };
+
+                headers.forEach(header => {
+                    const value = row[header.dataKey];
+
+                    // Try to convert to number if possible
+                    if (value !== null && value !== undefined && value !== '') {
+                        const numValue = Number(value);
+                        if (!isNaN(numValue)) {
+                            rowTotal += numValue;
+                            columnTotals[header.dataKey] += numValue;
+                            hasNumericValues = true;
+                        }
+                    }
+                });
+
+                // Add row total to the row
+                newRow.TOTAL = hasNumericValues ? rowTotal : null;
+                return newRow;
+            });
+
+            // Create total row at the bottom
+            const totalRow = {};
+            headers.forEach(header => {
+                totalRow[header.dataKey] = columnTotals[header.dataKey] || '';
+            });
+
+            const grandTotal = Object.values(columnTotals).reduce((sum, val) => sum + val, 0);
+
+            totalRow.TOTAL = grandTotal;
+
+            return {
+                rows: rowsWithTotals,
+                totalRow: totalRow,
+                headers: [...headers, { header: 'TOTAL', dataKey: 'TOTAL', align: 'right' }]
+            };
+        };
+        // ============ CHANGE END: Helper function to calculate totals ============
+
         // CHANGE START — Loop through each table in multipleTables
         multipleTables.forEach((data, tableIndex) => {
             if (!Array.isArray(data?.data) || data?.data.length === 0) return;
@@ -124,9 +178,18 @@ self.onmessage = async (e) => {
             }
 
             const unwantedKeys = ['pkcolumn'];
-            const headers = Object.keys(tableData[0] || {})
+            let headers = Object.keys(tableData[0] || {})
                 .filter(key => !unwantedKeys.includes(key))
                 .map(key => ({ header: key.toString().toUpperCase(), dataKey: key }));
+
+
+
+            // ============ CHANGE START: Calculate totals ============
+            const { rows: dataWithTotals, totalRow, headers: headersWithTotal } = calculateTotals(tableData, headers);
+            if (isTotal) {
+                headers = headersWithTotal;
+            }
+            // ============ CHANGE END: Calculate totals ============
 
 
             const columnCount = headers.length;
@@ -164,22 +227,60 @@ self.onmessage = async (e) => {
             };
 
 
-            const chunkData = tableData.map(row =>
+            // const chunkData = tableData.map(row =>
+            //     headers.map(header => {
+            //         const content = row[header.dataKey];
+            //         if (content === null || content === undefined) return '';
+            //         if (typeof content === 'object') return JSON.stringify(content);
+            //         if (typeof content === 'string' && content.includes('##')) {
+            //             const sst = content.split('##')[0];
+            //             return stripHtml(sst);
+            //         }
+            //         //  Strip HTML if string contains tags
+            //         if (typeof content === 'string') {
+            //             return stripHtml(content);
+            //         }
+            //         return content.toString();
+            //     })
+            // );
+
+
+            // FOR TOTAL COLUMN
+            let chunkData = (isTotal ? dataWithTotals : tableData)?.map(row =>
                 headers.map(header => {
                     const content = row[header.dataKey];
-                    if (content === null || content === undefined) return '';
+                    if (content === null || content === undefined || content === '') return '';
                     if (typeof content === 'object') return JSON.stringify(content);
                     if (typeof content === 'string' && content.includes('##')) {
                         const sst = content.split('##')[0];
                         return stripHtml(sst);
                     }
-                    //  Strip HTML if string contains tags
                     if (typeof content === 'string') {
                         return stripHtml(content);
                     }
                     return content.toString();
                 })
             );
+
+            // Add total row at the bottom
+            const totalRowData = headers.map(header => {
+                if (header.dataKey === 'TOTAL') {
+                    return 'Total';
+                }
+                const content = totalRow[header.dataKey];
+                if (content === null || content === undefined || content === '') return '';
+                if (typeof content === 'object') return JSON.stringify(content);
+                if (typeof content === 'string') {
+                    return stripHtml(content);
+                }
+                return content.toString();
+            });
+
+            // Add the total row to the data
+            if (isTotal) {
+                chunkData.push(totalRowData);
+            }
+            // ============ CHANGE END: Prepare data including totals ============
 
 
 
@@ -207,9 +308,34 @@ self.onmessage = async (e) => {
                     textColor: '#000000'
                 },
                 columnStyles: headers.reduce((styles, header, idx) => {
-                    styles[idx] = { cellWidth: header.width, halign: header.align, overflow: 'linebreak', };
+                    styles[idx] = {
+                        cellWidth: header.width,
+                        halign: header.align,
+                        overflow: 'linebreak',
+                        // ============ CHANGE START: Style for total row ============
+                        ...(idx === headers.length - 1 && isTotal && {
+                            fontStyle: 'bold',
+                            fillColor: [240, 240, 240]
+                        })
+                        // ============ CHANGE END: Style for total row ============
+                    };
                     return styles;
                 }, {}),
+                // ============ CHANGE START: Style for total row ============
+                didParseCell: (data) => {
+                    // Style the last row (total row) and last column (TOTAL column)
+                    if (data.row.index === data.table.body.length - 1 && isTotal) {
+                        data.cell.styles.fillColor = [240, 240, 240];
+                        data.cell.styles.fontStyle = 'bold';
+                        data.cell.styles.textColor = [0, 0, 0];
+                    }
+                    // Style the TOTAL column header
+                    if (data.row.index === -1 && data.column.dataKey === 'TOTAL') {
+                        data.cell.styles.fillColor = pdfTableheaderBarColor || "#000000";
+                        data.cell.styles.textColor = pdfTableheadingFontColour || '#ffffff';
+                    }
+                },
+                // ============ CHANGE END: Style for total row ============
                 styles: { overflow: 'linebreak', fontSize: parseInt(pdfTableFontSize), cellPadding: 2 },
                 tableWidth: 'auto',
                 showHead: isPdfHeaderReqInAllPages === 'Yes' ? 'everyPage' : 'firstPage',

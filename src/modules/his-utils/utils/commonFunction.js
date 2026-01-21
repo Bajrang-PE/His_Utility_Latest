@@ -58,7 +58,7 @@ export const convertToISODate = (dateStr) => {
   return `${formattedYear}-${formattedMonth}-${day}`;
 };
 
-export const fetchQueryData = async (queryVO = [], jndiServer, params, pkColumn, isGlobal, setJndiName) => {
+export const fetchQueryData = async (queryVO = [], jndiServer, params, pkColumn, isGlobal, setJndiName, isSoftDbConnReq, softDbType) => {
 
   if (!Array.isArray(queryVO) || queryVO.length === 0) {
     console.error("Invalid or empty queryVO array provided.");
@@ -87,7 +87,9 @@ export const fetchQueryData = async (queryVO = [], jndiServer, params, pkColumn,
       strGroupParaId: params?.strGroupParaId,
       strGroupParaValue: params?.strGroupParaValue,
       popupId: popupIdStr ? popupIdStr : "",
-      popupValue: pkColumn ? pkColumn?.toString() : ""
+      popupValue: pkColumn ? pkColumn?.toString() : "",
+      // isSoftDbConnReq: isSoftDbConnReq || false,
+      // softDbType: softDbType || ''
       // popupValue: "99929068@99929068"
     };
 
@@ -446,3 +448,45 @@ export const backToParentWidget = (id, levelData, currentLevel, presentWidgets, 
     }
   }
 }
+
+const replaceQueryParams = (query, params = {}) => {
+  if (!query) return query;
+
+  return query.replace(/#PARA#(\d+)#PARA#/g, (match, paraId) => {
+    return params.hasOwnProperty(paraId)
+      ? params[paraId]
+      : -1;
+  });
+};
+
+
+
+export const fetchQueryDataPreview = async (queryVO, params) => {
+  try {
+    if (!queryVO) {
+      console.error("No valid query found in queryVO.");
+      return [];
+    }
+
+    // 🔹 Replace PARA values in query
+    const updatedQuery = replaceQueryParams(queryVO, params);
+
+    const requestBody = {
+      query: updatedQuery,
+      params: {},
+      jndi: '',
+      strGroupParaId: params?.strGroupParaId,
+      strGroupParaValue: params?.strGroupParaValue,
+      popupId: "",
+      popupValue: ""
+    };
+
+    const response = await fetchPostData(`/hisutils/GenericApiQry`, requestBody);
+      return response
+
+  } catch (error) {
+    console.error("Error fetching query data:", error);
+    return [];
+  }
+};
+

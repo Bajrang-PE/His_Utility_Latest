@@ -48,9 +48,6 @@ const TabDash = React.memo(() => {
                 masterName: "DashboardWidgetMst"
             };
             return fetchPostData(`/hisutils/getWdgtMultipleData?isGlobal=${isGlobal || 0}`, val,
-                //      '', {
-                //     signal: abortControllerRef.current.signal
-                // }
             ).then((data) => {
                 if (data?.status === 1) {
                     setAllWidgetData(data?.data);
@@ -289,7 +286,6 @@ const TabDash = React.memo(() => {
     const tabNameFontSize = activeTab?.jsonData?.tabnameFontSize || "150";
     const tabNameDecoration = activeTab?.jsonData?.tabnameDecoration || "none";
 
-    console.log(activeTab)
     return (
         <>
             {tabLoading ?
@@ -337,7 +333,7 @@ const TabDash = React.memo(() => {
                         <SessionClock />
                     </div> */}
 
-                        {(activeTab?.jsonData?.docJsonString && JSON.parse(activeTab?.jsonData?.docJsonString)?.length > 0) && (
+                        {/* {(activeTab?.jsonData?.docJsonString && JSON.parse(activeTab?.jsonData?.docJsonString)?.length > 0) && (
                             <>
 
                                 <div className='help-docs'>
@@ -352,7 +348,7 @@ const TabDash = React.memo(() => {
                                     </Suspense>
                                 </div>
                             </>
-                        )}
+                        )} */}
 
                         {tabNameReq === "Yes" &&
                             <h4 className='text-center'

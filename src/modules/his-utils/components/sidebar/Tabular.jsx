@@ -154,9 +154,9 @@ const Tabular = ({
         },
         headCells: {
             style: {
-                backgroundColor: headingBgColor,
-                color: headingFontColor,
-                textAlign: headingAlignment,
+                backgroundColor: headingBgColor || "#000000",
+                color: headingFontColor || "#ffffff",
+                textAlign: headingAlignment || 'left',
                 fontWeight: "bold",
                 padding: "10px",
                 borderRight: '1px solid #474646',

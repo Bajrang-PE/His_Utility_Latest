@@ -1,0 +1,130 @@
+@use '../Util/mixins' as *;
+@use '../Util/variables' as *;
+
+@keyframes textFlow {
+  0% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.guideLines {
+  background-image: $minimalistic-gradient;
+  box-shadow: $box-shadow-text-fields;
+  width: 100%;
+  border-radius: 8px;
+}
+
+.staticAccordian {
+  border: 1px solid #e0e0e0;
+  margin-bottom: 1rem;
+  overflow: hidden;
+  box-shadow: $box-shadow-text-fields;
+  z-index: 0;
+  overflow: hidden;
+  position: relative;
+  border: 1px solid $underline-color;
+
+  &__title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: .5rem 1rem;
+    text-shadow: 0 4px 8px rgba(243, 61, 61, 0.274);
+    cursor: pointer;
+    font-weight: 600;
+    font-family: $primary-font;
+    font-size: 1.5rem;
+    background: $guideline-gradient;
+    background-size: 300% 300%;
+    color: transparent;
+    -webkit-background-clip: text;
+    background-clip: text;
+    animation: textFlow 6s ease-in-out infinite;
+    transition: filter 0.3s ease;
+  }
+
+  &__arrow {
+    transition: transform 0.3s ease;
+    display: inline-block;
+    font-weight: bold;
+    font-size: 1em;
+
+    &.open {
+      transform: rotate(45deg);
+    }
+  }
+
+  &__content-wrapper {
+    overflow: hidden;
+    transition: height 0.35s cubic-bezier(0.25, 1, 0.5, 1);
+  }
+
+  &__list {
+    margin: 10px 0 12px 20px;
+    padding: 0 16px;
+    list-style: disc;
+  }
+
+  .guideLines__desc {
+    font-size: 1rem;
+    margin-bottom: 1rem;
+    font-family: $secondary-font;
+    letter-spacing: 1px;
+  }
+}
+
+.error {
+  background-image: $error-gradient;
+  margin-top: 1rem;
+  box-shadow: $error-box-shadow;
+}
+
+.error {
+  width: 100%;
+  padding: 1rem 2rem;
+  margin-bottom: 1rem;
+  border-radius: 1rem;
+  user-select: none;
+
+  &__para {
+    margin-top: 1rem;
+  }
+
+  &__text {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+
+    &--img {
+      height: 5rem;
+    }
+
+    &--heading {
+      font-family: $secondary-font;
+      font-weight: 700;
+      font-size: 2rem;
+      margin-bottom: 1rem;
+      color: $pure-white;
+    }
+  }
+
+  &__desc {
+    font-family: $secondary-font;
+    font-weight: 500;
+    color: $pure-white;
+    font-size: 1rem;
+    line-height: 1rem;
+
+    &:not(:last-child) {
+      margin-bottom: 1.5rem;
+    }
+  }
+}

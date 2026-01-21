@@ -2,10 +2,10 @@
 @use 'sass:color';
 
 .tab__container {
-  border-radius: 2rem;
+  border-radius: 1rem;
   overflow: hidden;
   width: 90%;
-  margin-bottom: 3rem;
+  margin-bottom: 1rem;
 
   &-header {
     display: flex;
@@ -14,13 +14,13 @@
   }
 
   &-button {
-    padding: 1rem 2rem;
+    padding: .5rem .5rem;
     flex: 1;
     font-family: $secondary-font;
     cursor: pointer;
     background: none;
     letter-spacing: 2px;
-    font-size: 1.4rem;
+    font-size: 1rem;
     border: none;
 
     outline: none;

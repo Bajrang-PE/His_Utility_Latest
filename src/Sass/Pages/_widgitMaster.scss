@@ -1,29 +1,31 @@
 @use '../Util/variables' as *;
+@use '../Util/_mixins.scss' as *;
 
 .widgitMaster {
   padding-top: $global-top-padding;
-  width: 90%;
+  width: 99%;
   height: auto;
+  margin: .5rem;
 
   &__title {
     width: 100%;
     display: flex;
     gap: 2rem;
-    align-itrems: center;
+    align-items: center;
   }
 
 
   &__config {
-    width: 85%;
+    // width: 95%;
     display: flex;
-    align-itrems: center;
-    gap: 3rem;
-    margin-bottom: 2.5rem;
+    align-items: center;
+    gap: 2rem;
+    margin-bottom: 1rem;
     flex-wrap: wrap;
   }
 
   &__sqlEditor {
-    height: 35rem;
+    height: 22rem;
     width: 90%;
     box-shadow: $box-spherical-shadow;
     overflow: hidden;
@@ -32,24 +34,24 @@
 
   &__type {
     font-family: $secondary-font;
-    font-size: 2.2rem;
+    font-size: 1.5rem;
     font-weight: 500;
     letter-spacing: 2px;
-    margin-bottom: 2rem;
+    margin-bottom: 1rem;
   }
 
   &__paramConfig {
-    margin-top: 3rem;
-    padding-bottom: 5rem;
+    margin-top: 2rem;
+    padding-bottom: 2rem;
 
     &--warning {
       font-family: $secondary-font;
-      font-size: 1.8rem;
+      font-size: 1.2rem;
       letter-spacing: 1px;
       font-weight: 700;
       font-style: oblique;
       color: $indigo-color;
-      margin: 3rem;
+      margin: 2rem 1rem;
 
       &-bold {
         font-weight: 900;
@@ -61,31 +63,32 @@
     display: flex;
     gap: 3rem;
     flex-wrap: wrap;
-    align-itrems: center;
+    align-items: center;
   }
 
   &__controlBox {
-    padding-bottom: 2rem;
+    padding-bottom: 1rem;
     display: flex;
-    gap: 2rem;
-    margin-top: 3rem;
+    gap: 1rem;
+    margin-top: 1rem;
   }
 
   &__preview {
-    background-image: $gradient-success;
-    width: 90%;
-    height: auto;
-    border-radius: 2rem;
-    box-shadow: $box-spherical-light-shadow;
-    padding: 2rem 4rem;
+     @include previewComponentArea;
+    // background-image: $gradient-success;
+    // width: 99%;
+    // height: auto;
+    // border-radius: 1rem;
+    // box-shadow: $box-spherical-light-shadow;
+    // padding: 1rem 2rem;
 
     &--heading {
       font-family: $secondary-font;
-      font-size: 3rem;
+      font-size: 1.5rem;
       font-weight: 600;
       text-align: center;
-      margin: 1rem;
-      color: $pure-white;
+      margin: .5rem;
+      color: $dim-black;
     }
   }
 }

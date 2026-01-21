@@ -1,0 +1,6 @@
+@use '../Util/variables' as *;
+
+.global-alert-font {
+  font-family: $secondary-font;
+  font-size: .8rem;
+}

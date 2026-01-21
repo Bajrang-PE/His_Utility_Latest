@@ -125,12 +125,12 @@ export async function fetchAllComponents() {
   );
 
   if (response.data?.status === 0) {
-    console.log('Warning', response.data?.message);
+    console.warn('Warning', response.data?.message);
     return;
   }
 
   if (!response.data.status || response.data?.status === -1) {
-    console.log(response.message, response.data?.message);
+    console.warn(response.message, response.data?.message);
     return;
   }
 

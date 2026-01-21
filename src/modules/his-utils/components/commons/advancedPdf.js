@@ -117,7 +117,6 @@ export const generatePDF1 = async (widgetData, tableData, config, filters = []) 
   }
 };
 
-
 export const generatePDFff = async (widgetData, data, config, visibleColumns, isH2, filters = []) => {
   if (!widgetData) return;
   if (!Array.isArray(data) || data.length === 0) {
@@ -404,7 +403,6 @@ export const generatePDF = async (widgetData, multipleTables, config, visibleCol
     return;
   }
 
-
   const {
     pdfTheme,
     printPDFIn,
@@ -418,8 +416,6 @@ export const generatePDF = async (widgetData, multipleTables, config, visibleCol
     isPdfHeaderReqInAllPages,
     mpFormatColumn
   } = widgetData || {};
-
-
 
   const { reportHeader1, reportHeader2, reportHeader3, isLogoRequired, headingAlignment, logos } = config || {};
   const orientation = printPDFIn === 'Landscape' ? 'l' : 'p';
@@ -638,7 +634,6 @@ export const generatePDF = async (widgetData, multipleTables, config, visibleCol
   ToastAlert('Report Downloaded', 'success');
 
 };
-
 
 export const generatePDFbg = async (widgetData, tableData, config, filters = []) => {
   if (!widgetData) return;
@@ -1042,7 +1037,6 @@ export const generateGraphPDF = async (widgetData, tableData, config, visibleCol
   // }
 };
 
-
 export const generateCSVfff = (widgetData, multipleTables, config, visibleColumns, isH2) => {
   if (!Array.isArray(multipleTables) || multipleTables.length === 0) {
     ToastAlert('No data available to download.', 'warning');
@@ -1135,7 +1129,6 @@ export const generateCSVfff = (widgetData, multipleTables, config, visibleColumn
   document.body.removeChild(link);
 };
 
-
 export const generateCSV = (widgetData, multipleTables, config, visibleColumns, isH2, filters) => {
   if (!Array.isArray(multipleTables) || multipleTables.length === 0) {
     ToastAlert('No data available to download.', 'warning');
@@ -1165,77 +1158,11 @@ export const generateCSV = (widgetData, multipleTables, config, visibleColumns, 
   finalData.push([]);
 
   if (filters?.length) {
-    // finalData.push(['Filters Applied:']);
     filters.forEach(filter => {
       finalData.push([`${filter.disName}: ${filter.val}`]);
     });
     finalData.push([]); // extra empty line after filters
   }
-
-  // Loop through each table
-  // multipleTables.forEach((tableObj, tableIndex) => {
-  //   const { data, title } = tableObj;
-
-  //   if (!Array.isArray(data) || data.length === 0) {
-  //     finalData.push([`Table ${tableIndex + 1}: ${title || ''}`]);
-  //     finalData.push(['No Data Available']);
-  //     finalData.push([]);
-  //     return;
-  //   }
-
-  //   // Get columns
-  //   let columnNames;
-  //   if (isH2 === 'Yes') {
-  //     columnNames = visibleColumns?.map(col =>
-  //       col.name?.trim() ? `${col?.mainHeader}_${col?.name}` : col?.mainHeader
-  //     );
-  //   } else {
-  //     columnNames = visibleColumns?.map(col => col.name);
-  //   }
-
-  //   const unwantedKeys = ['pkcolumn'];
-  //   const tableHeaders = columnNames.filter(col => !unwantedKeys.includes(col));
-
-  //   // Add column headings
-  //   finalData.push(tableHeaders);
-
-  //   const stripHtml = (str) => {
-  //     if (!str) return '';
-  //     return str.replace(/<[^>]*>/g, '').trim();
-  //   };
-
-
-  //   // Add rows
-  //   data.forEach(row => {
-  //     // const filteredRow = tableHeaders.map(header => {
-  //     //   const content = row[header];
-  //     //   if (content === null || content === undefined) return '';
-  //     //   if (typeof content === 'object') return JSON.stringify(content);
-  //     //   if (typeof content === 'string' && content.includes('##')) {
-  //     //     return content.split('##')[0];
-  //     //   }
-  //     //   return content.toString();
-  //     // });
-  //     const filteredRow = tableHeaders.map(header => {
-  //       const content = row[header];
-  //       if (content === null || content === undefined) return '';
-  //       if (typeof content === 'object') return JSON.stringify(content);
-  //       if (typeof content === 'string') {
-  //         if (content.includes('##')) {
-  //           return stripHtml(content.split('##')[0]);
-  //         }
-  //         return stripHtml(content);
-  //       }
-  //       return content.toString();
-  //     });
-
-
-  //     finalData.push(filteredRow);
-  //   });
-
-  //   // Add an empty line after each table
-  //   finalData.push([]);
-  // });
 
   multipleTables.forEach((tableObj, tableIndex) => {
     const { data, title } = tableObj;
@@ -1247,7 +1174,7 @@ export const generateCSV = (widgetData, multipleTables, config, visibleColumns, 
       return;
     }
 
-    // 🔹 Use columns specific to this table
+    // Use columns specific to this table
     const currentColumns = Array.isArray(visibleColumns[tableIndex])
       ? visibleColumns[tableIndex]
       : visibleColumns;
@@ -1265,7 +1192,6 @@ export const generateCSV = (widgetData, multipleTables, config, visibleColumns, 
     const tableHeaders = columnNames.filter(col => !unwantedKeys.includes(col));
 
     // Add headings
-    // finalData.push([`Table ${tableIndex + 1}: ${title || ''}`]);
     finalData.push(tableHeaders);
 
     // Add rows
@@ -1304,9 +1230,9 @@ export const generateCSV = (widgetData, multipleTables, config, visibleColumns, 
   document.body.removeChild(link);
 };
 
-
 export const generateGraphCSV = (widgetData, data, config, visibleColumns, sortConfig, filters) => {
   if (!widgetData) return;
+
 
   const { rptDisplayName, xAxisLabel, yAxisLabel } = widgetData || {};
   const { reportHeader1, reportHeader2, reportHeader3 } = config || {};
@@ -1437,7 +1363,9 @@ export const generatePDFWorkers = (widgetData, multipleTables, config, visibleCo
       isH2,
       filters: JSON.parse(JSON.stringify(filters))
     };
-    confirm('Your report will be downloaded, press ok and wait sometime');
+
+    alert('Data is being downloaded. You can proceed further');
+
     worker.postMessage(safeData);
 
     worker.onmessage = (e) => {
@@ -1456,6 +1384,180 @@ export const generatePDFWorkers = (widgetData, multipleTables, config, visibleCo
         reject(error);
       }
       worker.terminate();
+    };
+  });
+};
+
+export const generateGraphPDFWorkers = (widgetData, tableData, config, visibleColumns, sortConfig, filters = []) => {
+
+  if (!widgetData) {
+    ToastAlert("No configuration available to download.", "warning");
+    return;
+  }
+
+  if (!Array.isArray(tableData[0]?.seriesData) || tableData[0].seriesData?.length === 0) {
+    ToastAlert('No data available to download.', 'warning');
+    return;
+  }
+
+  return new Promise((resolve, reject) => {
+    const worker = new Worker(
+      new URL("../../workers/graphPdfWorkers.js", import.meta.url),
+      { type: "module" }
+    );
+
+    const safeData = {
+      widgetData: JSON.parse(JSON.stringify(widgetData)),
+      tableData: JSON.parse(JSON.stringify(tableData)),
+      config: JSON.parse(JSON.stringify(config)),
+      visibleColumns: JSON.parse(JSON.stringify(visibleColumns)),
+      sortConfig: JSON.parse(JSON.stringify(sortConfig)),
+      filters: JSON.parse(JSON.stringify(filters))
+    };
+
+    alert('Data is being downloaded. You can proceed further');
+
+    worker.postMessage(safeData);
+
+    worker.onmessage = (e) => {
+      const { success, blob, fileName, error } = e.data;
+      if (success) {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = fileName;
+        a.click();
+        URL.revokeObjectURL(url);
+        resolve();
+        ToastAlert('Report Downloaded', 'success');
+      } else {
+        console.error("PDF generation failed:", error);
+        reject(error);
+      }
+      worker.terminate();
+    };
+  });
+};
+
+export const generateCSVWorkers = (widgetData, multipleTables, config, visibleColumns, isH2, filters = []) => {
+
+  if (!widgetData) {
+    ToastAlert("No configuration available to download.", "warning");
+    return;
+  }
+  if (!Array.isArray(multipleTables) || multipleTables.length === 0 || multipleTables[0]?.data?.length === 0 || !Array.isArray(multipleTables[0]?.data)) {
+    ToastAlert("No data available to download.", "warning");
+    return;
+  }
+
+  return new Promise((resolve, reject) => {
+    const worker = new Worker(
+      new URL("../../workers/csvWorkers.js", import.meta.url),
+      { type: "module" }
+    );
+
+    const safeData = {
+      widgetData: JSON.parse(JSON.stringify(widgetData)),
+      multipleTables: JSON.parse(JSON.stringify(multipleTables)),
+      config: JSON.parse(JSON.stringify(config)),
+      visibleColumns: JSON.parse(JSON.stringify(visibleColumns)),
+      isH2,
+      filters: JSON.parse(JSON.stringify(filters)),
+    };
+
+    alert('Data is being downloaded. You can proceed further');
+
+    worker.postMessage(safeData);
+
+    worker.onmessage = (e) => {
+      const { success, blob, fileName, error } = e.data;
+
+      if (success) {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = fileName;
+        a.click();
+        URL.revokeObjectURL(url);
+        ToastAlert("Report Downloaded Successfully", "success");
+        resolve();
+      } else {
+        console.error("CSV generation failed:", error);
+        ToastAlert("Failed to generate Report.", "error");
+        reject(error);
+      }
+
+      worker.terminate();
+    };
+
+    worker.onerror = (err) => {
+      console.error("Worker error:", err);
+      ToastAlert("Something went wrong during CSV generation.", "error");
+      worker.terminate();
+      reject(err);
+    };
+  });
+};
+
+export const generateGraphCSVWorkers = (widgetData, data, config, visibleColumns, sortConfig, filters) => {
+
+  if (!widgetData) {
+    ToastAlert("No configuration available to download.", "warning");
+    return;
+  }
+
+  if (!data[0].categories || data[0].categories.length === 0 ||
+    !data[0].seriesData || data[0].seriesData.length === 0 ||
+    !data[0].seriesData[0].data) {
+    ToastAlert('No data available to download.', 'warning');
+    return;
+  }
+
+  return new Promise((resolve, reject) => {
+    const worker = new Worker(
+      new URL("../../workers/graphCsvWorkers.js", import.meta.url),
+      { type: "module" }
+    );
+
+    const safeData = {
+      widgetData: JSON.parse(JSON.stringify(widgetData)),
+      data: JSON.parse(JSON.stringify(data)),
+      config: JSON.parse(JSON.stringify(config)),
+      visibleColumns: JSON.parse(JSON.stringify(visibleColumns)),
+      sortConfig: JSON.parse(JSON.stringify(sortConfig)),
+      filters: JSON.parse(JSON.stringify(filters)),
+    };
+
+    alert('Data is being downloaded. You can proceed further');
+
+    worker.postMessage(safeData);
+
+    worker.onmessage = (e) => {
+      const { success, blob, fileName, error } = e.data;
+
+      if (success) {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = fileName;
+        a.click();
+        URL.revokeObjectURL(url);
+        ToastAlert("Report Downloaded Successfully", "success");
+        resolve();
+      } else {
+        console.error("CSV generation failed:", error);
+        ToastAlert("Failed to generate Report.", "error");
+        reject(error);
+      }
+
+      worker.terminate();
+    };
+
+    worker.onerror = (err) => {
+      console.error("Worker error:", err);
+      ToastAlert("Something went wrong during CSV generation.", "error");
+      worker.terminate();
+      reject(err);
     };
   });
 };

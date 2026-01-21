@@ -24,12 +24,16 @@ import { fetchPostData } from '../../../../utils/HisApiHooks'
 
 const WidgetMaster = () => {
 
-  const { setShowDataTable, allWidgetData, getAllWidgetData, dashboardForDt, getDashboardForDrpData, parameterData, getAllParameterData, widgetDrpData, getAllServiceData, dataServiceData, selectedOption, setSelectedOption, actionMode, setActionMode, parameterDrpData, setLoading, setShowConfirmSave, confirmSave, setConfirmSave, getAllTabsData, tabDrpData, getDashConfigData, singleConfigData, dt } = useContext(HISContext);
+  const { setShowDataTable, allWidgetData, getAllWidgetData, dashboardForDt, getDashboardForDrpData, parameterData, getAllParameterData, widgetDrpData, getAllServiceData, dataServiceData, selectedOption, setSelectedOption, actionMode, setActionMode, parameterDrpData, setLoading, setShowConfirmSave, confirmSave, setConfirmSave, getAllTabsData, tabDrpData, getDashConfigData, singleConfigData, dt, widgetGraphPreviewData, setWidgetGraphPreviewData } = useContext(HISContext);
 
   const [values, setValues] = useState({
-    "id": "", "widgetFor": "", "widgetType": "columnBased", "widgetNameDisplay": "", "widgetNameInternal": "", "widgetRefreshTime": "", "widgetRefreshDelayTime": "", "cachingStatus": "Cache for All", "limit": "150", "widgetHadingClr": "", "widgetTopMargin": "", "headingBgColor": "", "headingFontColor": "#ffffff", "headingDisplayStyle": "", "recordsPerPage": "", "pagePerBlock": "", "DataScrollHeight": "", "parentWidget": "", "columnNoToDisplay": "1", "leftClmNoToFixed": "", "rightClmNoToFixed": "", "linkedWidget": [], "actionBtnReq": "", "pdfTableFontSize": "10", "pdfTableHeadBarClr": "", "pdfTableHeadTxtFontClr": "", "groupClmNoComma": "", "query": "", "webQuery": "", "procedureName": "", "recordsPerPageTreeCh": "", "parameterOption": "", "loadOption": "ONWINDOWLOAD", "paraComboBgColor": "", "paraComboFontColor": "", "paraLabelFontColor": "", "jndiSavingData": "", "stmtTimeOut": "5", "lastUpdatedQuery": "", "FooterText": "", "customMsgForNoData": "", "treeChildQuery": "", "treeChildProcedure": "", "popUpDetails": [], "queryLabel": '', "htmlText": '', 'iconName': "",
+    "id": "", "widgetFor": "", "widgetType": "columnBased", "widgetNameDisplay": "", "widgetNameInternal": "", "widgetRefreshTime": "", "widgetRefreshDelayTime": "", "cachingStatus": "Cache for All", "limit": "150", "widgetHadingClr": "", "widgetTopMargin": "", "headingBgColor": "", "headingFontColor": "#ffffff", "headingDisplayStyle": "", "recordsPerPage": "", "pagePerBlock": "", "DataScrollHeight": "", "parentWidget": "", "columnNoToDisplay": "1", "leftClmNoToFixed": "", "rightClmNoToFixed": "", "linkedWidget": [], "actionBtnReq": "", "pdfTableFontSize": "10", "pdfTableHeadBarClr": "", "pdfTableHeadTxtFontClr": "", "groupClmNoComma": "", "query": "", "webQuery": "", "procedureName": "", "recordsPerPageTreeCh": "", "parameterOption": "", "loadOption": "ONWINDOWLOAD", "paraComboBgColor": "", "paraComboFontColor": "", "paraLabelFontColor": "", "jndiSavingData": "", "stmtTimeOut": "5", "lastUpdatedQuery": "", "FooterText": "", "customMsgForNoData": "", "treeChildQuery": "", "treeChildProcedure": "", "popUpDetails": [], "queryLabel": '', "htmlText": '', 'iconName': "", "softDbType": '',
     //graphs fields
     "defaultPluginName": "highchart", "defaultGraphType": "BAR_GRAPH", "graphTypes": [], "clmNameForLineGraph": "", "colorsForBars": "", "graphHeight": "", "graphBottomMargin": "", "graphBgStartColor": "", "graphBgEndColor": "", "graphFontColor": "", "graphTypeBgColor": "", "graphTypeFontColor": "", "labelRotation": "", "alphaGraph3D": "", "betaGraph3D": "", "xAxisLabel": "", "yAxisLabel": "", "xAxisFontSize": "", "yAxisFontSize": "", "annotationFontSize": "", "maxValueOfAxis": "", "parentWidgetGraph": "", "isActionBtnReqGraph": "Yes", "minValueOfAxis": '',
+    "chartColorsPreview": "",
+    "chartTypesPreview": "",
+    "selectedXAxisPreview": "",
+    "selectedYAxisPreview": "",
     //kpi details
     "kpiType": "0", "kpiBorderWidth": "", "kpiBorderColor": "", "kpiIconType": "FONT_ICON", "kpiTabIconImage": "", "kpiDefaultBgColor": "#ffffff", "kpiDefaultFontColor": "", "kpiDefaultHoverBg": "", "kpiIconColor": "", "kpiBoxClickOptions": "0", "kpiTabOpenOnClick": "", "kpiWidgetOpenOnClick": "", "kpiDashboardOpenOnClick": "",
     "kpiTabLinkName": "", "kpiWidgetLinkName": "", "kpiLinkColor": "", "kpiLinkFontColor": "",
@@ -42,7 +46,7 @@ const WidgetMaster = () => {
     // other link
     "lstOtherLink": [],
     "sqChildJsonString": [],
-    "selFilterIds": "", "mpFormatColumn": ""
+    "selFilterIds": "", "mpFormatColumn": "", "isPreviewVisible": "No"
   })
 
   const [radioValues, setRadioValues] = useState({
@@ -59,7 +63,10 @@ const WidgetMaster = () => {
     //map
     isChildBasedPrimaryKey: "Yes", isHideParentMap: "Yes",
     //iframe
-    isSsoUrl: "Yes"
+    isSsoUrl: "Yes", "isSoftDbConnReq": "No",
+
+    //FOR WIDGET PREVIEW
+    isQueryDataPreview: "No", isParameterReq: "No"
   })
 
   const [tabIndex, setTabIndex] = useState(1);
@@ -120,6 +127,7 @@ const WidgetMaster = () => {
       setAvailableOptions(parameterDrpData);
     }
   }, [values?.selFilterIds, parameterDrpData]);
+
 
   //to set value of dashboard for auto
   const dashFor = localStorage.getItem('dfor');
@@ -301,7 +309,7 @@ const WidgetMaster = () => {
       //iframe
       "urlForIframe": "",
       "lstOtherLink": [],
-      "sqChildJsonString": []
+      "sqChildJsonString": [], "isPreviewVisible": "No"
     });
     setRadioValues({
       widgetViewed: 'Tabular', isWidgetNameVisible: 'Yes', selectedModeQuery: 'Query', widgetPurpose: 'HTML',
@@ -317,7 +325,8 @@ const WidgetMaster = () => {
       //map
       isChildBasedPrimaryKey: "Yes", isHideParentMap: "Yes",
       //iframe
-      isSsoUrl: "Yes"
+      isSsoUrl: "Yes", 
+      isQueryDataPreview: "No", isParameterReq: "No"
     });
     setErrors({
       widgetForErr: "", widgetNameDisplayErr: "", widgetNameInternalErr: "", defaultGraphTypeErr: "", graphTypesErr: "", clmNameForLineGraphErr: "", defaultPluginNameErr: "",
@@ -341,6 +350,13 @@ const WidgetMaster = () => {
     setRows([{ queryLabel: "", mainQuery: "", isMultiRowDataTable: "", tableDataDisplay: "horizontal", totalRecordCountQuery: "" }]);
 
     setProcedureRows([{ queryLabel: "", serviceReferenceNumber: "", webserviceName: "", isMultiRowDataTable: "", tableDataDisplay: "horizontal" }]);
+
+    setWidgetGraphPreviewData({
+      "chartColorsPreview": {},
+      "chartTypesPreview": {},
+      "selectedXAxisPreview": [],
+      "selectedYAxisPreview": [],
+    })
     // setIsInputChanged(false)
   }
 
@@ -380,7 +396,6 @@ const WidgetMaster = () => {
 
     return widgetDrpData.filter(item => ids.includes(String(item.value)));
   }
-
 
   useEffect(() => {
     if (singleData?.length > 0) {
@@ -494,7 +509,8 @@ const WidgetMaster = () => {
         // single query parent
         sqChildJsonString: singleData[0]?.sqChildJsonString ? JSON?.parse(singleData[0]?.sqChildJsonString) : [],
         selFilterIds: singleData[0]?.selFilterIds,
-        mpFormatColumn: singleData[0]?.mpFormatColumn
+        mpFormatColumn: singleData[0]?.mpFormatColumn,
+        softDbType: singleData[0]?.softDbType,//
       });
       setRadioValues({
         ...radioValues,
@@ -561,8 +577,12 @@ const WidgetMaster = () => {
         isHideParentMap: singleData[0]?.isHideParent,//
         // Iframe fields
         isSsoUrl: singleData[0]?.isSSOUrl,//
+        isSoftDbConnReq: singleData[0]?.isSoftDbConnReq,//
+        isQueryDataPreview: singleData[0]?.isQueryDataPreview || "No",
+        isParameterReq: singleData[0]?.isParameterReq || "No"
       });
       setRows(singleData[0]?.queryVO && singleData[0]?.queryVO?.length > 0 ? singleData[0]?.queryVO : [])
+      setWidgetGraphPreviewData(singleData[0]?.widgetGraphPreviewData || {})
       setLoading(false)
     }
   }, [singleData]);
@@ -602,6 +622,7 @@ const WidgetMaster = () => {
     }
   }, [widgetSearchInput, allWidgetData]);
 
+
   const saveWidgetData = () => {
     setLoading(true)
     const {
@@ -618,7 +639,7 @@ const WidgetMaster = () => {
       // newsTicker fields
       noOfNewsVisible, newsSpeed, newsInterval,
       // iframe
-      urlForIframe, lstOtherLink, sqChildJsonString, mpFormatColumn } = values;
+      urlForIframe, lstOtherLink, sqChildJsonString, mpFormatColumn, softDbType } = values;
 
     const {
       widgetViewed, isWidgetNameVisible, selectedModeQuery, widgetPurpose, widgetHeadingAlign, isRecordLimitReq, isWidgetBorderReq,
@@ -634,7 +655,10 @@ const WidgetMaster = () => {
       // Map fields
       isChildBasedPrimaryKey, isHideParentMap,
       // Iframe fields
-      isSsoUrl
+      isSsoUrl, isSoftDbConnReq,
+
+      //for widget preview
+      isQueryDataPreview, isParameterReq
     } = radioValues;
 
     const selectedIdParams = selectedOptions?.length > 0 ? selectedOptions?.map(option => option?.value).join(",") : '';
@@ -811,7 +835,14 @@ const WidgetMaster = () => {
         isChildBasedOnPK: isChildBasedPrimaryKey,
         isHideParentMap: isHideParentMap,
         //iframe
-        isSSOUrl: isSsoUrl
+        isSSOUrl: isSsoUrl,
+        isSoftDbConnReq: isSoftDbConnReq, softDbType: softDbType,
+
+        //for widget preview
+        isQueryDataPreview: isQueryDataPreview || 'No',
+        isParameterReq: isParameterReq || 'no',
+        widgetGraphPreviewData: widgetGraphPreviewData || {}
+
       }
     };
     fetchPostData("/hisutils/createWidget", val).then((data) => {
@@ -847,7 +878,7 @@ const WidgetMaster = () => {
       // newsTicker fields
       noOfNewsVisible, newsSpeed, newsInterval,
       // iframe
-      urlForIframe, lstOtherLink, sqChildJsonString, mpFormatColumn } = values;
+      urlForIframe, lstOtherLink, sqChildJsonString, mpFormatColumn, softDbType } = values;
 
     const {
       widgetViewed, isWidgetNameVisible, selectedModeQuery, widgetPurpose, widgetHeadingAlign, isRecordLimitReq, isWidgetBorderReq,
@@ -863,7 +894,9 @@ const WidgetMaster = () => {
       // Map fields
       isChildBasedPrimaryKey, isHideParentMap,
       // Iframe fields
-      isSsoUrl
+      isSsoUrl, isSoftDbConnReq,
+      //for widget preview
+      isParameterReq, isQueryDataPreview
     } = radioValues;
     const selectedIdParams = selectedOptions?.length > 0 ? selectedOptions?.map(option => option?.value).join(",") : '';
 
@@ -1042,7 +1075,12 @@ const WidgetMaster = () => {
         isChildBasedOnPK: isChildBasedPrimaryKey,
         isHideParentMap: isHideParentMap,
         //iframe
-        isSSOUrl: isSsoUrl
+        isSSOUrl: isSsoUrl, isSoftDbConnReq: isSoftDbConnReq, softDbType: softDbType,
+
+        //for widget preview
+        isQueryDataPreview: isQueryDataPreview || 'No',
+        isParameterReq: isParameterReq || 'no',
+        widgetGraphPreviewData: widgetGraphPreviewData || {}
       }
     }
     fetchPostData("/hisutils/updateWidget", val).then((data) => {
@@ -1384,7 +1422,7 @@ const WidgetMaster = () => {
               }
 
               {tabName?.value === 2 &&
-                <QueryDetails handleValueChange={handleValueChange} handleRadioChange={handleRadioChange} radioValues={radioValues} values={values} setValues={setValues} singleData={singleData} errors={errors} setErrors={setErrors} {...{ rows, setRows, procedureRows, setProcedureRows }} dt={dt} />
+                <QueryDetails handleValueChange={handleValueChange} handleRadioChange={handleRadioChange} radioValues={radioValues} values={values} setValues={setValues} singleData={singleData} errors={errors} setErrors={setErrors} {...{ rows, setRows, procedureRows, setProcedureRows }} dt={dt} selectedOptions={selectedOptions} setSelectedOptions={setSelectedOptions} />
               }
 
               {tabName?.value === 3 &&
@@ -1413,7 +1451,7 @@ const WidgetMaster = () => {
               }
 
               {(tabName?.value === 4 && (radioValues?.widgetViewed === "Criteria_Map" || radioValues?.widgetViewed === "Graph" || radioValues?.widgetViewed === "Tabular")) &&
-                <ParamsDetail handleValueChange={handleValueChange} values={values} pageName={'widget'} parameterDrpData={parameterDrpData} availableOptions={availableOptions} setAvailableOptions={setAvailableOptions} selectedOptions={selectedOptions} setSelectedOptions={setSelectedOptions} errors={errors} dt={dt} />}
+                <ParamsDetail handleValueChange={handleValueChange} values={values} pageName={'widget'} parameterDrpData={parameterDrpData} availableOptions={availableOptions} setAvailableOptions={setAvailableOptions} selectedOptions={selectedOptions} setSelectedOptions={setSelectedOptions} errors={errors} dt={dt} radioValues={radioValues} />}
 
               {tabName?.value === 5 &&
                 <JndiDetails handleValueChange={handleValueChange} handleRadioChange={handleRadioChange} radioValues={radioValues} values={values} errors={errors} dt={dt} />}

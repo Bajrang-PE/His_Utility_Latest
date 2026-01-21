@@ -54,39 +54,44 @@ const GraphWidget = (props) => {
                             }
                         </div>
                     </div>
-                    <div className="form-group row">
-                        <label className="col-sm-5 col-form-label pe-0 required-label">{dt("Default Graph Type")} : </label>
-                        <div className="col-sm-7 ps-0 align-content-center">
-                            <InputSelect
-                                className="backcolorinput "
-                                // placeholder="Enter value..."
-                                name='defaultGraphType'
-                                id="defaultGraphType"
-                                options={values?.defaultPluginName === "googlechart" ? googleChartOptions : highchartGraphOptions}
-                                onChange={handleValueChange}
-                                value={values?.defaultGraphType}
-                                errorMessage={errors?.defaultGraphTypeErr}
-                            />
+                    {radioValues?.isQueryDataPreview !== 'Yes' &&
+                        <div className="form-group row">
+                            <label className="col-sm-5 col-form-label pe-0 required-label">{dt("Default Graph Type")} : </label>
+                            <div className="col-sm-7 ps-0 align-content-center">
+                                <InputSelect
+                                    className="backcolorinput "
+                                    // placeholder="Enter value..."
+                                    name='defaultGraphType'
+                                    id="defaultGraphType"
+                                    options={values?.defaultPluginName === "googlechart" ? googleChartOptions : highchartGraphOptions}
+                                    onChange={handleValueChange}
+                                    value={values?.defaultGraphType}
+                                    errorMessage={errors?.defaultGraphTypeErr}
+                                />
+                            </div>
                         </div>
-                    </div>
+                    }
                 </div>
                 {/* right columns */}
                 <div className='col-sm-6'>
-                    <div className="form-group row">
-                        <label className="col-sm-5 col-form-label pe-0 required-label">{dt("Default Plugin Name")} : </label>
-                        <div className="col-sm-7 ps-0 align-content-center">
-                            <InputSelect
-                                className="backcolorinput "
-                                // placeholder="Enter value..."
-                                name='defaultPluginName'
-                                id="defaultPluginName"
-                                options={[{ value: "highchart", label: dt("High Charts") }, { value: "googlechart", label: dt("Google Charts") }]}
-                                onChange={handleValueChange}
-                                value={values?.defaultPluginName}
-                                errorMessage={errors?.defaultPluginNameErr}
-                            />
+                    {radioValues?.isQueryDataPreview !== 'Yes' &&
+                        <div className="form-group row">
+                            <label className="col-sm-5 col-form-label pe-0 required-label">{dt("Default Plugin Name")} : </label>
+                            <div className="col-sm-7 ps-0 align-content-center">
+                                <InputSelect
+                                    className="backcolorinput "
+                                    // placeholder="Enter value..."
+                                    name='defaultPluginName'
+                                    id="defaultPluginName"
+                                    options={[{ value: "highchart", label: dt("High Charts") }, { value: "googlechart", label: dt("Google Charts") }]}
+                                    onChange={handleValueChange}
+                                    value={values?.defaultPluginName}
+                                    errorMessage={errors?.defaultPluginNameErr}
+                                />
+                            </div>
                         </div>
-                    </div>
+                    }
+
                     {values?.defaultGraphType === 'BAR_GRAPH' &&
                         <div className="form-group row">
                             <label className="col-sm-5 col-form-label pe-0">
@@ -131,24 +136,27 @@ const GraphWidget = (props) => {
             <div className='row role-theme user-form' style={{ paddingBottom: "1px" }}>
                 {/* //left columns */}
                 <div className='col-sm-6'>
-                    <div className="form-group row">
-                        <label className="col-sm-5 col-form-label pe-0">{dt("Graph Type")} : </label>
-                        <div className="col-sm-7 ps-0 align-content-center">
-                            <Select
-                                id='graphTypes'
-                                name='graphTypes'
-                                options={values?.defaultPluginName === "googlechart" ? googleChartOptions : highchartGraphOptions}
-                                isMulti
-                                placeholder={dt("Select value...")}
-                                className="backcolorinput react-select-multi"
-                                value={values?.graphTypes}
-                                onChange={(e) => {
-                                    setValues({ ...values, ['graphTypes']: e });
-                                    setErrors(prev => ({ ...prev, 'graphTypesErr': "" }));
-                                }}
-                            />
+                    {radioValues?.isQueryDataPreview !== 'Yes' &&
+                        <div className="form-group row">
+                            <label className="col-sm-5 col-form-label pe-0">{dt("Graph Type")} : </label>
+                            <div className="col-sm-7 ps-0 align-content-center">
+                                <Select
+                                    id='graphTypes'
+                                    name='graphTypes'
+                                    options={values?.defaultPluginName === "googlechart" ? googleChartOptions : highchartGraphOptions}
+                                    isMulti
+                                    placeholder={dt("Select value...")}
+                                    className="backcolorinput react-select-multi"
+                                    value={values?.graphTypes}
+                                    onChange={(e) => {
+                                        setValues({ ...values, ['graphTypes']: e });
+                                        setErrors(prev => ({ ...prev, 'graphTypesErr': "" }));
+                                    }}
+                                />
+                            </div>
                         </div>
-                    </div>
+                    }
+
                     <div className="form-group row">
                         <label className="col-sm-5 col-form-label pe-0">{dt("Color For Bars")} : </label>
                         <div className="col-sm-7 ps-0 align-content-center">
@@ -262,21 +270,23 @@ const GraphWidget = (props) => {
                 </div>
                 {/* right columns */}
                 <div className='col-sm-6'>
-                    <div className="form-group row">
-                        <label className="col-sm-5 col-form-label pe-0 required-label">{dt("Column Name for Line graph")} : </label>
-                        <div className="col-sm-7 ps-0 align-content-center">
-                            <InputField
-                                type='text'
-                                className="backcolorinput "
-                                placeholder={dt("Enter value...")}
-                                name='clmNameForLineGraph'
-                                id="clmNameForLineGraph"
-                                onChange={handleValueChange}
-                                value={values?.clmNameForLineGraph}
-                                errorMessage={errors?.clmNameForLineGraphErr}
-                            />
+                    {radioValues?.isQueryDataPreview !== 'Yes' &&
+                        <div className="form-group row">
+                            <label className="col-sm-5 col-form-label pe-0">{dt("Column Name for Line graph")} : </label>
+                            <div className="col-sm-7 ps-0 align-content-center">
+                                <InputField
+                                    type='text'
+                                    className="backcolorinput "
+                                    placeholder={dt("Enter value...")}
+                                    name='clmNameForLineGraph'
+                                    id="clmNameForLineGraph"
+                                    onChange={handleValueChange}
+                                    value={values?.clmNameForLineGraph}
+                                    errorMessage={errors?.clmNameForLineGraphErr}
+                                />
+                            </div>
                         </div>
-                    </div>
+                    }
                     <div className="form-group row">
                         <label className="col-sm-5 col-form-label pe-0">{dt("Graph Height")} : </label>
                         <div className="col-sm-7 ps-0 align-content-center">

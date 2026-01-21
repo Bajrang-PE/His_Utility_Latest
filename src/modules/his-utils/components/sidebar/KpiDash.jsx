@@ -10,7 +10,7 @@ import { useSearchParams } from 'react-router-dom';
 import * as FaIcons from "react-icons/fa";
 
 const KpiDash = ({ widgetData, presentTabs, isLayoutWithPreview }) => {
-    const { setActiveTab, setLoading, paramsValues, searchScope, isSearchQuery, setIsSearchQuery, setSearchScope, setPrevKpiTab, activeTab, dt, presentTabsDash } = useContext(HISContext);
+    const { setActiveTab, paramsValues, searchScope, isSearchQuery, setIsSearchQuery, setSearchScope, setPrevKpiTab, activeTab, dt, presentTabsDash } = useContext(HISContext);
     const [kpiData, setKpiData] = useState([]);
     const [kpiLoading, setKpiLoading] = useState(false);
     const [popupConfig, setPopupConfig] = useState(null);
@@ -98,7 +98,14 @@ const KpiDash = ({ widgetData, presentTabs, isLayoutWithPreview }) => {
             setKpiData([]);
             fetchData(widgetData);
         }
-    }, [paramsValues, widgetData]);
+    }, [widgetData]);
+
+    useEffect(() => {
+        if (paramsValues?.widgetParams[widgetData?.rptId] && !isSearchQuery && widgetData) {
+            setKpiData([]);
+            fetchData(widgetData);
+        }
+    }, [paramsValues?.widgetParams[widgetData?.rptId]]);
 
     useEffect(() => {
         if (isSearchQuery && searchScope?.scope === "widgetParams" && searchScope?.id == widgetData?.rptId) {

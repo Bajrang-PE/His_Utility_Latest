@@ -1,16 +1,18 @@
 import React, { lazy, useContext, useEffect, useState } from "react";
 import Tabular from "./Tabular";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faArrowCircleLeft, faCog, faFileExcel, faFilePdf, faRefresh, faSliders, faSortAmountDesc, faTableCells } from "@fortawesome/free-solid-svg-icons";
+import { faArrowCircleLeft, faCog, faFileExcel, faFilePdf, faPrint, faRefresh, faSliders, faSortAmountDesc, faTableCells } from "@fortawesome/free-solid-svg-icons";
 import { fetchProcedureData, fetchQueryData, formatDateFullYear, formatParams, getOrderedParamValues, getWidgetParametersOnly, ToastAlert } from "../../utils/commonFunction";
 import { HISContext } from "../../contextApi/HISContext";
 import InputField from "../commons/InputField";
-import { generateCSV, generatePDF, generatePDFWorkers } from "../commons/advancedPdf";
+import { generateCSV, generateCSVWorkers, generatePDF, generatePDFWorkers } from "../commons/advancedPdf";
 import { getAuthUserData } from "../../../../utils/CommonFunction";
 import { useSearchParams } from "react-router-dom";
 import PopUpWidget from "./PopUpWidget";
 import { fetchPostData } from "../../../../utils/HisApiHooks";
 import AdvancedOptionsModal from "./AdvancedOptionsModal";
+import PrintComponent from "./PrintComponent";
+import { createRoot } from "react-dom/client";
 
 
 const Parameters = lazy(() => import('./Parameters'));
@@ -19,7 +21,7 @@ const TabularDash = (props) => {
 
   const { widgetData, setWidgetData, levelData, setLevelData, pkColumn, setPkColumn, isLayoutWithPreview, presentTabs, isPopup, pkConfig } = props;
 
-  const { theme, singleConfigData, paramsValues, setLoading, presentWidgets, isSearchQuery, setIsSearchQuery, setSearchScope, searchScope, dt, presentTabsDash, setActiveTab, activeTab, setPrevKpiTab, tabParams } = useContext(HISContext);
+  const { theme, singleConfigData, paramsValues, presentWidgets, isSearchQuery, setIsSearchQuery, setSearchScope, searchScope, dt, presentTabsDash, setActiveTab, activeTab, setPrevKpiTab, tabParams } = useContext(HISContext);
 
   // const [tableData, setTableData] = useState([]);
   const [currentLevel, setCurrentLevel] = useState(0);
@@ -247,7 +249,7 @@ const TabularDash = (props) => {
           setPrevKpiTab(prev => [...prev, activeTab]);
           setPkColumn(pkValue);
         } else {
-          ToastAlert('Tab Not Found', 'warning')
+          ToastAlert('Tab Not Found', 'warning');
         }
 
       } else {
@@ -632,7 +634,7 @@ const TabularDash = (props) => {
 
         return {
           name: key,
-          title: (<span style={{overflowWrap:"anywhere"}} title={key}>{key}</span>),
+          title: (<span style={{ overflowWrap: "anywhere" }} title={key}>{key}</span>),
           selector: row => getFirstValue(row[key]),
           sortable: true,
           wrap: true,
@@ -776,7 +778,6 @@ const TabularDash = (props) => {
         // setTimeout(() => setFetching(false), 500);
       } catch (error) {
         console.error("Error loading query data:", error);
-        setLoading(false);
         setFetching(false);
         setIsSearchQuery(false)
         setStatusMessage('')
@@ -786,7 +787,7 @@ const TabularDash = (props) => {
       try {
         setFetching(true);
         setStatusMessage("Requesting...")
-        const allQueryResults = await Promise.all(
+        const allQueryResults = await Promise.allSettled(
           widget.queryVO?.map(async (queryObj) => {
             const params = getOrderedParamValues(queryObj?.mainQuery, paramsValues, widget?.rptId);
             setStatusMessage("Executing Query...")
@@ -796,32 +797,36 @@ const TabularDash = (props) => {
         );
         setStatusMessage("Prepairing Data...")
         // Format results for each query
-        const processedTables = allQueryResults?.map(({ queryObj, data }, index) => {
-          let filteredData = data;
+        // const processedTables = allQueryResults?.map(({ queryObj, data }, index) => {
+        const processedTables = allQueryResults
+          .filter(r => r.status === "fulfilled" && r.value)
+          .map(({ value }, index) => {
+            const { queryObj, data } = value;
+            let filteredData = data;
 
-          if (widget?.isQuerychild === "1") {
-            const columnIndexes = widget?.columnIndexesParent || [];
-            const keys = Object.keys(data[0] || {});
-            filteredData = data?.map(row => {
-              const filteredRow = {};
-              columnIndexes.forEach(idx => {
-                const key = keys[idx];
-                if (key) filteredRow[key] = row[key];
+            if (widget?.isQuerychild === "1") {
+              const columnIndexes = widget?.columnIndexesParent || [];
+              const keys = Object.keys(data[0] || {});
+              filteredData = data?.map(row => {
+                const filteredRow = {};
+                columnIndexes.forEach(idx => {
+                  const key = keys[idx];
+                  if (key) filteredRow[key] = row[key];
+                });
+                return filteredRow;
               });
-              return filteredRow;
-            });
-          }
+            }
 
-          if (widget?.isFirstRowColumnName === 'Yes') {
-            const { headers, datafor, isH2 } = formatData(filteredData, widget?.isFirstRowColumnName);
-            const { columns, mainHeaders } = generateColumns(datafor, isChildPresent, widget?.isFirstRowColumnName, headers, isH2, index);
-            return { columns, mainHeaders, data: datafor, queryObj };
-          } else {
-            const { datafor } = formatData(filteredData, widget?.isFirstRowColumnName);
-            const columns = generateColumns(datafor, isChildPresent, widget?.isFirstRowColumnName, null, null, index);
-            return { columns, mainHeaders: [], data: datafor, queryObj };
-          }
-        });
+            if (widget?.isFirstRowColumnName === 'Yes') {
+              const { headers, datafor, isH2 } = formatData(filteredData, widget?.isFirstRowColumnName);
+              const { columns, mainHeaders } = generateColumns(datafor, isChildPresent, widget?.isFirstRowColumnName, headers, isH2, index);
+              return { columns, mainHeaders, data: datafor, queryObj };
+            } else {
+              const { datafor } = formatData(filteredData, widget?.isFirstRowColumnName);
+              const columns = generateColumns(datafor, isChildPresent, widget?.isFirstRowColumnName, null, null, index);
+              return { columns, mainHeaders: [], data: datafor, queryObj };
+            }
+          });
         setMultipleTables(processedTables);
         setIsSearchQuery(false);
         setFetching(false);
@@ -840,7 +845,13 @@ const TabularDash = (props) => {
     if (widgetData && !isSearchQuery && (widgetData?.widgetLoadOption !== "ONGOBUTTONCLICK" || !paramsData)) {
       fetchData(widgetData);
     }
-  }, [widgetData, paramsValues]);
+  }, [widgetData]);
+
+  useEffect(() => {
+    if (paramsValues?.widgetParams[widgetData?.rptId] && !isSearchQuery && widgetData) {
+      fetchData(widgetData);
+    }
+  }, [paramsValues?.widgetParams[widgetData?.rptId]]);
 
   // useEffect(() => {
   //   let intervalId;
@@ -994,6 +1005,105 @@ const TabularDash = (props) => {
     }));
   };
 
+  const addStylesToWindow = (win) => {
+    document.querySelectorAll('link[rel="stylesheet"], style').forEach((node) => {
+      win.document.head.appendChild(node.cloneNode(true));
+    });
+  };
+
+
+  const handlePrint = (isLimited) => {
+    const printTab = window.open("", "_blank");
+
+    printTab.document.write(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+         <title>Report Print</title>
+         <link rel="stylesheet" href="${window.location.origin}/index.css" />
+         <style> 
+
+            @media print {
+                body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            }
+         </style>
+      </head>
+      <body>
+      <div id="print-loader">
+          <div class="spinner"></div>
+          <p>Preparing Print...</p>
+        </div>
+         <div id="print-root"></div>
+      </body>
+      </html>
+    `);
+
+    printTab.document.close();
+
+    Array.from(document.styleSheets).forEach((styleSheet) => {
+      try {
+        let rules = styleSheet.cssRules;
+        if (rules) {
+          let style = printTab.document.createElement("style");
+          for (let rule of rules) style.appendChild(printTab.document.createTextNode(rule.cssText));
+          printTab.document.head.appendChild(style);
+        }
+      } catch (err) {
+        // external CSS like bootstrap, scss build etc
+        let link = printTab.document.createElement("link");
+        link.rel = "stylesheet";
+        link.href = styleSheet.href;
+        printTab.document.head.appendChild(link);
+      }
+    });
+
+
+    // wait for DOM ready
+    const startRender = setInterval(() => {
+      const rootEl = printTab.document.getElementById("print-root");
+      const copiedStyles = printTab.document.querySelectorAll("style,link").length > 2;
+
+      if (rootEl && copiedStyles) {
+        clearInterval(startRender);
+
+        setTimeout(() => {
+          const root = createRoot(rootEl);
+
+          root.render(
+            <PrintComponent
+              filterColumns={filterColumns}
+              visibleColumns={visibleColumns}
+              widgetData={widgetData}
+              multipleTables={multipleTables?.map(table => ({
+                ...table,
+                columns: table?.columns?.filter(dt => dt?.name !== "Action" && dt?.name !== "pkcolumn"),
+                data: widgetLimit && isLimited ? table?.data?.slice(0, parseInt(widgetLimit)) : safeLimit && isLimited ? table?.data?.slice(0, safeLimit) : table.data
+              }))}
+              config={singleConfigData?.databaseConfigVO}
+              filters={getParametersWithValues(widgetParams, paramsValues, widgetData?.rptId, allDrpDtParams)}
+              onReady={() => {
+                setTimeout(() => {
+                  const loader = printTab.document.getElementById("print-loader");
+                  if (loader) {
+                    loader?.remove();
+                  }
+                  printTab.focus();
+                  printTab.print();
+                  // printTab.close();   
+                }, 800);
+              }}
+            />
+          );
+        }, 200);
+        const loader = printTab.document.getElementById("print-loader");
+        if (loader && multipleTables[0]?.columns?.length === 0) {
+          loader?.remove();
+        }
+      }
+    }, 100);
+  };
+
+
   return (
     <>
       {/* {currentLevel == 0 && */}
@@ -1037,7 +1147,7 @@ const TabularDash = (props) => {
                             ? table?.data?.slice(0, safeLimit)
                             : table.data
                       }));
-                      generatePDF(widgetData, limitedTables, singleConfigData?.databaseConfigVO,
+                      generatePDFWorkers(widgetData, limitedTables, singleConfigData?.databaseConfigVO,
                         // filterColumns(multipleTables[0]?.columns, visibleColumns, isFirstRowHeading), 
                         multipleTables?.map((tbl, idx) =>
                           filterColumns(tbl?.columns, visibleColumns, isFirstRowHeading)
@@ -1054,12 +1164,12 @@ const TabularDash = (props) => {
                       const limitedTables = multipleTables?.map(table => ({
                         ...table,
                         data: widgetLimit
-                          ? table.data.slice(0, parseInt(widgetLimit))
+                          ? table?.data?.slice(0, parseInt(widgetLimit))
                           : safeLimit
-                            ? table.data.slice(0, safeLimit)
-                            : table.data
+                            ? table?.data?.slice(0, safeLimit)
+                            : table?.data
                       }));
-                      generateCSV(widgetData, limitedTables, singleConfigData?.databaseConfigVO,
+                      generateCSVWorkers(widgetData, limitedTables, singleConfigData?.databaseConfigVO,
                         // filterColumns(multipleTables[0]?.columns, visibleColumns, isFirstRowHeading),
                         multipleTables?.map((tbl, idx) =>
                           filterColumns(tbl?.columns, visibleColumns, isFirstRowHeading)
@@ -1073,6 +1183,12 @@ const TabularDash = (props) => {
                   <li className="p-1 dropdown-item text-primary" style={{ cursor: "pointer" }} onClick={() => setShowAdvancedOptions(true)}>
                     <FontAwesomeIcon icon={faSliders} className="dropdown-gear-icon me-2" />{dt('Advanced')}</li>
                 }
+
+                <li className="p-1 dropdown-item text-primary" style={{ cursor: "pointer" }}
+                  onClick={() => { multipleTables[0]?.columns?.length > 0 ? handlePrint(true) : ToastAlert('No data available', 'warning') }}
+                >
+                  <FontAwesomeIcon icon={faPrint} className="dropdown-gear-icon me-2" />{dt('Print')}</li>
+
               </ul>
             </>)}
 
@@ -1086,7 +1202,7 @@ const TabularDash = (props) => {
                 <FontAwesomeIcon icon={faFilePdf} />
               </button>
 
-              <button className="small-box-btn-dwn" onClick={() => generateCSV(widgetData, multipleTables, singleConfigData?.databaseConfigVO,
+              <button className="small-box-btn-dwn" onClick={() => generateCSVWorkers(widgetData, multipleTables, singleConfigData?.databaseConfigVO,
                 // filterColumns(multipleTables[0]?.columns, visibleColumns, isFirstRowHeading), 
                 multipleTables?.map((tbl, idx) =>
                   filterColumns(tbl?.columns, visibleColumns, isFirstRowHeading)
@@ -1094,6 +1210,10 @@ const TabularDash = (props) => {
                 isFirstRowHeading, getParametersWithValues(widgetParams, paramsValues, widgetData?.rptId, allDrpDtParams))} title="CSV">
                 <FontAwesomeIcon icon={faFileExcel} />
               </button>
+
+              {/* <button className="small-box-btn-dwn" onClick={() => { multipleTables[0]?.columns?.length > 0 ? handlePrint(false) : ToastAlert('No data available', 'warning') }} title="Print">
+                <FontAwesomeIcon icon={faPrint} />
+              </button> */}
             </>)}
 
             {currentLevel !== 0 && (

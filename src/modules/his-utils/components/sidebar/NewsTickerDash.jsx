@@ -7,7 +7,7 @@ import { fetchProcedureData, fetchQueryData, formatDateFullYear } from '../../ut
 import { useSearchParams } from 'react-router-dom';
 
 const NewsTickerDash = ({ widgetData }) => {
-    const { theme, mainDashData, singleConfigData, paramsValues, setLoading, dt } = useContext(HISContext);
+    const { theme, mainDashData, singleConfigData, paramsValues, dt } = useContext(HISContext);
 
     const [currentIndex, setCurrentIndex] = useState(0);
     const [isTransitionActive, setIsTransitionActive] = useState(true);

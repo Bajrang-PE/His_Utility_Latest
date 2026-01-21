@@ -39,9 +39,7 @@ const HISContextData = ({ children }) => {
   const [presentWidgets, setPresentWidgets] = useState([]);
   const [presentTabsDash, setPresentTabsDash] = useState([]);
 
-
   const [tabParams, setTabParams] = useState([]);
-
 
   // ALL DATA
   const [parameterData, setParameterData] = useState([]);
@@ -60,6 +58,7 @@ const HISContextData = ({ children }) => {
   const [dataServiceDrpData, setDataServiceDrpData] = useState([]);
   const [serviceCategoryDrpData, setServiceCategoryDrpData] = useState([]);
   const [jndiServerDrpData, setJndiServerDrpData] = useState([]);
+  const [dbConnectionDrpData, setDbConnectionDrpData] = useState([]);
 
 
   //language provider
@@ -70,6 +69,12 @@ const HISContextData = ({ children }) => {
 
   const [token, setToken] = useState('');
 
+  const [widgetGraphPreviewData, setWidgetGraphPreviewData] = useState({
+    "chartColorsPreview": {},
+    "chartTypesPreview": {},
+    "selectedXAxisPreview": [],
+    "selectedYAxisPreview": [],
+  })
 
   const fetchTranslations = async (lang) => {
     try {
@@ -216,10 +221,6 @@ const HISContextData = ({ children }) => {
       if (searchParams.get("userName")) {
         userName = searchParams.get("userName");
       }
-      //  else if (searchParams.get("dbfhttf")) {
-      //   const encIFUrl = searchParams.get("dbfhttf");
-      //   userName = encIFUrl ? atob(getEncryptedParamValue(encIFUrl, "userName")) : "";
-      // }
 
       const data = await fetchData(`/hisutils/dashboard-configurations?isGlobal=${isGlobal || 0}`,
         !isToken && isGlobal != 1 ? { 'userName': userName } : null
@@ -240,11 +241,18 @@ const HISContextData = ({ children }) => {
           .map(({ key, label }) => {
             const value = config?.[key];
             return value && value.trim() !== ""
-              ? { value, label: `${label} - ${value}` }
+              ? { value, label: `${label} - ${value} (JNDI)` }
               : null;
           })
           .filter(Boolean);
+
+        const dbConnections = Array.isArray(config?.softDbConnections) && config?.softDbConnections?.map((dt, index) => (
+          { value: index === 0 ? 'softDbPrimary' : `softDbSecondary${index}`, label: `${dt?.serviceName}-${dt?.hostname} (DB)` }
+        ))
+
         setJndiServerDrpData(jndiServerOptions);
+
+        setDbConnectionDrpData(dbConnections);
       } else {
         setSingleConfigData(null);
       }
@@ -330,7 +338,11 @@ const HISContextData = ({ children }) => {
       fetchTranslations,
       setLanguage,
       showTranslateModal, setShowTranslateModal,
-      extractedTexts, setExtractedTexts, token, setToken, setTabParams, tabParams
+      extractedTexts, setExtractedTexts, token, setToken, setTabParams, tabParams,
+
+      dbConnectionDrpData, setDbConnectionDrpData,
+
+      widgetGraphPreviewData, setWidgetGraphPreviewData
     }}>
       {children}
     </HISContext.Provider>

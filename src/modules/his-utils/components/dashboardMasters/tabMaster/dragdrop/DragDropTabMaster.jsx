@@ -27,6 +27,7 @@ export default function DragDropTabMaster({ setTablayout, tabLayout }) {
     const [currentStyle, setCurrentStyle] = useState(themeClasses.minimalistic);
     const [paramState, setParamState] = useState('visible');
     const [layout, setLayout] = useState([]);
+    
     //Derived state
     const currentLayout = useMemo(
         () => droppedComponents.map((widget) => widget.layout),
@@ -104,7 +105,6 @@ export default function DragDropTabMaster({ setTablayout, tabLayout }) {
         dispatch(setWidgitStyle([currentStyle.at(3), currentStyle.at(4)]));
     }, [activeWidget]);
 
-
     return (
         <div className="tabMaster">
             <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
@@ -116,7 +116,6 @@ export default function DragDropTabMaster({ setTablayout, tabLayout }) {
                                 <div className="accordian__content">{draggable.id}</div>
                             ) : null}
                         </DragOverlay>
-                        {/* <Popup /> */}
                         <TabLayoutWrapper
                             addOnStyles={currentStyle?.at(2)}
                             layout={currentLayout}

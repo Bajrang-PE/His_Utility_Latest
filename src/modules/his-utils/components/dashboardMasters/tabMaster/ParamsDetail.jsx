@@ -8,7 +8,7 @@ const InputSelect = lazy(() => import('../../commons/InputSelect'));
 const InputField = lazy(() => import('../../commons/InputField'));
 
 const ParamsDetail = (props) => {
-    const { availableOptions, setAvailableOptions, selectedOptions, setSelectedOptions, handleValueChange, values, pageName, dt } = props;
+    const { availableOptions, setAvailableOptions, selectedOptions, setSelectedOptions, handleValueChange, values, pageName, dt, radioValues } = props;
 
     const [leftSelectedValues, setLeftSelectedValues] = useState([]);
     const [rightSelectedValues, setRightSelectedValues] = useState([]);
@@ -97,48 +97,50 @@ const ParamsDetail = (props) => {
     return (
         <>
             <b><h6 className='header-devider m-0'>{dt('Parameter Details')}</h6></b>
-            <div className='d-flex justify-content-center mt-1 mb-2 role-theme'>
-                <div className='' style={{ width: "30%" }}>
-                    <b><h6 className='mb-2 text-center'>{dt('Parameter Name')}</h6></b>
 
-                    <input className='form-control form-control-sm backcolorinput mb-1' type="search" placeholder='search...' value={searchInput} onChange={(e) => setSearchInput(e?.target?.value)} />
+            {radioValues?.isQueryDataPreview !== 'Yes' &&
+                <div className='d-flex justify-content-center mt-1 mb-2 role-theme'>
+                    <div className='' style={{ width: "30%" }}>
+                        <b><h6 className='mb-2 text-center'>{dt('Parameter Name')}</h6></b>
 
-                    <select className="form-select form-select-sm backcolorinput" id='leftRightSelect' size="6" aria-label="size 4 select example" onChange={handleLeftSelect}>
-                        {filterData?.map((opt, index) => (
-                            <option value={opt.value} key={index}>{opt.label}</option>
-                        ))}
-                    </select>
-                </div>
+                        <input className='form-control form-control-sm backcolorinput mb-1' type="search" placeholder='search...' value={searchInput} onChange={(e) => setSearchInput(e?.target?.value)} />
 
-                <div className='align-self-center' style={{ marginLeft: "2%", marginRight: "2%" }}>
-
-                    <div className='d-flex justify-content-center'>
-                        <button type='button' className='btn btn-outline-secondary btn-sm m-1' disabled={availableOptions?.length > 0 ? false : true} onClick={() => moveRight()}>
-                            <svg dangerouslySetInnerHTML={{ __html: rightCaret }} height={16} width={16} />
-                        </button>
-
+                        <select className="form-select form-select-sm backcolorinput" id='leftRightSelect' size="6" aria-label="size 4 select example" onChange={handleLeftSelect}>
+                            {filterData?.map((opt, index) => (
+                                <option value={opt.value} key={index}>{opt.label}</option>
+                            ))}
+                        </select>
                     </div>
 
-                    <div className='d-flex justify-content-center'>
-                        <button type='button' className='btn btn-outline-secondary btn-sm m-1' disabled={selectedOptions?.length > 0 ? false : true} onClick={() => moveLeft()}>
-                            <svg dangerouslySetInnerHTML={{ __html: leftCaret }} height={16} width={16} />
-                        </button>
+                    <div className='align-self-center' style={{ marginLeft: "2%", marginRight: "2%" }}>
+
+                        <div className='d-flex justify-content-center'>
+                            <button type='button' className='btn btn-outline-secondary btn-sm m-1' disabled={availableOptions?.length > 0 ? false : true} onClick={() => moveRight()}>
+                                <svg dangerouslySetInnerHTML={{ __html: rightCaret }} height={16} width={16} />
+                            </button>
+
+                        </div>
+
+                        <div className='d-flex justify-content-center'>
+                            <button type='button' className='btn btn-outline-secondary btn-sm m-1' disabled={selectedOptions?.length > 0 ? false : true} onClick={() => moveLeft()}>
+                                <svg dangerouslySetInnerHTML={{ __html: leftCaret }} height={16} width={16} />
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className='' style={{ width: "30%" }}>
+                        <b><h6 className='mb-2 text-center'>{dt('Selected Parameter Name')}</h6></b>
+
+                        <input className='form-control form-control-sm backcolorinput mb-1' type="search" placeholder='search...' value={searchInput2} onChange={(e) => setSearchInput2(e?.target?.value)} />
+
+                        <select className="form-select form-select-sm backcolorinput" id='leftRightSelect1' size="6" aria-label="size 4 select example" onChange={handleRightSelect}>
+                            {filterData2?.map((opt, index) => (
+                                <option value={opt.value} key={index}>{opt.label}</option>
+                            ))}
+                        </select>
                     </div>
                 </div>
-
-                <div className='' style={{ width: "30%" }}>
-                    <b><h6 className='mb-2 text-center'>{dt('Selected Parameter Name')}</h6></b>
-
-                    <input className='form-control form-control-sm backcolorinput mb-1' type="search" placeholder='search...' value={searchInput2} onChange={(e) => setSearchInput2(e?.target?.value)} />
-
-                    <select className="form-select form-select-sm backcolorinput" id='leftRightSelect1' size="6" aria-label="size 4 select example" onChange={handleRightSelect}>
-                        {filterData2?.map((opt, index) => (
-                            <option value={opt.value} key={index}>{opt.label}</option>
-                        ))}
-                    </select>
-                </div>
-            </div>
-
+            }
             {/* SECTION DEVIDER parameter details*/}
             <div className='row role-theme user-form' style={{ paddingBottom: "1px" }}>
                 {/* //left columns */}
@@ -232,7 +234,7 @@ const ParamsDetail = (props) => {
                                     rows="2"
                                     onChange={handleValueChange}
                                     value={values?.paraRemark}
-                                    // value={sanitizeInput(values?.paraRemark, true)}
+                                // value={sanitizeInput(values?.paraRemark, true)}
                                 ></textarea>
                             </div>
                         </div>

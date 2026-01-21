@@ -13,6 +13,10 @@ import LogoUploader from '../../components/commons/LogoUploader'
 // import SessionClock from '../../components/commons/SessionClock'
 import DBConnection from '../../components/dashboardMasters/configMaster/DBConnection'
 import { decryptAesOrRsa } from '../../../../utils/SecurityConfig'
+import axios from 'axios'
+import SpinLoader from '../../components/commons/Spinner'
+import PrintComponent from '../../components/sidebar/PrintComponent'
+import { createRoot } from 'react-dom/client'
 
 const DbConfigMaster = () => {
   const { dashboardForDt, getDashboardForDrpData, setSelectedOption, setLoading, setShowConfirmSave, confirmSave, setConfirmSave, singleConfigData, getDashConfigData, clearAllCache, dt } = useContext(HISContext);
@@ -46,10 +50,14 @@ const DbConfigMaster = () => {
   const [isHeadByQueryReq, setIsHeadByQueryReq] = useState('No');
   const [logoCounts, setLogoCounts] = useState('1');
   const [isEditing, setIsEditing] = useState(null);
+  const [isValidating, setIsValidating] = useState(false);
+  const [message, setMessage] = useState('');
 
   const [errors, setErrors] = useState({
-    "configurationForErr": '', "serverNameErr": '', "driverClassErr": '', "connectionURLErr": '', "userNameErr": '', "passwordErr": '', "staticReportHead1Err": '', "reportHeaderByQueryErr": '', "jndiServerErr": '', "jndiServer1Err": '', "isDashboardCachedErr": '', "dbTypeErr": "", "hostnameErr": '', "portErr": '', "serviceNameErr": '', "softDbUserNameErr": '', "softDbPasswordErr": ''
+    "configurationForErr": '', "serverNameErr": '', "driverClassErr": '', "connectionURLErr": '', "userNameErr": '', "passwordErr": '', "staticReportHead1Err": '', "reportHeaderByQueryErr": '', "jndiServerErr": '', "jndiServer1Err": '', "isDashboardCachedErr": '', "dbTypeErr": ""
   })
+
+  const [connectionCards, setConnectionCards] = useState([{ id: 1, isTesting: false, testStatus: null, hostname: '', port: '', serviceName: '', softDbUserName: '', softDbPassword: '', errors: { "hostnameErr": '', "portErr": '', "serviceNameErr": '', "softDbUserNameErr": '', "softDbPasswordErr": '' } }]);
 
   //to set value of dashboard for auto
   const dashFor = localStorage.getItem('dfor');
@@ -67,6 +75,7 @@ const DbConfigMaster = () => {
 
     init();
   }, [])
+
 
   useEffect(() => {
     if (singleConfigData) {
@@ -93,12 +102,7 @@ const DbConfigMaster = () => {
         logoImageUrl3: dtd?.logos[2]?.image,
         staticDefaultLimit: dtd?.setDefaultLimit,
 
-        dbType: dtd?.dbType,
-        hostname: dtd?.hostname,
-        port: dtd?.port,
-        serviceName: dtd?.serviceName,
-        softDbUserName: dtd?.softDbUserName,
-        softDbPassword: dtd?.softDbPassword
+        dbType: dtd?.dbType || ''
       })
       setIsDbConnReq(dtd?.isDbConnectionReq || "1");
       setIsDashboardCached(dtd?.isDashboardConfigurationCached || "Yes");
@@ -116,7 +120,8 @@ const DbConfigMaster = () => {
       setRows(dtd?.lstWebServiceClientConfigVO || [])
       setLogoCounts(dtd?.logoCounts || '1')
       setIsHeadByQueryReq(dtd?.isHeadByQueryReq || "No")
-      setIsSoftDbConnReq(dtd?.isSoftDbConnReq || "No")
+      setIsSoftDbConnReq(dtd?.isSoftDbConnReq ? 'Yes' : 'No' || "No")
+      setConnectionCards(dtd?.softDbConnections || [{ id: 1, isTesting: false, testStatus: null, hostname: '', port: '', serviceName: '', softDbUserName: '', softDbPassword: '', errors: { "hostnameErr": '', "portErr": '', "serviceNameErr": '', "softDbUserNameErr": '', "softDbPasswordErr": '' } }])
       localStorage?.setItem("dfor", dtd?.dashboardFor);
     }
   }, [singleConfigData])
@@ -125,12 +130,8 @@ const DbConfigMaster = () => {
     const { name, value } = e.target;
     const error = name + 'Err'
     if (name) {
-      setValues({ ...values, [name]: value })
-    }
-    if (error && name === "dbType") {
-      setErrors({ ...errors, [error]: '', "hostnameErr": '', "portErr": '', "serviceNameErr": '', "softDbUserNameErr": '', "softDbPasswordErr": '' })
-    } else if (error && name) {
-      setErrors({ ...errors, [error]: '' })
+      setValues({ ...values, [name]: value });
+      setErrors({ ...errors, [error]: '' });
     }
   }
 
@@ -195,7 +196,7 @@ const DbConfigMaster = () => {
 
   const saveConfiguration = () => {
     setLoading(true);
-    const { configurationFor, serverName, jndiServer, jndiServer1, jndiServer2, jndiServer3, driverClass, userName, connectionURL, password, staticReportHead1, staticReportHead2, staticReportHead3, reportHeaderByQuery, logoImageUrl, staticDefaultLimit, logoImageUrl1, logoImageUrl2, logoImageUrl3, dbType, hostname, port, serviceName, softDbUserName, softDbPassword } = values;
+    const { configurationFor, serverName, jndiServer, jndiServer1, jndiServer2, jndiServer3, driverClass, userName, connectionURL, password, staticReportHead1, staticReportHead2, staticReportHead3, reportHeaderByQuery, logoImageUrl, staticDefaultLimit, logoImageUrl1, logoImageUrl2, logoImageUrl3, dbType } = values;
 
     const val = {
       "databaseConfigVO": {
@@ -203,16 +204,16 @@ const DbConfigMaster = () => {
         "serverName": serverName,
 
         //for jndi connection
-        ...(isSoftDbConnReq === 'No' && {
+        ...(isDbConnReq === 'Yes' && {
           "driverClassName": driverClass,
           "userName": userName,
           "url": connectionURL,
-          "password": password,
-          "jndiForPrimaryServer": jndiServer,
-          "jndiForSecondaryServer1": jndiServer1,
-          "jndiForSecondaryServer2": jndiServer2,
-          "jndiForSecondaryServer3": jndiServer3
+          "password": password
         }),
+        "jndiForPrimaryServer": jndiServer,
+        "jndiForSecondaryServer1": jndiServer1,
+        "jndiForSecondaryServer2": jndiServer2,
+        "jndiForSecondaryServer3": jndiServer3,
 
         "isDbConnectionReq": isDbConnReq,
         "reportHeader1": staticReportHead1,
@@ -238,20 +239,44 @@ const DbConfigMaster = () => {
         "setDefaultLimit": staticDefaultLimit,
         "logoCounts": logoCounts,
         "isHeadByQueryReq": isHeadByQueryReq,
-        "isSoftDbConnReq": isSoftDbConnReq,
+        "isSoftDbConnReq": isSoftDbConnReq === "Yes" ? true : false,
+
 
         //for soft db connection
         ...(isSoftDbConnReq === 'Yes' && {
+          "softDbConnections": connectionCards?.length > 0 ? connectionCards?.map((dt, index) => ({
+            id: index, isTesting: false, testStatus: null, hostname: dt?.hostname, port: dt?.port, serviceName: dt?.serviceName, softDbUserName: dt?.softDbUserName, softDbPassword: dt?.softDbPassword, errors: {}
+          })) : [],
           "dbType": dbType,
-          "hostname": hostname,
-          "port": port,
-          "serviceName": serviceName,
-          "softDbUserName": softDbUserName,
-          "softDbPassword": softDbPassword
+          ...(connectionCards?.length > 0 && (() => {
+            let dbObj = {};
+            connectionCards?.forEach((cnn, index) => {
+              if (index === 0) {
+                dbObj["softDbPrimary"] = {
+                  "hostname": cnn?.hostname,
+                  "username": cnn?.softDbUserName,
+                  "password": cnn?.softDbPassword,
+                  "dbName": cnn?.serviceName,
+                  "port": cnn?.port,
+                  "dbType": dbType
+                }
+              } else {
+                dbObj[`softDbSecondary${index}`] = {
+                  "hostname": cnn?.hostname,
+                  "username": cnn?.softDbUserName,
+                  "password": cnn?.softDbPassword,
+                  "dbName": cnn?.serviceName,
+                  "port": cnn?.port,
+                  "dbType": dbType
+                }
+              }
+            })
+            return dbObj;
+          })()
+          ),
         })
       }
     }
-
     fetchPostData("/hisutils/dashboard-config-save", val).then((data) => {
       if (data?.status === 1) {
         ToastAlert(data?.message, "success");
@@ -267,9 +292,104 @@ const DbConfigMaster = () => {
       }
     });
   }
+  const testConnection = async (cardId) => {
 
-  const handleSaveConfig = () => {
+    const dbDetails = connectionCards.find(dt => dt.id === cardId);
+
+    setConnectionCards(prev =>
+      prev.map(card =>
+        card.id === cardId
+          ? { ...card, isTesting: true, testStatus: null }
+          : card
+      )
+    );
+
+    try {
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      const val = {
+        hostname: dbDetails.hostname || '',
+        dbName: dbDetails.serviceName || '',
+        portNumber: dbDetails.port || '',
+        userName: dbDetails.softDbUserName || '',
+        password: dbDetails.softDbPassword || '',
+        dbType: values?.dbType || ''
+      };
+
+      const response = await axios.post(
+        '/hisutils/test-server-connection', //http://10.226.29.202:8024
+        val
+      );
+
+      const success = response?.data?.status === 1;
+
+      setConnectionCards(prev =>
+        prev.map(card =>
+          card.id === cardId
+            ? { ...card, isTesting: false, testStatus: success ? 'success' : 'error' }
+            : card
+        )
+      );
+
+      return success;
+
+    } catch (error) {
+
+      setConnectionCards(prev =>
+        prev.map(card =>
+          card.id === cardId
+            ? { ...card, isTesting: false, testStatus: 'error' }
+            : card
+        )
+      );
+
+      return false;
+    }
+  };
+
+
+  const validateDBConnections = (cardId) => {
     let isValid = true;
+    const cardData = connectionCards.find(c => c.id === cardId);
+    let newErrors = {};
+
+
+    if (!cardData?.hostname?.trim()) {
+      newErrors.hostnameErr = "Hostname is required";
+      isValid = false;
+    }
+    if (!cardData?.port?.trim()) {
+      newErrors.portErr = "Port is required";
+      isValid = false;
+    }
+    if (!cardData?.serviceName?.trim()) {
+      newErrors.serviceNameErr = "Service name is required";
+      isValid = false;
+    }
+    if (!cardData?.softDbUserName?.trim()) {
+      newErrors.softDbUserNameErr = "Username is required";
+      isValid = false;
+    }
+    if (!cardData?.softDbPassword?.trim()) {
+      newErrors.softDbPasswordErr = "Password is required";
+      isValid = false;
+    }
+
+    setConnectionCards(prev =>
+      prev.map(card =>
+        card.id === cardId
+          ? { ...card, errors: newErrors }
+          : card
+      )
+    );
+
+    return isValid;
+  }
+
+  const handleSaveConfig = async () => {
+    let isValid = true;
+    setIsValidating(true);
+    setMessage('Validating inputs...')
     if (!values?.configurationFor?.trim()) {
       setErrors(prev => ({ ...prev, 'configurationForErr': "configuration for is required" }));
       isValid = false;
@@ -317,34 +437,33 @@ const DbConfigMaster = () => {
       isValid = false;
     }
 
-
     // FOR MULTIPLE DB CONNECTION
-
     if (isSoftDbConnReq === 'Yes' && !values?.dbType?.trim()) {
       setErrors(prev => ({ ...prev, 'dbTypeErr': "please select database type" }));
       isValid = false;
     }
-    // if (isSoftDbConnReq === 'Yes' && !values?.hostname?.trim()) {
-    //   setErrors(prev => ({ ...prev, 'hostnameErr': "hostname is required" }));
-    //   isValid = false;
-    // }
-    // if (isSoftDbConnReq === 'Yes' && !values?.port?.trim()) {
-    //   setErrors(prev => ({ ...prev, 'portErr': "port is required" }));
-    //   isValid = false;
-    // }
-    // if (isSoftDbConnReq === 'Yes' && !values?.serviceName?.trim()) {
-    //   setErrors(prev => ({ ...prev, 'serviceNameErr': "service name is required" }));
-    //   isValid = false;
-    // }
-    // if (isSoftDbConnReq === 'Yes' && !values?.softDbUserName?.trim()) {
-    //   setErrors(prev => ({ ...prev, 'softDbUserNameErr': "user name is required" }));
-    //   isValid = false;
-    // }
-    // if (isSoftDbConnReq === 'Yes' && !values?.softDbPassword?.trim()) {
-    //   setErrors(prev => ({ ...prev, 'softDbPasswordErr': "password is required" }));
-    //   isValid = false;
-    // }
 
+
+    if (values?.dbType?.trim() && connectionCards?.length > 0) {
+      setMessage('Testing Connections...')
+      for (const dt of connectionCards) {
+        const isValidate = validateDBConnections(dt.id);
+        if (!isValidate) {
+          isValid = false;
+          break;
+        }
+
+        const isTested = await testConnection(dt.id);
+        if (!isTested) {
+          isValid = false;
+          break;
+        }
+      }
+
+    }
+
+    setMessage('');
+    setIsValidating(false);
     if (isValid) {
       setShowConfirmSave(true)
     }
@@ -357,9 +476,9 @@ const DbConfigMaster = () => {
   }, [confirmSave])
 
   const reset = () => {
-    setValues({ "configurationFor": dashFor, "serverName": "WEBSPHERE", "jndiServer": '', "jndiServer1": '', "jndiServer2": '', "jndiServer3": '', "driverClass": "", "userName": "", "connectionURL": "", "password": "", "staticReportHead1": "", "staticReportHead2": "", "staticReportHead3": "", "reportHeaderByQuery": "", "logoImageUrl": "", "staticDefaultLimit": "", "logoImageUrl1": "", "logoImageUrl2": "", "logoImageUrl3": "", "dbType": "", "hostname": '', "port": '', "serviceName": '', "softDbUserName": '', "softDbPassword": '' });
+    setValues({ "configurationFor": dashFor, "serverName": "WEBSPHERE", "jndiServer": '', "jndiServer1": '', "jndiServer2": '', "jndiServer3": '', "driverClass": "", "userName": "", "connectionURL": "", "password": "", "staticReportHead1": "", "staticReportHead2": "", "staticReportHead3": "", "reportHeaderByQuery": "", "logoImageUrl": "", "staticDefaultLimit": "", "logoImageUrl1": "", "logoImageUrl2": "", "logoImageUrl3": "", "dbType": "" });
 
-    setErrors({ "configurationForErr": '', "serverNameErr": '', "driverClassErr": '', "connectionURLErr": '', "userNameErr": '', "passwordErr": '', "staticReportHead1Err": '', "reportHeaderByQueryErr": '', "jndiServerErr": '', "jndiServer1Err": '', "isDashboardCachedErr": '', "dbTypeErr": "", "hostnameErr": '', "portErr": '', "serviceNameErr": '', "softDbUserNameErr": '', "softDbPasswordErr": '' });
+    setErrors({ "configurationForErr": '', "serverNameErr": '', "driverClassErr": '', "connectionURLErr": '', "userNameErr": '', "passwordErr": '', "staticReportHead1Err": '', "reportHeaderByQueryErr": '', "jndiServerErr": '', "jndiServer1Err": '', "isDashboardCachedErr": '', "dbTypeErr": "" });
     setLoading(false);
     setRows([]);
     setLogoPosition({ "logo1Position": "left", "logo2Position": "right", "logo3Position": "top" })
@@ -370,8 +489,42 @@ const DbConfigMaster = () => {
     setIsConsoleReq('Yes');
     setIsDashboardCached('Yes');
     setIsDbConnReq('1');
+    setConnectionCards([{ id: 1, isTesting: false, testStatus: null, hostname: '', port: '', serviceName: '', softDbUserName: '', softDbPassword: '', errors: { "hostnameErr": '', "portErr": '', "serviceNameErr": '', "softDbUserNameErr": '', "softDbPasswordErr": '' } }]);
   }
 
+  if (isValidating) {
+    return <SpinLoader message={message} />
+  }
+
+
+  const handlePrint = (data) => {
+    const newWindow = window.open("", "_blank", "width=900,height=900");
+
+    newWindow.document.write(`
+    <html>
+      <head>
+        <title>Report</title>
+      </head>
+      <body>
+        <div id="root"></div>
+      </body>
+    </html>
+  `);
+
+    newWindow.document.close();
+
+    // React render
+    setTimeout(() => {
+      const root = newWindow.document.getElementById("root");
+      createRoot(root).render(<PrintComponent data={data} />);
+
+      setTimeout(() => {
+        newWindow.print();
+        // optional auto close
+        // newWindow.close();
+      }, 500);
+    }, 100);
+  };
 
 
   return (
@@ -464,51 +617,51 @@ const DbConfigMaster = () => {
                 </div>
               </div>
               {/* right columns */}
-              {
-                isSoftDbConnReq === 'No' &&
-                <div className='col-sm-6'>
-                  <div className="form-group row">
-                    <label className="col-sm-5 col-form-label pe-0">
-                      {dt("Is DB Connection String Required")}:
-                    </label>
-                    <div className="col-sm-7 ps-0 align-content-center">
-                      <div className="form-check form-check-inline">
-                        <input
-                          className="form-check-input"
-                          type="radio"
-                          name="isDbConnReq"
-                          id="isDbConnReqYes"
-                          value={isDbConnReq}
-                          onChange={(e) => setIsDbConnReq('1')}
-                          checked={isDbConnReq === "1"}
-                        />
-                        <label className="form-check-label" htmlFor="dbYes">
-                          {dt("Yes")}
-                        </label>
-                      </div>
-                      <div className="form-check form-check-inline">
-                        <input
-                          className="form-check-input"
-                          type="radio"
-                          name="isDbConnReq"
-                          id="isDbConnReqNo"
-                          value={isDbConnReq}
-                          onChange={(e) => setIsDbConnReq('0')}
-                          checked={isDbConnReq === '0'}
-                        />
-                        <label className="form-check-label" htmlFor="dbNo">
-                          {dt("No")}
-                        </label>
-                      </div>
+              {/* {
+                isSoftDbConnReq === 'No' && */}
+              <div className='col-sm-6'>
+                <div className="form-group row">
+                  <label className="col-sm-5 col-form-label pe-0">
+                    {dt("Is DB Connection String Required")}:
+                  </label>
+                  <div className="col-sm-7 ps-0 align-content-center">
+                    <div className="form-check form-check-inline">
+                      <input
+                        className="form-check-input"
+                        type="radio"
+                        name="isDbConnReq"
+                        id="isDbConnReqYes"
+                        value={isDbConnReq}
+                        onChange={(e) => setIsDbConnReq('1')}
+                        checked={isDbConnReq === "1"}
+                      />
+                      <label className="form-check-label" htmlFor="dbYes">
+                        {dt("Yes")}
+                      </label>
+                    </div>
+                    <div className="form-check form-check-inline">
+                      <input
+                        className="form-check-input"
+                        type="radio"
+                        name="isDbConnReq"
+                        id="isDbConnReqNo"
+                        value={isDbConnReq}
+                        onChange={(e) => setIsDbConnReq('0')}
+                        checked={isDbConnReq === '0'}
+                      />
+                      <label className="form-check-label" htmlFor="dbNo">
+                        {dt("No")}
+                      </label>
                     </div>
                   </div>
                 </div>
-              }
+              </div>
+              {/* } */}
             </div>
 
             {/* SECTION DEVIDER */}
             {/* IF DB CONNECTION STRING NO */}
-            {(isDbConnReq === '0' && isSoftDbConnReq === 'No') &&
+            {isDbConnReq === '0' &&
               <div iv className='role-theme db-connection-grid' style={{ paddingBottom: "1px" }}>
                 {/* //left columns */}
                 {/* <div className='col-sm-6'> */}
@@ -580,7 +733,7 @@ const DbConfigMaster = () => {
             }
             {/* SECTION DEVIDER */}
             {/* IF DB CONNECTION STRING YES */}
-            {(isDbConnReq === '1' && isSoftDbConnReq === 'No') &&
+            {isDbConnReq === '1' &&
               <div iv className='row role-theme user-form' style={{ paddingBottom: "1px" }}>
                 {/* //left columns */}
                 <div className='col-sm-6'>
@@ -652,7 +805,7 @@ const DbConfigMaster = () => {
             }
             {
               isSoftDbConnReq === 'Yes' &&
-              <DBConnection dt={dt} values={values} handleValueChange={handleValueChange} errors={errors} />
+              <DBConnection dt={dt} values={values} handleValueChange={handleValueChange} errors={errors} connectionCards={connectionCards} setConnectionCards={setConnectionCards} validateDBConnections={validateDBConnections} testConnection={testConnection} />
             }
 
             {/* SECTION DEVIDER 4 logs radio*/}
@@ -1468,8 +1621,12 @@ const DbConfigMaster = () => {
               <FontAwesomeIcon icon={faDatabase} className="dropdown-gear-icon me-1" />
               {dt("Clear All Cached Data")}
             </button>
+            <button className='btn btn-sm ms-1' onClick={handlePrint}>
+             Print
+            </button>
           </div>
           {/* <SessionClock /> */}
+
         </div>
       </div>
     </>

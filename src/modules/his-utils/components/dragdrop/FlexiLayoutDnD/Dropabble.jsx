@@ -1,11 +1,11 @@
 // Components/FlexiLayoutDnD/Dropabble.js
 import { useDroppable } from '@dnd-kit/core';
 
-export default function Droppable({ id, children }) {
+export default function Dropabble({ id, children, className = 'dndZone' }) {
   const { setNodeRef } = useDroppable({ id });
 
   return (
-    <div ref={setNodeRef} className="dndZone">
+    <div ref={setNodeRef} className={className}>
       {children}
     </div>
   );

@@ -45,3 +45,9 @@ code {
   transform: translateY(-2px);
   background: rgba(0, 0, 0, 0.8);
 } */
+
+
+.container-for-dnd {
+  font-size: 62.5%;
+  scroll-behavior: smooth;
+}

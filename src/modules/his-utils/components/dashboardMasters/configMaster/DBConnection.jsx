@@ -3,15 +3,17 @@ import InputField from '../../commons/InputField';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEye, faEyeSlash, faDatabase, faCheckCircle, faPlus, faTimes, faPlay, faXmarkCircle } from '@fortawesome/free-solid-svg-icons';
 import './DBConnection.css';
+import { fetchPostData } from '../../../../../utils/HisApiHooks';
+import { ToastAlert } from '../../../utils/commonFunction';
+import axios from 'axios';
 
 const DBConnection = (props) => {
-    const { dt, values, handleValueChange, errors } = props;
+    const { dt, values, handleValueChange, errors, connectionCards, setConnectionCards, validateDBConnections,testConnection } = props;
 
     const [showPassword, setShowPassword] = useState(false);
     const [showDatabaseFields, setShowDatabaseFields] = useState(false);
     const [selectedDbType, setSelectedDbType] = useState(values?.dbType || '');
     const [animationClass, setAnimationClass] = useState('');
-    const [connectionCards, setConnectionCards] = useState([{ id: 1, isTesting: false, testStatus: null, hostname: '', port: '', serviceName: '', softDbUserName: '', softDbPassword: '', errors: { "hostnameErr": '', "portErr": '', "serviceNameErr": '', "softDbUserNameErr": '', "softDbPasswordErr": '' } }]);
 
     const databaseTypes = [
         {
@@ -43,7 +45,7 @@ const DBConnection = (props) => {
             iconPath: "/microsoft-sql-server-logo-svgrepo-com.svg"
         },
         {
-            id: 'edbdb',
+            id: 'edb',
             name: 'EDB',
             color: '#47A248',
             gradient: 'linear-gradient(135deg, #47A248 0%, #3D8B3D 100%)',
@@ -51,12 +53,12 @@ const DBConnection = (props) => {
         }
     ];
 
-
     useEffect(() => {
-        if (selectedDbType) {
+        if (values?.dbType) {
             setShowDatabaseFields(true);
+            setSelectedDbType(values?.dbType);
         }
-    }, []);
+    }, [values?.dbType]);
 
     const handleDbTypeSelect = (dbType) => {
         setSelectedDbType(dbType);
@@ -176,79 +178,14 @@ const DBConnection = (props) => {
         }, 300);
     };
 
-    const testConnection = async (cardId) => {
-        setConnectionCards(prev =>
-            prev.map(card =>
-                card.id === cardId
-                    ? { ...card, isTesting: true, testStatus: null }
-                    : card
-            )
-        );
-
-        try {
-            await new Promise(resolve => setTimeout(resolve, 2000));
-
-            const isSuccess = Math.random() > 0.3;
-            setConnectionCards(prev =>
-                prev.map(card =>
-                    card.id === cardId
-                        ? { ...card, isTesting: false, testStatus: isSuccess ? 'success' : 'error' }
-                        : card
-                )
-            );
-        } catch (error) {
-            setConnectionCards(prev =>
-                prev.map(card =>
-                    card.id === cardId
-                        ? { ...card, isTesting: false, testStatus: 'error' }
-                        : card
-                )
-            );
-        }
-    };
-
     const handleTestValidation = (cardId) => {
-        let isValid = true;
-        const cardData = connectionCards.find(c => c.id === cardId);
-        const newErrors = {};
-
-        if (!cardData?.hostname?.trim()) {
-            newErrors.hostnameErr = "Hostname is required";
-            isValid = false;
-        }
-        if (!cardData?.port?.trim()) {
-            newErrors.portErr = "Port is required";
-            isValid = false;
-        }
-        if (!cardData?.serviceName?.trim()) {
-            newErrors.serviceNameErr = "Service name is required";
-            isValid = false;
-        }
-        if (!cardData?.softDbUserName?.trim()) {
-            newErrors.softDbUserNameErr = "Username is required";
-            isValid = false;
-        }
-        if (!cardData?.softDbPassword?.trim()) {
-            newErrors.softDbPasswordErr = "Password is required";
-            isValid = false;
-        }
-
-        setConnectionCards(prev =>
-            prev.map(card =>
-                card.id === cardId
-                    ? { ...card, errors: newErrors }
-                    : card
-            )
-        );
-
-        if (isValid) {
+        const isValidate = validateDBConnections(cardId);
+        if (isValidate) {
             testConnection(cardId);
         }
     };
 
-
     const handleDBValueChange = (cardId, e) => {
-
         const { name, value } = e?.target;
         const errName = name + 'Err';
 
@@ -349,7 +286,7 @@ const DBConnection = (props) => {
                                             )}
                                         </button>
                                         {card.testStatus && (
-                                            <div className={`status-indicator ${card.testStatus}`}>
+                                            <div className={`status-indicator`}>
                                                 {card.testStatus === 'success' ? <p className='text-success m-0 p-0 fw-medium'>Connection Success!!!</p> : <p className='text-danger m-0 p-0 fw-medium'>Connection failed!!!</p>}
                                             </div>
                                         )}

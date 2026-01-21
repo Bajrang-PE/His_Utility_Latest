@@ -12,7 +12,7 @@ import Parameters from "./Parameters";
 
 
 const MapDash = ({ widgetData, setWidgetData, pkColumn, setPkColumn, levelData, setLevelData }) => {
-    const { theme, setSearchScope, singleConfigData, paramsValues, setLoading, isSearchQuery, setIsSearchQuery, presentWidgets, searchScope, dt } = useContext(HISContext);
+    const { theme, setSearchScope, singleConfigData, paramsValues, isSearchQuery, setIsSearchQuery, presentWidgets, searchScope, dt } = useContext(HISContext);
     const [mapData, setMapData] = useState(null);
     const [isLoaded, setIsLoaded] = useState(false)
     const [stateName, setStateName] = useState([]);
@@ -218,12 +218,10 @@ const MapDash = ({ widgetData, setWidgetData, pkColumn, setPkColumn, levelData, 
                 const generatedColumns = generateColumns(formattedData, isChildPresent);
                 setColumns(generatedColumns);
                 setTableData(formattedData);
-                setLoading(false)
                 setIsSearchQuery(false)
                 setSearchScope({ scope: "", id: "" })
             } catch (error) {
                 console.error("Error loading query data:", error);
-                setLoading(false)
             }
         } else {
             if (!widget?.queryVO?.length > 0) return;
@@ -251,7 +249,6 @@ const MapDash = ({ widgetData, setWidgetData, pkColumn, setPkColumn, levelData, 
                     const generatedColumns = generateColumns(formattedData, false);
                     setColumns(generatedColumns);
                     setTableData(formattedData);
-                    setLoading(false)
                     setIsSearchQuery(false)
                     setSearchScope({ scope: "", id: "" })
                 } else {

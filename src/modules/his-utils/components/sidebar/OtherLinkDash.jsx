@@ -4,7 +4,7 @@ import { HISContext } from '../../contextApi/HISContext';
 const GlobalModal = React.lazy(() => import('../commons/GlobalModal'));
 
 const OtherLinkDash = ({ widgetData }) => {
-    const { theme, setLoading,dt } = useContext(HISContext);
+    const { theme,dt } = useContext(HISContext);
 
     const [currentLink, setCurrentLink] = useState({});
     const [isShowModal, setIsShowModal] = useState(false);

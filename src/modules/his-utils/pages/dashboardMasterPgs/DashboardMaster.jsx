@@ -29,7 +29,7 @@ const DashboardMaster = () => {
   const [selectedOptions, setSelectedOptions] = useState();
 
   const [availableOptionsTab, setAvailableOptionsTab] = useState([]);
-  const [selectedOptionsTab, setSelectedOptionsTab] = useState();
+  const [selectedOptionsTab, setSelectedOptionsTab] = useState([]);
 
 
   const [values, setValues] = useState({
