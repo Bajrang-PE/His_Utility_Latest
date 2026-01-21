@@ -1,7 +1,7 @@
 import { faDownload } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import * as SolidIcons from '@fortawesome/free-solid-svg-icons';
-import React, { useContext, useEffect, useState } from 'react'
+import React, { useContext, useEffect, useRef, useState } from 'react'
 import { faSearch } from '@fortawesome/free-solid-svg-icons/faSearch';
 import { HISContext } from '../../contextApi/HISContext';
 import { fetchProcedureData, fetchQueryData, formatDateFullYear, formatParams, getOrderedParamValues, ToastAlert, useImageWithFallback } from '../../utils/commonFunction';
@@ -10,7 +10,7 @@ import { useSearchParams } from 'react-router-dom';
 import * as FaIcons from "react-icons/fa";
 
 const KpiDash = ({ widgetData, presentTabs, isLayoutWithPreview }) => {
-    const { setActiveTab, setLoading, paramsValues, searchScope, isSearchQuery, setIsSearchQuery, setSearchScope, setPrevKpiTab, activeTab, dt, presentTabsDash } = useContext(HISContext);
+    const { setActiveTab, paramsValues, searchScope, isSearchQuery, setIsSearchQuery, setSearchScope, setPrevKpiTab, activeTab, dt, presentTabsDash } = useContext(HISContext);
     const [kpiData, setKpiData] = useState([]);
     const [kpiLoading, setKpiLoading] = useState(false);
     const [popupConfig, setPopupConfig] = useState(null);
@@ -30,6 +30,7 @@ const KpiDash = ({ widgetData, presentTabs, isLayoutWithPreview }) => {
             return formattedItem;
         });
     };
+
     const fetchData = async (widget) => {
         if (widget?.modeOfQuery === "Procedure") {
             if (!widget?.procedureMode) return;
@@ -54,7 +55,7 @@ const KpiDash = ({ widgetData, presentTabs, isLayoutWithPreview }) => {
                 const formattedData = formatData(response.data || []);
                 // const generatedColumns = generateColumns(formattedData);
                 setKpiData(formattedData);
-                setIsSearchQuery(false)
+                setIsSearchQuery(false);
                 setKpiLoading(false);
                 setSearchScope({ scope: "", id: "" })
             } catch (error) {
@@ -67,13 +68,11 @@ const KpiDash = ({ widgetData, presentTabs, isLayoutWithPreview }) => {
             setKpiLoading(true);
             const params = getOrderedParamValues(widget?.queryVO[0]?.mainQuery, paramsValues, widget?.rptId);
             try {
-
                 const data = await fetchQueryData(widget?.queryVO, widgetData?.JNDIid, params, null, isGlobal);
                 if (data?.length > 0) {
                     const firstItem = data[0];
                     const dynamicKey = Object.keys(firstItem)[0];
                     const dynamicValue = firstItem[dynamicKey];
-
                     setKpiData(dynamicValue);
                     setIsSearchQuery(false);
                     setKpiLoading(false);
@@ -89,7 +88,6 @@ const KpiDash = ({ widgetData, presentTabs, isLayoutWithPreview }) => {
             }
         } else if (widget?.modeOfQuery === "HTMLText") {
             setKpiData(widget?.htmlText ? widget?.htmlText : "")
-
         }
     }
 
@@ -98,7 +96,15 @@ const KpiDash = ({ widgetData, presentTabs, isLayoutWithPreview }) => {
             setKpiData([]);
             fetchData(widgetData);
         }
-    }, [paramsValues, widgetData]);
+    }, [widgetData]);
+
+    useEffect(() => {
+        if (paramsValues?.widgetParams[widgetData?.rptId] && !isSearchQuery && widgetData) {
+            setKpiData([]);
+            fetchData(widgetData);
+        }
+    }, [paramsValues?.widgetParams[widgetData?.rptId]]);
+
 
     useEffect(() => {
         if (isSearchQuery && searchScope?.scope === "widgetParams" && searchScope?.id == widgetData?.rptId) {
@@ -107,6 +113,7 @@ const KpiDash = ({ widgetData, presentTabs, isLayoutWithPreview }) => {
         } else if (isSearchQuery && searchScope?.scope !== "" && searchScope?.scope !== "widgetParams") {
             setKpiData([]);
             fetchData(widgetData);
+
         }
     }, [isSearchQuery]);
 
@@ -139,8 +146,6 @@ const KpiDash = ({ widgetData, presentTabs, isLayoutWithPreview }) => {
         const Cmp = FaIcons[iconName] || FaBars;
         return <Cmp />;
     };
-
-
 
     const onHover = (e) => {
         e.currentTarget.style.backgroundColor = widgetData?.widgetHoverBackground || widgetData?.widgetBackgroundColour
@@ -184,7 +189,7 @@ const KpiDash = ({ widgetData, presentTabs, isLayoutWithPreview }) => {
     //     } catch (error) {
     //         return new URL(`../../../../assets/default-icon.png`, import.meta.url).href;
     //     }
-    // };
+    // }
 
 
     return (

@@ -26,10 +26,10 @@ const DashboardMaster = () => {
   const [filterData, setFilterData] = useState(dashboardData)
   //multi params
   const [availableOptions, setAvailableOptions] = useState([]);
-  const [selectedOptions, setSelectedOptions] = useState();
+  const [selectedOptions, setSelectedOptions] = useState([]);
 
   const [availableOptionsTab, setAvailableOptionsTab] = useState([]);
-  const [selectedOptionsTab, setSelectedOptionsTab] = useState();
+  const [selectedOptionsTab, setSelectedOptionsTab] = useState([]);
 
 
   const [values, setValues] = useState({

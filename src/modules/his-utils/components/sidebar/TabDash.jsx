@@ -48,9 +48,6 @@ const TabDash = React.memo(() => {
                 masterName: "DashboardWidgetMst"
             };
             return fetchPostData(`/hisutils/getWdgtMultipleData?isGlobal=${isGlobal || 0}`, val,
-                //      '', {
-                //     signal: abortControllerRef.current.signal
-                // }
             ).then((data) => {
                 if (data?.status === 1) {
                     setAllWidgetData(data?.data);

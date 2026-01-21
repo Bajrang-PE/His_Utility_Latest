@@ -90,9 +90,9 @@ export const fetchQueryData = async (queryVO = [], jndiServer, params, pkColumn,
       popupValue: pkColumn ? pkColumn?.toString() : ""
       // popupValue: "99929068@99929068"
     };
-    // console.log('requestBody', requestBody)
+    console.log('requestBody', requestBody)
     const response = await fetchPostData(`/hisutils/GenericApiQry?isGlobal=${isGlobal || 0}`, requestBody);
-    console.log(query, response);
+    // console.log(query, response);
 
     if (response?.status === 1) {
       if (setJndiName) {
@@ -121,7 +121,6 @@ export const fetchProcedureData = async (procedure, params, jndiServer, signal =
       "jndi": jndiServer
     };
     const response = await fetchPostData(`/hisutils/procedures/execute?isGlobal=${isGlobal || 0}`, requestBody, null, signal);
-    console.log(procedure, response);
     if (setJndiName) {
       setJndiName(response?.serverSource);
     }

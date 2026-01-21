@@ -10,8 +10,8 @@ import { HISContext } from '../../contextApi/HISContext'
 import { fetchData, fetchPostData } from '../../../../utils/HisApiHooks'
 import LogoUploader from '../../components/commons/LogoUploader'
 import { decryptAesOrRsa } from '../../../../utils/SecurityConfig'
-import { jwtDecode } from "jwt-decode";
-import SessionClock from '../../components/commons/SessionClock'
+// import { jwtDecode } from "jwt-decode";
+// import SessionClock from '../../components/commons/SessionClock'
 
 const DbConfigMaster = () => {
   const { dashboardForDt, getDashboardForDrpData, setSelectedOption, setLoading, setShowConfirmSave, confirmSave, setConfirmSave, singleConfigData, getDashConfigData, clearAllCache, dt } = useContext(HISContext);
@@ -307,7 +307,6 @@ const DbConfigMaster = () => {
     setRows([])
     setLogoPosition({ "logo1Position": "left", "logo2Position": "right", "logo3Position": "top" })
   }
-
 
 
   return (

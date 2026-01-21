@@ -665,7 +665,6 @@ export const generatePDF = async (widgetData, multipleTables, config, visibleCol
 
 };
 
-
 export const generatePDFbg = async (widgetData, tableData, config, filters = []) => {
   if (!widgetData) return;
 

@@ -1,0 +1,46 @@
+ /* html,
+ body {
+     margin: 0;
+     padding: 0;
+     overflow: hidden !important;
+ } */
+
+ .rdt_TableCol {
+     background-color: #000000;
+     color: #ffffff;
+ }
+
+ #print-loader {
+     position: fixed;
+     top: 50%;
+     left: 50%;
+     transform: translate(-50%, -50%);
+     font-size: 22px;
+     font-weight: bold;
+ }
+
+ .spinner {
+     width: 40px;
+     height: 40px;
+     border: 4px solid #ddd;
+     border-top: 4px solid #008cff;
+     border-radius: 50%;
+     animation: spin .9s linear infinite;
+     margin: auto;
+ }
+
+ .rdt_Table,
+ .rdt_TableBody,
+ .rdt_TableWrapper,
+ .rdt_TableContainer,
+ .rdt_TableRow {
+     overflow: visible !important;
+     height: auto !important;
+     max-height: none !important;
+ }
+
+ @keyframes spin {
+     100% {
+         transform: rotate(360deg);
+     }
+ }

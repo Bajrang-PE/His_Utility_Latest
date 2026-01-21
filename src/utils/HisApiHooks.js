@@ -111,7 +111,6 @@ export const fetchData = async (url, params = null) => {
         
         const decryptedData = decryptAesOrRsa(response?.data);
         const jsonData = JSON.parse(decryptedData);
-        console.log('response?.data', decryptedData)
 
         // const jsonData = response?.data;
 

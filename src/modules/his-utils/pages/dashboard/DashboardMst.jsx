@@ -19,8 +19,6 @@ const DashboardMst = () => {
     const dashboardFor = atob(searchParams.get("dashboardFor"));
     const isGlobal = searchParams.get("isGlobal") || 0;
 
-
-
     useEffect(() => {
         const initializeDashboard = async () => {
             setLoading(true);

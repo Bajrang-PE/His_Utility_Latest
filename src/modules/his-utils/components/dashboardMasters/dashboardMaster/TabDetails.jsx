@@ -9,7 +9,7 @@ import { faAngleDoubleDown, faAngleDoubleUp, faAngleDown, faAngleUp } from '@for
 
 const TabDetails = (props) => {
     const { handleValueChange, handleRadioChange, radioValues, values, availableOptions, setAvailableOptions, selectedOptions, setSelectedOptions, dt } = props;
-
+    
     const [leftSelectedValues, setLeftSelectedValues] = useState([]);
     const [rightSelectedValues, setRightSelectedValues] = useState([]);
 

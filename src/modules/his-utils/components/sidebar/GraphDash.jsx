@@ -42,7 +42,7 @@ const GraphDash = ({ widgetData, pkColumn, setPkColumn, isLayoutWithPreview, pre
   const xAxisFontSize = parseInt(widgetData?.XAxisFontSize, 10) || 10;
   const yAxisFontSize = parseInt(widgetData?.YAxisFontSize, 10) || 10;
   const annotationFontSize = parseInt(widgetData?.annotationFontSize, 10) || 12;
-  const isDirectDownloadRequired = widgetData?.isDirectDownloadRequiredGraph ? widgetData?.isDirectDownloadRequiredGraph : widgetData?.isDirectDownloadRequired || 'No';
+  const isDirectDownloadRequired = widgetData?.isDirectDownloadRequired || 'Yes';
 
   const minAxisValue = widgetData?.minValueOfAxis && widgetData?.minValueOfAxis !== '0' ? parseInt(widgetData.minValueOfAxis, 10) : undefined;
   const maxAxisValue = widgetData?.maxValueOfAxis && widgetData?.maxValueOfAxis !== '0' ? parseInt(widgetData.maxValueOfAxis, 10) : undefined;
@@ -399,7 +399,7 @@ const GraphDash = ({ widgetData, pkColumn, setPkColumn, isLayoutWithPreview, pre
         clearInterval(intervalId);
       }
     };
-  }, [widgetData, paramsValues, isSearchQuery]);
+  }, [widgetData]);
 
   useEffect(() => {
     if (isSearchQuery && searchScope?.scope === "widgetParams" && searchScope?.id == widgetData?.rptId) {
@@ -417,6 +417,16 @@ const GraphDash = ({ widgetData, pkColumn, setPkColumn, isLayoutWithPreview, pre
     }
   }, [isSearchQuery]);
 
+  useEffect(() => {
+    if (paramsValues?.widgetParams[widgetData?.rptId] && !isSearchQuery && widgetData) {
+      if (widgetData?.modeOfQuery === "Procedure") {
+        fetchProcedure(widgetData);
+      } else {
+        fetchDataQry(widgetData);
+      }
+    }
+  }, [paramsValues?.widgetParams[widgetData?.rptId]]);
+
   const refreshData = (widgetData) => {
     if (widgetData && widgetData?.modeOfQuery === "Procedure") {
       fetchProcedure(widgetData)
@@ -424,6 +434,8 @@ const GraphDash = ({ widgetData, pkColumn, setPkColumn, isLayoutWithPreview, pre
       fetchDataQry(widgetData);
     }
   }
+
+  console.log(searchScope,'searchScope')
 
   const exportingOptions = {
     enabled: isActionButtonReq !== "No" && isActionButtonReq !== "None",
@@ -501,7 +513,6 @@ const GraphDash = ({ widgetData, pkColumn, setPkColumn, isLayoutWithPreview, pre
     setShowAdvancedOptions(true);
   }
 
-  console.log('graphData', graphData)
   return (
     <div className={`widget_id_${widgetData?.rptId} high-chart-main ${theme === 'Dark' ? 'dark-theme' : ""}`}
       style={{

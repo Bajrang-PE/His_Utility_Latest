@@ -27,8 +27,6 @@ const Tabular = ({
 
     const [sortedData, setSortedData] = useState([]);
 
-    
-
     // Helper: Detect date strings like "23-Jul-2025"
     const isDateString = (value) => {
         if (typeof value !== 'string') return false;
@@ -121,9 +119,6 @@ const Tabular = ({
         setSortedData(sorted);
     }, [data, sortConfig, columns]);
 
-
-
-
     useEffect(() => {
         if (mainHeaders && mainHeaders.length > 0) {
             const totalWidth = mainHeaders.reduce((sum, header) => sum + (header.subHeaders * 150), 0);
@@ -155,9 +150,9 @@ const Tabular = ({
         },
         headCells: {
             style: {
-                backgroundColor: headingBgColor,
-                color: headingFontColor,
-                textAlign: headingAlignment,
+                backgroundColor: headingBgColor || "#000000",
+                color: headingFontColor || "#ffffff",
+                textAlign: headingAlignment || 'left',
                 fontWeight: "bold",
                 padding: "10px",
                 borderRight: '1px solid #474646',
@@ -277,7 +272,6 @@ const CustomTableHeading = ({ mainHeaders, headingBgColor, headingFontColor, tab
                         borderBottom: header?.isSingle ? 'none' : '1px solid #474646',
                     }}
                 >
-
                     <div title={header?.name}>{header?.name}</div>
                 </div >
             ))}
