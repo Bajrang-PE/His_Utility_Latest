@@ -19,6 +19,10 @@ const getAccessToken = () => {
     return sessionStorage.getItem('accessToken');
 };
 
+const getCpatToken = () => {
+    return sessionStorage.getItem('cpat');
+};
+
 const getCsrfToken = () => {
     return Cookies.get('csrfToken');
 };
@@ -37,7 +41,10 @@ apiHis.interceptors.request.use(
         if (accessToken) {
             config.headers['Authorization'] = `Bearer ${accessToken}`;
             // config.headers['X-CSRF-TOKEN'] = CsrfToken;
-
+        }
+        const cpat = getCpatToken();
+        if (cpat) {
+            config.params = { ...(config.params || {}), cpat };
         }
         return config;
     },
@@ -52,9 +59,6 @@ apiHis.interceptors.response.use(
         if (response?.data?.status && response?.data?.status === 401) {
             ToastAlert("Network Exception!!!", 'error');
             sessionStorage.clear();
-            // setTimeout(() => {
-            //     logout();
-            // }, 1000);
         } else {
             return response;
         }
@@ -63,52 +67,31 @@ apiHis.interceptors.response.use(
         if (error.response) {
             const { status, data } = error.response;
             if (status === 401) {
-                // Token is expired or unauthorized
                 ToastAlert("Network Exception!!!", 'error');
                 sessionStorage.clear();
-                // setTimeout(() => {
-                //     logout();
-                // }, 1000);
-
             }
         }
-        // Return the error to allow further handling
         return Promise.reject(error);
     }
 );
 
 
-
-// export const fetchData = async (url, params) => {
-//     try {
-//         if (params) {
-//             const response = await apiHis.get(url, { params: params ? params : '' });
-//             // return response?.data
-//             const decryptedData = decryptAesOrRsa(response?.data)
-//             return JSON.parse(decryptedData);
-//         } else {
-//             const response = await apiHis.get(url);
-//             const decryptedData = decryptAesOrRsa(response?.data)
-//             return JSON.parse(decryptedData);
-//             // return response?.data
-//         }
-//     } catch (error) {
-//         console.error('API Error:', error);
-//     }
-// };
-
-// fetchData.js
-
-
 export const fetchData = async (url, params = null) => {
     try {
-        const response = await apiHis.get(url, { params: params || "" });
-        
+        // const cpat = getCpatToken();
+
+        // // merge params safely
+        // const finalParams = {
+        //     ...(params || {}),
+        //     ...(cpat ? { cpat } : {}),
+        // };
+        const response = await apiHis.get(url, { params: params });
+
         const rawToken = response.headers['authorization'] ||
-        response.headers['Authorization'] ||
-        response.headers?.get?.('authorization') ||
-        response.headers?.get?.('Authorization');
-        
+            response.headers['Authorization'] ||
+            response.headers?.get?.('authorization') ||
+            response.headers?.get?.('Authorization');
+
         const decryptedData = decryptAesOrRsa(response?.data);
         const jsonData = JSON.parse(decryptedData);
 
@@ -138,54 +121,15 @@ export const fetchData = async (url, params = null) => {
 };
 
 
-// export const fetchPostData = async (url, data, rtblob, signal) => {
-//     try {
-//         if (rtblob) {
-//             const response = await apiHis.post(url, data, rtblob, { signal });
-//             //  const decryptedData = decryptAesOrRsa(response?.data)
-//             //  return JSON.parse(decryptedData);
-//             return response;
-//         } else {
-//             //     const response = await apiHis.post(url, data,{
-//             //     headers: {
-//             //         'Content-Type': 'application/json',
-//             //     },
-//             // });
-//             // encodeURIComponent
-//             const response = await apiHis.post(url, encodeURIComponent(encryptAesData(JSON?.stringify(data))),
-//                 {
-//                     headers: {
-//                         'Content-Type': 'text/plain',
-//                     },
-//                 }
-//             );
-//             const rawToken = response.headers['authorization'] ||
-//                 response.headers['Authorization'] ||
-//                 response.headers?.get?.('authorization') ||
-//                 response.headers?.get?.('Authorization');
-
-
-//             if (rawToken) {
-//                 const token = rawToken.split(",")[0].trim();
-//                 const formatToken = token.replace('Bearer', '');
-//                 sessionStorage.setItem("accessToken", formatToken);
-//             }
-
-//             const decryptedData = decryptAesOrRsa(response?.data);
-//             return JSON.parse(decryptedData);
-//             // return response.data;
-//         }
-
-//     } catch (error) {
-//         console.log('API Error:', error);
-//         // return error?.response?.data;
-//     }
-// };
-
-export const fetchPostData = async (url, data, rtblob, options = {}) => {
+export const fetchPostData = async (url, data, rtblob) => {
     try {
-        // const { signal } = options;
-        
+        // const cpat = getCpatToken();
+
+        // // attach cpat as query param (POST supports this)
+        // const configWithCpat = {
+        //     params: cpat ? { cpat } : {},
+        // };
+
         if (rtblob) {
             const config = {};
             const response = await apiHis.post(url, data, rtblob, config);
@@ -196,13 +140,9 @@ export const fetchPostData = async (url, data, rtblob, options = {}) => {
                 headers: {
                     'Content-Type': 'text/plain',
                 },
+                // ...(cpat ? { params: { cpat } } : {}),
             };
-            
-            // Add signal to config if provided
-            // if (signal) {
-            //     config.signal = signal;
-            // }
-            
+
             const response = await apiHis.post(url, requestData, config);
 
             const rawToken = response.headers['authorization'] ||

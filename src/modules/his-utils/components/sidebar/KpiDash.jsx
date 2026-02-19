@@ -8,6 +8,7 @@ import { fetchProcedureData, fetchQueryData, formatDateFullYear, formatParams, g
 import PopUpWidget from './PopUpWidget';
 import { useSearchParams } from 'react-router-dom';
 import * as FaIcons from "react-icons/fa";
+import { fetchPostData } from '../../../../utils/HisApiHooks';
 
 const KpiDash = ({ widgetData, presentTabs, isLayoutWithPreview }) => {
     const { setActiveTab, paramsValues, searchScope, isSearchQuery, setIsSearchQuery, setSearchScope, setPrevKpiTab, activeTab, dt, presentTabsDash } = useContext(HISContext);
@@ -15,6 +16,7 @@ const KpiDash = ({ widgetData, presentTabs, isLayoutWithPreview }) => {
     const [kpiLoading, setKpiLoading] = useState(false);
     const [popupConfig, setPopupConfig] = useState(null);
     const [showPopUpWidget, setShowPopUpWidget] = useState(false);
+    const [pkColumn, setPkColumn] = useState('');
     const [searchParams] = useSearchParams();
     const isGlobal = searchParams.get("isGlobal") || 0;
 
@@ -71,15 +73,28 @@ const KpiDash = ({ widgetData, presentTabs, isLayoutWithPreview }) => {
                 const data = await fetchQueryData(widget?.queryVO, widgetData?.JNDIid, params, null, isGlobal);
                 if (data?.length > 0) {
                     const firstItem = data[0];
-                    const dynamicKey = Object.keys(firstItem)[0];
-                    const dynamicValue = firstItem[dynamicKey];
-                    setKpiData(dynamicValue);
+                    // const dynamicKey = Object.keys(firstItem)[0];
+                    // const dynamicValue = firstItem[dynamicKey];
+
+                    const pkColumnValue = firstItem.pkcolumn || '';
+                    setPkColumn(pkColumnValue);
+
+                    const kpiKey = Object.keys(firstItem)
+                        .filter(key => key !== "pkcolumn")[0];
+
+                    if (kpiKey) {
+                        setKpiData(firstItem[kpiKey]);
+                    } else {
+                        setKpiData([]);
+                    }
+                    // setKpiData(dynamicValue);
                     setIsSearchQuery(false);
                     setKpiLoading(false);
                     setSearchScope({ scope: "", id: "" })
                 } else {
                     setKpiData([])
                     setKpiLoading(false);
+                    setPkColumn()
                 }
             } catch (error) {
                 console.error("Error loading query data:", error);
@@ -171,6 +186,7 @@ const KpiDash = ({ widgetData, presentTabs, isLayoutWithPreview }) => {
         if (id) {
             setPopupConfig({
                 widgetId: id,
+                pkValue: pkColumn
             })
             setShowPopUpWidget(true);
         }
@@ -191,6 +207,39 @@ const KpiDash = ({ widgetData, presentTabs, isLayoutWithPreview }) => {
     //     }
     // }
 
+    const FtpClicked = async (e) => {
+
+        const anchor = e.target.closest("a");
+
+        if (!anchor) return;
+
+        const isFtp =
+            anchor.classList.contains("ftp") ||
+            anchor.dataset.issftp !== undefined;
+
+        if (!isFtp) return;
+
+        e.preventDefault();
+
+        const remoteUrl = anchor.getAttribute('data-url');
+        const fileName = anchor.getAttribute('data-filename');
+
+        const val = {
+            "remoteUrl": remoteUrl,
+            "fileName": fileName
+        }
+
+        fetchPostData(`/hisutils/ftp/view?isGlobal=${isGlobal || 0}`, val, { responseType: 'blob' }).then(async (data) => {
+            if (data) {
+                const pdfBlob = new Blob([data?.data], { type: 'application/pdf' });
+                const pdfUrl = URL.createObjectURL(pdfBlob);
+                window.open(pdfUrl, '_blank');
+
+            } else {
+                ToastAlert("Internal Error", 'error')
+            }
+        })
+    }
 
     return (
         <>
@@ -260,7 +309,10 @@ const KpiDash = ({ widgetData, presentTabs, isLayoutWithPreview }) => {
                         <>
                             <div
                                 className='inner'
-                                dangerouslySetInnerHTML={{ __html: kpiData || "" }}
+                                onClick={FtpClicked}
+                                dangerouslySetInnerHTML={{
+                                    __html: kpiData || ""
+                                }}
                             />
                             {/* widgetData?.onClickOfKPITabId !== '0' && widgetData?.onClickOfKPITabId !== '' && */}
 

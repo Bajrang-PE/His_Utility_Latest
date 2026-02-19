@@ -1,6 +1,7 @@
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import Papa from 'papaparse';
+import ExcelJS from 'exceljs';
 import { ToastAlert } from '../../utils/commonFunction';
 
 export const generatePDF1 = async (widgetData, tableData, config, filters = []) => {
@@ -116,7 +117,6 @@ export const generatePDF1 = async (widgetData, tableData, config, filters = []) 
     pdf.output('dataurlnewwindow');
   }
 };
-
 
 export const generatePDFff = async (widgetData, data, config, visibleColumns, isH2, filters = []) => {
   if (!widgetData) return;
@@ -419,7 +419,7 @@ export const generatePDF = async (widgetData, multipleTables, config, visibleCol
     mpFormatColumn
   } = widgetData || {};
 
- 
+
 
   const { reportHeader1, reportHeader2, reportHeader3, isLogoRequired, headingAlignment, logos } = config || {};
   const orientation = printPDFIn === 'Landscape' ? 'l' : 'p';
@@ -661,7 +661,7 @@ export const generatePDF = async (widgetData, multipleTables, config, visibleCol
   // if (isDirectDownloadRequired === 'Yes') {
   const filterLabels = filters?.map(f => f.val).join("--") || "report";
   pdf.save(`${rptDisplayName}--${filterLabels}.pdf`);
-   ToastAlert('Report Downloaded', 'success');
+  ToastAlert('Report Downloaded', 'success');
 
 };
 
@@ -1066,7 +1066,6 @@ export const generateGraphPDF = async (widgetData, tableData, config, visibleCol
   // }
 };
 
-
 export const generateCSVfff = (widgetData, multipleTables, config, visibleColumns, isH2) => {
   if (!Array.isArray(multipleTables) || multipleTables.length === 0) {
     ToastAlert('No data available to download.', 'warning');
@@ -1159,8 +1158,7 @@ export const generateCSVfff = (widgetData, multipleTables, config, visibleColumn
   document.body.removeChild(link);
 };
 
-
-export const generateCSV = (widgetData, multipleTables, config, visibleColumns, isH2, filters) => {
+export const generateCSV11 = (widgetData, multipleTables, config, visibleColumns, isH2, filters) => {
   if (!Array.isArray(multipleTables) || multipleTables.length === 0) {
     ToastAlert('No data available to download.', 'warning');
     return;
@@ -1316,7 +1314,7 @@ export const generateCSV = (widgetData, multipleTables, config, visibleColumns, 
 
   // Convert to CSV
   const csvContent = Papa.unparse(finalData, { skipEmptyLines: false });
-  const filterLabels = filters?.map(f => f.val).join("--") || "report";
+  const filterLabels = filters?.map(f => f.val).join("--");
 
   // Download CSV
   const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -1328,12 +1326,11 @@ export const generateCSV = (widgetData, multipleTables, config, visibleColumns, 
   document.body.removeChild(link);
 };
 
-
-export const generateGraphCSV = (widgetData, data, config, visibleColumns, sortConfig, filters) => {
+export const generateGraphCSV11 = (widgetData, data, config, visibleColumns, sortConfig, filters) => {
   if (!widgetData) return;
 
   const { rptDisplayName, xAxisLabel, yAxisLabel } = widgetData || {};
-  const { reportHeader1, reportHeader2, reportHeader3 } = config || {};
+  const { reportHeader1, reportHeader2, reportHeader3, headingAlignment } = config || {};
   const currentDate = new Date().toLocaleDateString('en-GB') + ' ' + new Date().toLocaleTimeString('en-GB');
 
 
@@ -1420,4 +1417,365 @@ export const generateGraphCSV = (widgetData, data, config, visibleColumns, sortC
   link.click();
   document.body.removeChild(link);
 };
+
+// ------------------------------------------------------XLSX----------------------------
+
+export const generateCSV = async (
+  widgetData,
+  multipleTables,
+  config,
+  visibleColumns,
+  isH2,
+  filters
+) => {
+  if (!Array.isArray(multipleTables) || multipleTables.length === 0) {
+    ToastAlert('No data available to download.', 'warning');
+    return;
+  }
+
+  if (!widgetData) return;
+
+  const stripHtml = (str) => {
+    if (!str) return '';
+    return str.replace(/<[^>]*>/g, '').trim();
+  };
+
+  const { rptDisplayName, mpFormatColumn } = widgetData;
+
+  const {
+    reportHeader1,
+    reportHeader2,
+    reportHeader3,
+    headingAlignment
+  } = config || {};
+
+  const safeAlignment = headingAlignment?.toLowerCase() || 'left';
+
+  const workbook = new ExcelJS.Workbook();
+  const worksheet = workbook.addWorksheet('Report');
+
+  const maxColumnCount = Math.max(
+    ...multipleTables.map((_, tableIndex) => {
+      const cols = Array.isArray(visibleColumns?.[tableIndex])
+        ? visibleColumns[tableIndex]
+        : visibleColumns || [];
+      return cols.filter(c => c?.name !== 'pkcolumn').length;
+    })
+  );
+
+  let currentRow = 1;
+  let fixedLeftEndRow = 0;
+  const headerRowStart = currentRow;
+  [
+    reportHeader1,
+    reportHeader2,
+    reportHeader3,
+    rptDisplayName
+  ].filter(Boolean).forEach(text => {
+    const rowNumber = currentRow++;
+    worksheet.mergeCells(rowNumber, 1, rowNumber, maxColumnCount);
+    const cell = worksheet.getCell(rowNumber, 1);
+    cell.value = text;
+    cell.font = { bold: true };
+    cell.alignment = { horizontal: 'center', vertical: 'middle' };
+
+    fixedLeftEndRow = rowNumber;
+  });
+  const headerRowEnd = fixedLeftEndRow;
+
+  // Date
+  const dateRow = worksheet.getRow(currentRow++);
+  dateRow.getCell(1).value =
+    `Date: ${new Date().toLocaleDateString('en-GB')} ` +
+    `${new Date().toLocaleTimeString('en-GB')}`;
+  dateRow.getCell(1).alignment = { horizontal: 'left' };
+  dateRow.getCell(1).font = { bold: true };
+  fixedLeftEndRow = dateRow.number;
+
+  // currentRow++; 
+
+  // FILTERS
+
+  if (filters?.length) {
+    filters.forEach(filter => {
+      if (filter?.disName && filter?.val) {
+        const row = worksheet.getRow(currentRow++);
+        row.getCell(1).value = `${filter.disName}: ${filter.val}`;
+        row.getCell(1).alignment = { horizontal: 'left' };
+        row.getCell(1).font = { bold: true };
+        fixedLeftEndRow = row.number;
+      }
+    });
+    // currentRow++;
+  }
+
+  currentRow++;
+
+  // TABLES
+  multipleTables.forEach((tableObj, tableIndex) => {
+    const { data } = tableObj;
+
+    if (!Array.isArray(data) || data.length === 0) {
+      worksheet.getRow(currentRow++).getCell(1).value = 'No Data Available';
+      currentRow += 2;
+      return;
+    }
+
+    const currentColumns = Array.isArray(visibleColumns[tableIndex])
+      ? visibleColumns[tableIndex]
+      : visibleColumns;
+
+    let columnNames;
+    if (isH2 === 'Yes') {
+      columnNames = currentColumns.map(col =>
+        col.name?.trim()
+          ? `${col.mainHeader}_${col.name}`
+          : col.mainHeader
+      );
+    } else {
+      columnNames = currentColumns.map(col => col.name);
+    }
+
+    const tableHeaders = columnNames.filter(col => col !== 'pkcolumn');
+
+    const formatSettings =
+      mpFormatColumn?.[tableIndex]?.lstFormatColumn || [];
+
+    // APPLY COLUMN FORMAT
+    tableHeaders.forEach((_, idx) => {
+      const format = formatSettings.find(
+        f => parseInt(f.columnNo) === idx + 1
+      );
+
+      worksheet.getColumn(idx + 1).width =
+        parseInt(format?.columnWidth) || 15;
+
+      worksheet.getColumn(idx + 1).alignment = {
+        horizontal: format?.columnAlignment?.toLowerCase() || safeAlignment
+      };
+    });
+
+    // HEADER ROW
+    const headerRow = worksheet.getRow(currentRow++);
+    tableHeaders.forEach((header, i) => {
+      const cell = headerRow.getCell(i + 1);
+      cell.value = header;
+      cell.font = { bold: true };
+    });
+
+    // DATA ROWS
+    data.forEach(rowData => {
+      const row = worksheet.getRow(currentRow++);
+      tableHeaders.forEach((header, i) => {
+        let value = rowData[header];
+
+        if (value === null || value === undefined) value = '';
+        else if (typeof value === 'object') value = JSON.stringify(value);
+        else if (typeof value === 'string') {
+          value = value.includes('##')
+            ? stripHtml(value.split('##')[0])
+            : stripHtml(value);
+        }
+
+        row.getCell(i + 1).value = value;
+      });
+    });
+
+    for (let r = headerRowStart; r <= headerRowEnd; r++) {
+      worksheet.getRow(r).getCell(1).alignment = {
+        horizontal: 'center',
+        vertical: 'middle'
+      };
+    }
+
+    // Left-align Date & Filters ONLY
+    for (let r = headerRowEnd + 1; r <= fixedLeftEndRow; r++) {
+      worksheet.getRow(r).getCell(1).alignment = {
+        horizontal: 'left'
+      };
+    }
+
+    currentRow += 2;
+  });
+
+  const buffer = await workbook.xlsx.writeBuffer();
+  const filterLabels = filters?.map(f => f.val).filter(Boolean).join('--');
+  const blob = new Blob([buffer], {
+    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+  });
+
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = `${rptDisplayName}${filterLabels ? `--${filterLabels}` : ''}.xlsx`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+};
+
+export const generateGraphCSV = async (
+  widgetData,
+  data,
+  config,
+  visibleColumns,
+  sortConfig,
+  filters
+) => {
+  if (!widgetData) return;
+
+  const { rptDisplayName, xAxisLabel } = widgetData || {};
+  const {
+    reportHeader1,
+    reportHeader2,
+    reportHeader3,
+    headingAlignment
+  } = config || {};
+
+  const safeAlignment = headingAlignment?.toLowerCase() || 'left';
+
+  const currentDate =
+    new Date().toLocaleDateString('en-GB') +
+    ' ' +
+    new Date().toLocaleTimeString('en-GB');
+
+  if (
+    !data?.[0]?.categories?.length ||
+    !data?.[0]?.seriesData?.length ||
+    !data[0].seriesData[0].data
+  ) {
+    ToastAlert('No graph data available to download.', 'warning');
+    return;
+  }
+
+  const workbook = new ExcelJS.Workbook();
+  const worksheet = workbook.addWorksheet('Graph Report');
+
+  let currentRow = 1;
+  let fixedLeftEndRow = 0;
+  const headerRowStart = currentRow;
+
+  const maxColumnCount = Math.max(data?.[0]?.seriesData?.length);
+
+  [
+    reportHeader1,
+    reportHeader2,
+    reportHeader3,
+    rptDisplayName || 'Report'
+  ].filter(Boolean).forEach(text => {
+    const rowNumber = currentRow++;
+    worksheet.mergeCells(rowNumber, 1, rowNumber, maxColumnCount + 1);
+    const cell = worksheet.getCell(rowNumber, 1);
+    cell.value = text;
+    cell.font = { bold: true };
+    cell.alignment = { horizontal: 'center', vertical: 'middle' };
+
+    fixedLeftEndRow = rowNumber;
+  });
+
+  const headerRowEnd = fixedLeftEndRow;
+
+  // currentRow += 2;
+
+  const dateRow = worksheet.getRow(currentRow++);
+  dateRow.getCell(1).value = `Date: ${currentDate}`;
+  dateRow.getCell(1).alignment = { horizontal: safeAlignment };
+  dateRow.getCell(1).font = { bold: true };
+
+  // currentRow++;
+
+
+  if (filters?.length) {
+    filters.forEach(filter => {
+      if (filter?.disName && filter?.val) {
+        const r = worksheet.getRow(currentRow++);
+        r.getCell(1).value = `${filter.disName}: ${filter.val}`;
+        r.getCell(1).alignment = { horizontal: safeAlignment };
+        r.getCell(1).font = { bold: true };
+      }
+    });
+    // currentRow++;
+  }
+
+  currentRow++;
+
+  const selectedHeaders =
+    visibleColumns?.length > 0
+      ? visibleColumns.map(c => c.name)
+      : [
+        xAxisLabel,
+        ...data[0].seriesData.map(s => s.name)
+      ];
+
+  const headerRow = worksheet.getRow(currentRow++);
+  selectedHeaders.forEach((h, i) => {
+    const cell = headerRow.getCell(i + 1);
+    cell.value = h;
+    cell.font = { bold: true };
+    cell.alignment = { horizontal: safeAlignment };
+  });
+
+
+  let rows = data[0].categories.map((category, index) => {
+    const rowObj = {};
+    selectedHeaders.forEach(h => {
+      if (h === xAxisLabel) {
+        rowObj[h] = category;
+      } else {
+        const series = data[0].seriesData.find(s => s.name === h);
+        rowObj[h] = series ? series.data[index] || 0 : '';
+      }
+    });
+    return rowObj;
+  });
+
+  if (sortConfig?.length > 0) {
+    sortConfig.forEach(sortRule => {
+      rows.sort((a, b) => {
+        if (a[sortRule.name] < b[sortRule.name])
+          return sortRule.direction === 'asc' ? -1 : 1;
+        if (a[sortRule.name] > b[sortRule.name])
+          return sortRule.direction === 'asc' ? 1 : -1;
+        return 0;
+      });
+    });
+  }
+
+  rows.forEach(rowObj => {
+    const row = worksheet.getRow(currentRow++);
+    selectedHeaders.forEach((h, i) => {
+      row.getCell(i + 1).value = rowObj[h];
+      row.getCell(i + 1).alignment = { horizontal: safeAlignment };
+    });
+  });
+
+  for (let r = headerRowStart; r <= headerRowEnd; r++) {
+    worksheet.getRow(r).getCell(1).alignment = {
+      horizontal: 'center',
+      vertical: 'middle'
+    };
+  }
+
+  // Left-align Date & Filters ONLY
+  for (let r = headerRowEnd + 1; r <= fixedLeftEndRow; r++) {
+    worksheet.getRow(r).getCell(1).alignment = {
+      horizontal: 'left'
+    };
+  }
+
+
+  const filterLabels = filters?.map(f => f.val).filter(Boolean).join('--');
+
+  const buffer = await workbook.xlsx.writeBuffer();
+  const blob = new Blob([buffer], {
+    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+  });
+
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = `${rptDisplayName}${filterLabels ? `--${filterLabels}` : ''}.xlsx`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+};
+
+
 

@@ -14,7 +14,7 @@ import AdvancedOptionsModal from "./AdvancedOptionsModal";
 const Parameters = lazy(() => import('./Parameters'));
 
 const GraphDash = ({ widgetData, pkColumn, setPkColumn, isLayoutWithPreview, presentTabs }) => {
-  const { theme, paramsValues, singleConfigData, isSearchQuery, setIsSearchQuery, setSearchScope, searchScope, dt } = useContext(HISContext);
+  const { theme, paramsValues, singleConfigData, isSearchQuery, setIsSearchQuery, setSearchScope, searchScope, dt,tabParams } = useContext(HISContext);
   const [widParamsValues, setWidParamsValues] = useState();
   const [filteredGraphOptions, setFilteredGraphOptions] = useState([]);
   const [chartType, setChartType] = useState('BAR_GRAPH');
@@ -69,18 +69,59 @@ const GraphDash = ({ widgetData, pkColumn, setPkColumn, isLayoutWithPreview, pre
 
   const widheight = presentTabs?.length > 0 && presentTabs?.filter(dt => dt?.rptId == widgetData?.rptId)[0]?.widgetHeight;
 
-  const getParametersWithValues = (parameters, paramsData, widgetId, allDrpDtParams) => {
-    return parameters.map(param => {
-      const value = paramsData?.widgetParams?.[widgetId]?.[param?.id] || null;
-      const val = allDrpDtParams?.[param?.paraName] || null;
+  // const getParametersWithValues = (parameters, paramsData, widgetId, allDrpDtParams) => {
+  //   return parameters.map(param => {
+  //     const value = paramsData?.widgetParams?.[widgetId]?.[param?.id] || null;
+  //     const val = allDrpDtParams?.[param?.paraName] || null;
+
+  //     return {
+  //       ...param,
+  //       value: value,
+  //       val: val?.find(dt => dt?.optionValue == value)?.optionText || value
+  //     };
+  //   });
+  // }
+
+  const getParametersWithValues = (widgetParams, paramsValues, widgetId, allDrpDtParams) => {
+    let allParams = [...widgetParams];
+
+    const tabParamsEntries = Object.entries(paramsValues?.tabParams || {});
+
+    tabParamsEntries.forEach(([id, value]) => {
+      const exists = allParams.some(p => String(p.id) === String(id));
+      if (!exists) {
+        // Find the tab parameter data to get the label
+        const tabParamData = tabParams.find(tab => String(tab.id) === String(id));
+
+        allParams.push({
+          id: parseInt(id),
+          disName: tabParamData?.disName || '',
+          paraName: tabParamData?.paraName || '',
+          value
+        });
+      }
+    });
+
+
+
+    return allParams?.map(param => {
+      let widgetValue = paramsValues?.widgetParams?.[widgetId]?.[param?.id] || null;
+
+      const tabValue = paramsValues?.tabParams?.[param?.id] || param?.value || null;
+      const value = widgetValue ?? tabValue ?? null;
+
+      const valOptions = allDrpDtParams?.[param?.paraName] || [];
+      const matchedOption = valOptions.find(dt => dt?.optionValue == value);
 
       return {
         ...param,
-        value: value,
-        val: val?.find(dt => dt?.optionValue == value)?.optionText || value
+        value,
+        val: matchedOption
+          ? matchedOption.optionText
+          : value == "%" ? "All" : value
       };
     });
-  }
+  };
 
   useEffect(() => {
     const timeout = setTimeout(() => {
@@ -435,7 +476,6 @@ const GraphDash = ({ widgetData, pkColumn, setPkColumn, isLayoutWithPreview, pre
     }
   }
 
-  console.log(searchScope,'searchScope')
 
   const exportingOptions = {
     enabled: isActionButtonReq !== "No" && isActionButtonReq !== "None",
@@ -526,48 +566,49 @@ const GraphDash = ({ widgetData, pkColumn, setPkColumn, isLayoutWithPreview, pre
         <div className="col-md-8 col-xs-7 fw-medium fs-6 pe-0">
           {dt(widgetData?.rptDisplayName)}
         </div>
-        {isDirectDownloadRequired === 'Yes' &&
-          <div className="col-md-4">
-            <button
-              type="button"
-              className="small-box-btn-dwn"
-              aria-expanded="false"
-              data-bs-toggle="dropdown"
-            >
-              <FontAwesomeIcon icon={faCog} className="dropdown-gear-icon" />
-            </button>
-            <ul className="dropdown-menu p-2">
-              <li className="p-1 dropdown-item text-primary" style={{ cursor: "pointer" }} onClick={() => refreshData(widgetData)}>
-                <FontAwesomeIcon icon={faRefresh} className="dropdown-gear-icon me-2" />{dt('Refresh Data')}
-              </li>
+        {/* {isDirectDownloadRequired === 'Yes' && */}
+        <div className="col-md-4">
+          <button
+            type="button"
+            className="small-box-btn-dwn"
+            aria-expanded="false"
+            data-bs-toggle="dropdown"
+          >
+            <FontAwesomeIcon icon={faCog} className="dropdown-gear-icon" />
+          </button>
+          <ul className="dropdown-menu p-2">
+            <li className="p-1 dropdown-item text-primary" style={{ cursor: "pointer" }} onClick={() => refreshData(widgetData)}>
+              <FontAwesomeIcon icon={faRefresh} className="dropdown-gear-icon me-2" />{dt('Refresh Data')}
+            </li>
 
-              <li className="p-1 dropdown-item text-primary" style={{ cursor: "pointer" }}
-                onClick={() => generateGraphPDF(widgetData, graphData, singleConfigData?.databaseConfigVO, filterColumns(visibleColumns), sortConfig, getParametersWithValues(widgetParams, paramsValues, widgetData?.rptId, allDrpDtParams))} title="pdf">
-                <FontAwesomeIcon icon={faFilePdf} className="dropdown-gear-icon me-2" />{dt('Download PDF')}
-              </li>
+            <li className="p-1 dropdown-item text-primary" style={{ cursor: "pointer" }}
+              onClick={() => generateGraphPDF(widgetData, graphData, singleConfigData?.databaseConfigVO, filterColumns(visibleColumns), sortConfig, getParametersWithValues(widgetParams, paramsValues, widgetData?.rptId, allDrpDtParams))} title="pdf">
+              <FontAwesomeIcon icon={faFilePdf} className="dropdown-gear-icon me-2" />{dt('Download PDF')}
+            </li>
 
-              <li className="p-1 dropdown-item text-primary" style={{ cursor: "pointer" }} onClick={() => generateGraphCSV(widgetData, graphData, singleConfigData?.databaseConfigVO, filterColumns(visibleColumns), sortConfig, getParametersWithValues(widgetParams, paramsValues, widgetData?.rptId, allDrpDtParams))}>
-                <FontAwesomeIcon icon={faFileExcel} className="dropdown-gear-icon me-2" />{dt('Download CSV')}
-              </li>
+            <li className="p-1 dropdown-item text-primary" style={{ cursor: "pointer" }} onClick={() => generateGraphCSV(widgetData, graphData, singleConfigData?.databaseConfigVO, filterColumns(visibleColumns), sortConfig, getParametersWithValues(widgetParams, paramsValues, widgetData?.rptId, allDrpDtParams))}>
+              <FontAwesomeIcon icon={faFileExcel} className="dropdown-gear-icon me-2" />{dt('Download Excel')}
+            </li>
 
-              <li className="p-1 dropdown-item text-primary" style={{ cursor: "pointer" }}
-                onClick={() => onClickAdvanced()}>
-                <FontAwesomeIcon icon={faSliders} className="dropdown-gear-icon me-2" />{dt('Advanced')}</li>
-            </ul>
-            <button type="button" className="small-box-btn-dwn"
-              onClick={() => generateGraphPDF(widgetData, allGraphData, singleConfigData?.databaseConfigVO, filterColumns(visibleColumns), sortConfig, getParametersWithValues(widgetParams, paramsValues, widgetData?.rptId, allDrpDtParams), getParametersWithValues(widgetParams, paramsValues, widgetData?.rptId, allDrpDtParams))}
-              title="PDF"
-            >
-              <FontAwesomeIcon icon={faFilePdf} className="dropdown-gear-icon" />
-            </button>
-            <button type="button" className="small-box-btn-dwn"
-              onClick={() => generateGraphCSV(widgetData, allGraphData, singleConfigData?.databaseConfigVO, filterColumns(visibleColumns), sortConfig)}
-              title="CSV"
-            >
-              <FontAwesomeIcon icon={faFileCsv} className="dropdown-gear-icon" />
-            </button>
-          </div>
-        }
+            <li className="p-1 dropdown-item text-primary" style={{ cursor: "pointer" }}
+              onClick={() => onClickAdvanced()}>
+              <FontAwesomeIcon icon={faSliders} className="dropdown-gear-icon me-2" />{dt('Advanced')}</li>
+          </ul>
+
+          <button type="button" className="small-box-btn-dwn"
+            onClick={() => generateGraphPDF(widgetData, allGraphData, singleConfigData?.databaseConfigVO, filterColumns(visibleColumns), sortConfig, getParametersWithValues(widgetParams, paramsValues, widgetData?.rptId, allDrpDtParams), getParametersWithValues(widgetParams, paramsValues, widgetData?.rptId, allDrpDtParams))}
+            title="PDF"
+          >
+            <FontAwesomeIcon icon={faFilePdf} className="dropdown-gear-icon" />
+          </button>
+          <button type="button" className="small-box-btn-dwn"
+            onClick={() => generateGraphCSV(widgetData, allGraphData, singleConfigData?.databaseConfigVO, filterColumns(visibleColumns), sortConfig, getParametersWithValues(widgetParams, paramsValues, widgetData?.rptId, allDrpDtParams))}
+            title="Excel"
+          >
+            <FontAwesomeIcon icon={faFileCsv} className="dropdown-gear-icon" />
+          </button>
+        </div>
+        {/* // } */}
       </div>
 
       {paramsData && (

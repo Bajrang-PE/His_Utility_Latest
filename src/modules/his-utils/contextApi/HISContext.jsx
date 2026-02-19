@@ -8,7 +8,7 @@ export const HISContext = createContext();
 
 const HISContextData = ({ children }) => {
   //GLOBALS
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [showDataTable, setShowDataTable] = useState(false);
   const [selectedOption, setSelectedOption] = useState([]);
   const [actionMode, setActionMode] = useState('home');
@@ -167,7 +167,13 @@ const HISContextData = ({ children }) => {
     fetchData("/hisutils/TabDetails", { 'masterName': dashFor }).then((data) => {
       if (data?.status === 1) {
         setAllTabsData(data?.data);
-        setTabDrpData(DrpDataValLab(data?.data, 'dashboardId', 'dashboardName', true))
+
+        const drpData = DrpDataValLab(data?.data, 'dashboardId', 'dashboardName', true);
+
+        const sortedDrpData = [...drpData].sort((a, b) =>
+          a.label.localeCompare(b.label)
+        );
+        setTabDrpData(sortedDrpData);
       } else {
         setAllTabsData([]);
         setTabDrpData([]);
@@ -180,7 +186,13 @@ const HISContextData = ({ children }) => {
       if (data?.status === 1) {
         const fdt = data?.data?.filter(dt => dt?.rptId !== undefined && dt?.rptId !== null && dt?.rptId !== '');
         setAllWidgetData(fdt);
-        setWidgetDrpData(DrpDataValLab(fdt, 'rptId', 'rptName', false))
+        const drpData = DrpDataValLab(fdt, 'rptId', 'rptName', false);
+
+        const sortedDrpData = [...drpData].sort((a, b) =>
+          a.label.localeCompare(b.label)
+        );
+        setWidgetDrpData(sortedDrpData)
+
       } else {
         setAllWidgetData([]);
         setWidgetDrpData([]);
@@ -204,22 +216,29 @@ const HISContextData = ({ children }) => {
     try {
       // const isToken = localStorage.getItem('accessToken');
       const auth = searchParams.get("auth") || '';
+
       if (auth) {
         sessionStorage.setItem("accessToken", auth);
       }
-      const isToken = sessionStorage.getItem('accessToken') || auth;
 
-      let userName = "";
+      // const cpat = searchParams.get("cpat") || '';
       const isGlobal = searchParams.get("isGlobal") || 0;
+      // const newParams = new URLSearchParams(searchParams);
+
+      // if (cpat) {
+      //   sessionStorage.setItem("cpat", cpat);
+      //   newParams.delete("cpat");
+      //   newParams.delete("isGlobal");
+      //   setSearchParams(newParams, { replace: true });
+      // }
+
+      const isToken = sessionStorage.getItem('accessToken') || auth;
+      let userName = "";
 
       // Extract params from URL
       if (searchParams.get("userName")) {
         userName = searchParams.get("userName");
       }
-      //  else if (searchParams.get("dbfhttf")) {
-      //   const encIFUrl = searchParams.get("dbfhttf");
-      //   userName = encIFUrl ? atob(getEncryptedParamValue(encIFUrl, "userName")) : "";
-      // }
 
       const data = await fetchData(`/hisutils/dashboard-configurations?isGlobal=${isGlobal || 0}`,
         !isToken && isGlobal != 1 ? { 'userName': userName } : null

@@ -161,7 +161,9 @@ const ParameterMaster = () => {
       dashboardFor: parameterFor, masterName: "ParameterMst", entryUserId: 101, keyName: parameterDisplay,
       jndiIdForGettingData: jndiSavingData, statementTimeout: stmtTimeOut,
       jsonData: {
-        JNDIid: jndiSavingData, parentId: parentID, isMandatory: mandatory, modeForQuery: modeForQuery,
+        JNDIid: jndiSavingData,
+        parentId: Array.isArray(parentID) ? parentID.map(dt => dt?.value).join(",") : "0",
+        isMandatory: mandatory, modeForQuery: modeForQuery,
         defaultOption: {
           optionText: defaultOptText,
           optionValue: defaultOptValue,
@@ -207,7 +209,9 @@ const ParameterMaster = () => {
     const val = {
       id: id, dashboardFor: parameterFor, masterName: "ParameterMst", entryUserId: 101, keyName: parameterDisplay, jndiIdForGettingData: jndiSavingData, statementTimeout: stmtTimeOut,
       jsonData: {
-        JNDIid: jndiSavingData, parentId: parentID, isMandatory: mandatory, modeForQuery: modeForQuery,
+        JNDIid: jndiSavingData,
+        parentId: Array.isArray(parentID) ? parentID.map(dt => dt?.value).join(",") : "0",
+        isMandatory: mandatory, modeForQuery: modeForQuery,
         defaultOption: {
           optionText: defaultOptText,
           optionValue: defaultOptValue,
@@ -352,7 +356,7 @@ const ParameterMaster = () => {
         maxLength: jsonData.textboxMaxlength || "",
         minLength: jsonData.textboxMinlength || "",
 
-        parentID: jsonData.parentId || [],
+        parentID: jsonData.parentId || "0",
         modeForQuery: jsonData.modeForQuery || "",
         query: jsonData.parameterQuery || "",
         defaultOptValue: jsonData.defaultOption?.optionValue || "",

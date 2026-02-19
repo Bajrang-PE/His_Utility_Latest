@@ -25,6 +25,7 @@ const Parameters = ({ params, scope, widgetId = null, isLayoutWithPreview, setWi
     const [defaultValueIfEmpty, setDefaultValueIfEmpty] = useState('');
     const [queryParams] = useSearchParams();
 
+
     const groupId = atob(queryParams.get("groupId"));
     const dashFor = atob(queryParams.get("dashboardFor"));
     const isGlobal = queryParams.get("isGlobal") || 0;
@@ -34,7 +35,6 @@ const Parameters = ({ params, scope, widgetId = null, isLayoutWithPreview, setWi
 
     const [errors, setErrors] = useState({
     })
-
 
     const handleSetParamsValues = useCallback((values, type, widgetId = null) => {
         if (type === 'tabParams') {
@@ -230,6 +230,7 @@ const Parameters = ({ params, scope, widgetId = null, isLayoutWithPreview, setWi
                 ...prev,
                 [parameterName]: formattedData,
             }));
+            
             setAllDrpDtParams(prev => ({
                 ...prev,
                 [parameterName]: formattedData,

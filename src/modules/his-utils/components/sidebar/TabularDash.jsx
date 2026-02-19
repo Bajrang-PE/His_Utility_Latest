@@ -762,7 +762,6 @@ const TabularDash = (props) => {
     }
   };
 
-  console.log('paramsValues', paramsValues)
 
   const fetchData = async (widget) => {
     if (widget?.modeOfQuery === "Procedure") {
@@ -1212,8 +1211,8 @@ const TabularDash = (props) => {
                           filterColumns(tbl?.columns, visibleColumns, isFirstRowHeading)
                         ),
                         isFirstRowHeading, getParametersWithValues(widgetParams, paramsValues, widgetData?.rptId, allDrpDtParams))
-                    }} title="CSV">
-                    <FontAwesomeIcon icon={faFileExcel} className="dropdown-gear-icon me-2" />{dt('Download CSV')}
+                    }} title="Excel">
+                    <FontAwesomeIcon icon={faFileExcel} className="dropdown-gear-icon me-2" />{dt('Download Excel')}
                   </li>
                 }
                 {(isActionButtonReq === 'Yes' || isActionButtonReq === 'advanced') &&
@@ -1242,7 +1241,7 @@ const TabularDash = (props) => {
                 multipleTables?.map((tbl, idx) =>
                   filterColumns(tbl?.columns, visibleColumns, isFirstRowHeading)
                 ),
-                isFirstRowHeading, getParametersWithValues(widgetParams, paramsValues, widgetData?.rptId, allDrpDtParams))} title="CSV">
+                isFirstRowHeading, getParametersWithValues(widgetParams, paramsValues, widgetData?.rptId, allDrpDtParams))} title="Excel">
                 <FontAwesomeIcon icon={faFileExcel} />
               </button>
 
