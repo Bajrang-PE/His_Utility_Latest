@@ -46,7 +46,10 @@ const WidgetMaster = () => {
     // other link
     "lstOtherLink": [],
     "sqChildJsonString": [],
-    "selFilterIds": "", "mpFormatColumn": "", "isPreviewVisible": "No"
+    "selFilterIds": "", "mpFormatColumn": "", "isPreviewVisible": "No",
+    // for grid
+    "tablePluginType": "datatable", "gridTheme": "default",
+    "conditions": [], "synchronizedWidget": [],
   })
 
   const [radioValues, setRadioValues] = useState({
@@ -64,6 +67,10 @@ const WidgetMaster = () => {
     isChildBasedPrimaryKey: "Yes", isHideParentMap: "Yes",
     //iframe
     isSsoUrl: "Yes", "isSoftDbConnReq": "No",
+
+    //for grid
+    "isRowHighlight": "no",
+    "isGridFilterRequired": "no",
 
     //FOR WIDGET PREVIEW
     isQueryDataPreview: "No", isParameterReq: "No"
@@ -92,6 +99,11 @@ const WidgetMaster = () => {
   const [rows, setRows] = useState([{ queryLabel: "", mainQuery: "", isMultiRowDataTable: "", tableDataDisplay: "horizontal", totalRecordCountQuery: "" }]);
 
   const [procedureRows, setProcedureRows] = useState([{ queryLabel: "", serviceReferenceNumber: "", webserviceName: "", isMultiRowDataTable: "", tableDataDisplay: "horizontal" }]);
+
+  // for grid
+  const [conditions, setConditions] = useState([{
+    label: "Condition1", name: "condition1", id: "condition1", value: "", colorName: "color1", colorValue: "", colorId: "color1"
+  }]);
 
   const [errors, setErrors] = useState({
     widgetForErr: "", widgetNameDisplayErr: "", widgetNameInternalErr: "", defaultGraphTypeErr: "", clmNameForLineGraphErr: "", defaultPluginNameErr: "",
@@ -309,7 +321,10 @@ const WidgetMaster = () => {
       //iframe
       "urlForIframe": "",
       "lstOtherLink": [],
-      "sqChildJsonString": [], "isPreviewVisible": "No"
+      "sqChildJsonString": [], "isPreviewVisible": "No",
+
+      //for grid
+      "tablePluginType": "datatable", "gridTheme": "default", "synchronizedWidget": [], "conditions": []
     });
     setRadioValues({
       widgetViewed: 'Tabular', isWidgetNameVisible: 'Yes', selectedModeQuery: 'Query', widgetPurpose: 'HTML',
@@ -325,8 +340,10 @@ const WidgetMaster = () => {
       //map
       isChildBasedPrimaryKey: "Yes", isHideParentMap: "Yes",
       //iframe
-      isSsoUrl: "Yes", 
-      isQueryDataPreview: "No", isParameterReq: "No"
+      isSsoUrl: "Yes",
+      isQueryDataPreview: "No", isParameterReq: "No",
+      //for grid
+      isRowHighlight: "no", isGridFilterRequired: "no",
     });
     setErrors({
       widgetForErr: "", widgetNameDisplayErr: "", widgetNameInternalErr: "", defaultGraphTypeErr: "", graphTypesErr: "", clmNameForLineGraphErr: "", defaultPluginNameErr: "",
@@ -340,9 +357,10 @@ const WidgetMaster = () => {
     setTabName({ value: 1, label: "About Widget" })
     localStorage.removeItem('values');
     localStorage.removeItem('radio');
+    localStorage.setItem('mode', 'home');
     setLoading(false)
     onTableClose()
-
+    setActionMode('home');
     setNewRow({ modeForSQCHILDColumnNo: "", SQCHILDWidgetId: "", drillSQCHILDWidgetName: "" });
 
     setOtherLinkData([{ otherLinkName: "", otherLinkURL: "" }]);
@@ -390,6 +408,14 @@ const WidgetMaster = () => {
   }
 
   const returnLinkedData = (linkedWidgetRptId) => {
+    if (!linkedWidgetRptId || !widgetDrpData) return [];
+
+    const ids = linkedWidgetRptId?.split(",").map(id => id.trim());
+
+    return widgetDrpData.filter(item => ids.includes(String(item.value)));
+  }
+
+  const returnSynchronizedData = (linkedWidgetRptId) => {
     if (!linkedWidgetRptId || !widgetDrpData) return [];
 
     const ids = linkedWidgetRptId?.split(",").map(id => id.trim());
@@ -511,6 +537,11 @@ const WidgetMaster = () => {
         selFilterIds: singleData[0]?.selFilterIds,
         mpFormatColumn: singleData[0]?.mpFormatColumn,
         softDbType: singleData[0]?.softDbType,//
+        //for grid
+        tablePluginType: singleData[0]?.tablePluginType,
+        gridTheme: singleData[0]?.gridOptions?.theme,
+        conditions: singleData[0]?.gridOptions?.highLightOptions,
+        synchronizedWidget: returnSynchronizedData(singleData[0]?.synchronizedWidgetRptId),//
       });
       setRadioValues({
         ...radioValues,
@@ -579,11 +610,17 @@ const WidgetMaster = () => {
         isSsoUrl: singleData[0]?.isSSOUrl,//
         isSoftDbConnReq: singleData[0]?.isSoftDbConnReq,//
         isQueryDataPreview: singleData[0]?.isQueryDataPreview || "No",
-        isParameterReq: singleData[0]?.isParameterReq || "No"
+        isParameterReq: singleData[0]?.isParameterReq || "No",
+        //for grid
+        isRowHighlight: singleData[0]?.gridOptions?.isRowHighlight || "no",
+        "isGridFilterRequired": singleData[0]?.gridOptions?.isGridFilterRequired || "no",
       });
       setRows(singleData[0]?.queryVO && singleData[0]?.queryVO?.length > 0 ? singleData[0]?.queryVO : [])
       setWidgetGraphPreviewData(singleData[0]?.widgetGraphPreviewData || {})
       setLoading(false)
+
+      //for grid
+      setConditions(singleData[0]?.gridOptions?.highLightOptions || []);
     }
   }, [singleData]);
 
@@ -639,7 +676,9 @@ const WidgetMaster = () => {
       // newsTicker fields
       noOfNewsVisible, newsSpeed, newsInterval,
       // iframe
-      urlForIframe, lstOtherLink, sqChildJsonString, mpFormatColumn, softDbType } = values;
+      urlForIframe, lstOtherLink, sqChildJsonString, mpFormatColumn, softDbType,
+      //for grid
+      gridTheme, tablePluginType, conditions, synchronizedWidget } = values;
 
     const {
       widgetViewed, isWidgetNameVisible, selectedModeQuery, widgetPurpose, widgetHeadingAlign, isRecordLimitReq, isWidgetBorderReq,
@@ -658,7 +697,8 @@ const WidgetMaster = () => {
       isSsoUrl, isSoftDbConnReq,
 
       //for widget preview
-      isQueryDataPreview, isParameterReq
+      isQueryDataPreview, isParameterReq,
+      isRowHighlight, isGridFilterRequired,
     } = radioValues;
 
     const selectedIdParams = selectedOptions?.length > 0 ? selectedOptions?.map(option => option?.value).join(",") : '';
@@ -720,6 +760,15 @@ const WidgetMaster = () => {
         lastUpdatedQuery: lastUpdatedQuery,
         footerText: FooterText,
         customMessage: customMsgForNoData,
+        //for grid
+        tablePluginType: tablePluginType,
+        gridOptions: {
+          theme: gridTheme,
+          isGridFilterRequired: isGridFilterRequired,
+          isRowHighlight: isRowHighlight,
+          highLightOptions: conditions,
+        },
+        synchronizedWidgetRptId: synchronizedWidget?.length > 0 ? synchronizedWidget.map(item => item.value).join(',') : '',
         //graph
         graphPluginName: defaultPluginName,
         defaultgraphType: defaultGraphType,
@@ -878,7 +927,9 @@ const WidgetMaster = () => {
       // newsTicker fields
       noOfNewsVisible, newsSpeed, newsInterval,
       // iframe
-      urlForIframe, lstOtherLink, sqChildJsonString, mpFormatColumn, softDbType } = values;
+      urlForIframe, lstOtherLink, sqChildJsonString, mpFormatColumn, softDbType,
+      //for grid
+      conditions, gridTheme, tablePluginType, synchronizedWidget } = values;
 
     const {
       widgetViewed, isWidgetNameVisible, selectedModeQuery, widgetPurpose, widgetHeadingAlign, isRecordLimitReq, isWidgetBorderReq,
@@ -896,7 +947,8 @@ const WidgetMaster = () => {
       // Iframe fields
       isSsoUrl, isSoftDbConnReq,
       //for widget preview
-      isParameterReq, isQueryDataPreview
+      isParameterReq, isQueryDataPreview,
+      isRowHighlight, isGridFilterRequired,
     } = radioValues;
     const selectedIdParams = selectedOptions?.length > 0 ? selectedOptions?.map(option => option?.value).join(",") : '';
 
@@ -940,6 +992,17 @@ const WidgetMaster = () => {
         pdfTableheaderBarColor: pdfTableHeadBarClr,
         pdfTableheadingFontColour: pdfTableHeadTxtFontClr,
         groupColumnNo: groupClmNoComma,
+
+        //for grid
+        tablePluginType: tablePluginType,
+        gridOptions: {
+          theme: gridTheme,
+          isGridFilterRequired: isGridFilterRequired,
+          isRowHighlight: isRowHighlight,
+          highLightOptions: conditions,
+        },
+        synchronizedWidgetRptId: synchronizedWidget?.length > 0 ? synchronizedWidget.map(item => item.value).join(',') : '',
+
         // query: query,
         queryVO: selectedModeQuery === 'Query' ? query : selectedModeQuery === 'WebSevice' ? webQuery : [],
         queryLabel: queryLabel,//
@@ -1428,7 +1491,7 @@ const WidgetMaster = () => {
               {tabName?.value === 3 &&
                 <>
                   {radioValues?.widgetViewed === "Tabular" &&
-                    <TableDetails handleValueChange={handleValueChange} handleRadioChange={handleRadioChange} radioValues={radioValues} values={values} parentWidget={widgetDrpData} setValues={setValues} errors={errors} dt={dt} tabDrpData={tabDrpData} />
+                    <TableDetails handleValueChange={handleValueChange} handleRadioChange={handleRadioChange} radioValues={radioValues} values={values} parentWidget={widgetDrpData} setValues={setValues} errors={errors} dt={dt} tabDrpData={tabDrpData} conditions={conditions} setConditions={setConditions} />
                   }
 
                   {radioValues?.widgetViewed === "Graph" &&

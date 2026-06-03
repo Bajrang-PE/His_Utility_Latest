@@ -15,7 +15,7 @@ const PdfDownload = lazy(() => import('../commons/PdfDownload'));
 const Parameters = lazy(() => import('./Parameters'));
 
 const TabDash = React.memo(() => {
-    const { activeTab, setParamsValues, presentWidgets, setPresentWidgets, prevKpiTab, setActiveTab, setPrevKpiTab, setParamsValuesPro, dt, setTabParams, tabParams } = useContext(HISContext);
+    const { activeTab, setParamsValues, presentWidgets, setPresentWidgets, prevKpiTab, setActiveTab, setPrevKpiTab, setParamsValuesPro, dt, setTabParams, tabParams, setPkColumn } = useContext(HISContext);
     const [presentTabs, setPresentTabs] = useState([]);
     const [widWithoutLinked, setWidWithoutLinked] = useState([]);
     const [allWidgetData, setAllWidgetData] = useState([]);
@@ -201,6 +201,7 @@ const TabDash = React.memo(() => {
         if (prevKpiTab.length > 0) {
             const previous = prevKpiTab[prevKpiTab.length - 1];
             setActiveTab(previous);
+            setPkColumn(previous?.pkVal || "")
             setPrevKpiTab(prev => prev.slice(0, -1));
         }
     };
@@ -209,6 +210,7 @@ const TabDash = React.memo(() => {
         const selectedTab = prevKpiTab[index];
         setActiveTab(selectedTab);
         // Keep only tabs before the selected one (like real navigation)
+        setPkColumn(selectedTab?.pkVal || "")
         setPrevKpiTab(prev => prev.slice(0, index));
     };
 
@@ -285,6 +287,8 @@ const TabDash = React.memo(() => {
     const tabNameMarginBottom = activeTab?.jsonData?.marginBottom || "5";
     const tabNameFontSize = activeTab?.jsonData?.tabnameFontSize || "150";
     const tabNameDecoration = activeTab?.jsonData?.tabnameDecoration || "none";
+
+
 
     return (
         <>
@@ -419,7 +423,7 @@ const TabDash = React.memo(() => {
                                     </div>
                                 )}
 
-                                <div className='row mt-4'>
+                                <div className='row'>
                                     {widWithoutLinked?.length > 0 && widWithoutLinked.map((widget, index) => (
                                         <React.Fragment key={index}>
                                             {widget &&

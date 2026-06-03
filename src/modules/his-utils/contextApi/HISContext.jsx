@@ -15,6 +15,7 @@ const HISContextData = ({ children }) => {
   const [activeTab, setActiveTab] = useState();
   const [theme, setTheme] = useState('Default');
   const [mainDashData, setMainDashData] = useState(null);
+  const [pkColumn, setPkColumn] = useState('');
 
   const [confirmSave, setConfirmSave] = useState(false);
   const [showConfirmSave, setShowConfirmSave] = useState(false);
@@ -40,6 +41,9 @@ const HISContextData = ({ children }) => {
   const [presentTabsDash, setPresentTabsDash] = useState([]);
 
   const [tabParams, setTabParams] = useState([]);
+  const [syncPkValues, setsyncPkValues] = useState({});
+  const [selectedPk, setSelectedPk] = useState({});
+  const [allDrpDtParams, setAllDrpDtParams] = useState([]);
 
   // ALL DATA
   const [parameterData, setParameterData] = useState([]);
@@ -342,7 +346,12 @@ const HISContextData = ({ children }) => {
 
       dbConnectionDrpData, setDbConnectionDrpData,
 
-      widgetGraphPreviewData, setWidgetGraphPreviewData
+      widgetGraphPreviewData, setWidgetGraphPreviewData,
+
+      pkColumn, setPkColumn,
+
+      syncPkValues, setsyncPkValues,
+      selectedPk, setSelectedPk, allDrpDtParams, setAllDrpDtParams
     }}>
       {children}
     </HISContext.Provider>

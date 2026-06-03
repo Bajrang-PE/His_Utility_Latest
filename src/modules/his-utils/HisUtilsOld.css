@@ -363,9 +363,9 @@ label {
 /* //for multi select react */
 
 .react-select-multi .css-13cymwt-control {
-  /* background-color: transparent !important; */
+  background-color: transparent !important;
   border-radius: 10px !important;
-  /* border:1px solid gray !important; */
+  border-color: gray !important;
   /* height: 2rem; */
   min-height: 2rem !important;
 }
@@ -380,9 +380,9 @@ label {
 }
 
 .react-select-multi .css-t3ipsp-control {
-  /* border-color: #3182ce !important; */
+  border-color: #3182ce !important;
   outline: none;
-  /* box-shadow: 0 0 4px rgba(49, 130, 206, 0.5) !important; */
+  box-shadow: 0 0 4px rgba(49, 130, 206, 0.5) !important;
   background-color: transparent !important;
   border-radius: 10px !important;
   /* height: 2rem; */
@@ -564,9 +564,10 @@ label {
   box-shadow: none;
   border: 1px solid transparent;
   padding: revert !important;
+  /* padding: 0px 0px 2px 0px; */
   color: #fff !important;
   /* background-color: #001f3f !important; */
-  /* margin-top: 5px; */
+  margin-top: 0px;
   margin-right: 3px;
   float: right;
   position: relative;
@@ -640,75 +641,26 @@ label {
 
 .high-chart-main {
   margin-top: 10px;
-  height: 650px;
+  /* height: 650px; */
   overflow: auto;
   padding-top: 1px;
-  border-width: 1px 1px 1px 1px !important;
+  border-width: 7px 1px 1px 1px !important;
   font-size: 12.9px;
   border-radius: 8px;
   background-color: white;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  scrollbar-width: thin;
-  scrollbar-color: transparent transparent;
 }
 
 .tabular-box {
   margin-top: 10px;
   height: 650px;
-  /* overflow: auto; */
+  overflow: auto;
   /* padding-top: 1px; */
   font-size: 12.9px;
   background-color: white;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  overflow: auto;
-  scrollbar-width: thin;
-  scrollbar-color: transparent transparent;
 }
 
-.high-chart-main:hover,
-.tabular-box:hover {
-  scrollbar-color: #bec4d1 transparent;
-}
-
-/* Chrome, Edge, Safari */
-.high-chart-main::-webkit-scrollbar,
-.tabular-box::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-
-.high-chart-main::-webkit-scrollbar-track,
-.tabular-box::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.high-chart-main::-webkit-scrollbar-thumb,
-.tabular-box::-webkit-scrollbar-thumb {
-  background: transparent;
-  border-radius: 10px;
-  /* transition: background 0.3s ease; */
-}
-
-/* Visible only on hover */
-.high-chart-main:hover::-webkit-scrollbar-thumb,
-.tabular-box:hover::-webkit-scrollbar-thumb {
-  background: #b8bcc4;
-  /* light gray */
-}
-
-/* Slightly darker on active hover */
-.high-chart-main:hover::-webkit-scrollbar-thumb:hover,
-.tabular-box:hover::-webkit-scrollbar-thumb:hover {
-  background: #9aa0a6;
-}
-
-/* Remove scrollbar arrows/buttons */
-.high-chart-main::-webkit-scrollbar-button,
-.tabular-box::-webkit-scrollbar-button {
-  display: none;
-  width: 0;
-  height: 0;
-}
 
 .tabular-box-border {
   /* border: 1px solid black; */
@@ -1177,3 +1129,275 @@ label {
   padding: .5rem 1rem !important;
   border-radius: 1rem !important;
 }
+
+
+/* -----??----------------------------------------db connection------------------------------------ */
+
+/* Database Icons Styling */
+.database-selection-container {
+  padding: 20px;
+  border-radius: 12px;
+  background: #f8f9fa;
+  border: 2px dashed #dee2e6;
+  transition: all 0.3s ease;
+}
+
+.database-icons-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 15px;
+  justify-items: center;
+}
+
+.database-icon-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px 15px;
+  border-radius: 12px;
+  background: white;
+  border: 2px solid #e9ecef;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  min-height: 120px;
+  width: 100%;
+  max-width: 140px;
+}
+
+.database-icon-card:hover {
+  transform: translateY(-5px);
+  border-color: var(--db-color);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.database-icon-card.selected {
+  border-color: var(--db-color);
+  background: var(--db-gradient);
+  color: white;
+  transform: scale(1.05);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.database-icon-wrapper {
+  position: relative;
+  margin-bottom: 12px;
+}
+
+.database-icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #ecf1f7;
+  font-size: 1.5rem;
+  transition: all 0.3s ease;
+  border: 1px solid var(--db-color);
+}
+
+.db-svg-image {
+  width: 45px;
+  height: 45px;
+  object-fit: contain;
+}
+
+.current-svg-image {
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
+}
+
+.selected-indicator {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  background: white;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--db-color);
+  font-size: 0.8rem;
+  border: 2px solid var(--db-color);
+}
+
+.database-name {
+  font-weight: 600;
+  font-size: 0.85rem;
+  text-align: center;
+  transition: color 0.3s ease;
+}
+
+.database-icon-card.selected .database-name {
+  color: white;
+  font-weight: 700;
+}
+
+/* Selected Database Display */
+.selected-database-display {
+  padding: 5px 10px;
+  border-radius: 10px;
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+}
+
+.selected-db-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 5px;
+}
+
+.back-button {
+  background: #6c757d;
+  color: white;
+  border: none;
+  padding: 8px 15px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: all 0.3s ease;
+}
+
+.back-button:hover {
+  background: #5a6268;
+  transform: translateX(-2px);
+}
+
+.current-selection {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.current-db-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* color: white; */
+  font-size: 1.2rem;
+  /* border: 1px solid var(--db-color); */
+}
+
+/* Animations */
+.database-fields-container {
+  animation: slideInUp 0.5s ease-out;
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideOutDown {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  to {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+}
+
+.pulse-animation {
+  animation: pulse 0.3s ease-in-out;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.1);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+.slide-out-animation {
+  animation: slideOutDown 0.3s ease-in-out;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .database-icons-grid {
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    gap: 10px;
+  }
+
+  .database-icon-card {
+    padding: 15px 10px;
+    min-height: 100px;
+  }
+
+  .database-icon {
+    width: 40px;
+    height: 40px;
+    font-size: 1.2rem;
+  }
+
+  .selected-db-header {
+    gap: 10px;
+  }
+}
+
+/* -------------------------------------------------db connection end------------------------------ */
+
+/* FOR SCROLLBAR DESIGN */
+/* .high-chart-main::-webkit-scrollbar,
+.tabular-box::-webkit-scrollbar {
+  width: 0px;
+  height: 4px;
+}
+
+.high-chart-main::-webkit-scrollbar-track,
+.tabular-box::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.high-chart-main::-webkit-scrollbar-thumb,
+.tabular-box::-webkit-scrollbar-thumb {
+  background: #b1b0b0;
+  border-radius: 3px;
+}
+
+.high-chart-main::-webkit-scrollbar-thumb:hover,
+.tabular-box::-webkit-scrollbar-thumb:hover {
+  background: #838282;
+}
+
+.high-chart-main::-webkit-scrollbar-button,
+.tabular-box::-webkit-scrollbar-button {
+  display: none;
+  height: 0;
+  width: 0;
+}
+
+.high-chart-main:hover::-webkit-scrollbar,
+.tabular-box:hover::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+} */

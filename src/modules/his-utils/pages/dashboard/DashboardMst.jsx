@@ -9,7 +9,7 @@ const TopBar = lazy(() => import("../../components/sidebar/TopBar"));
 const TabDash = lazy(() => import("../../components/sidebar/TabDash"));
 
 const DashboardMst = () => {
-    const { activeTab, setActiveTab, theme, setTheme, mainDashData, setMainDashData, setLoading, loading, getDashConfigData, setParamsValues, setPrevKpiTab, dt, setPresentTabsDash } = useContext(HISContext);
+    const { activeTab, setActiveTab, theme, setTheme, mainDashData, setMainDashData, setLoading, loading, getDashConfigData, setParamsValues, setPrevKpiTab, dt, setPresentTabsDash, setAllDrpDtParams } = useContext(HISContext);
 
     const [searchParams] = useSearchParams();
     const [presentTabs, setPresentTabs] = useState([]);
@@ -138,6 +138,7 @@ const DashboardMst = () => {
                                 dashboardData={mainDashData}
                                 setPrevKpiTab={setPrevKpiTab}
                                 dt={dt}
+                                setAllDrpDtParams={setAllDrpDtParams}
                             />
                         ) : (
                             <DashSidebar
@@ -147,6 +148,7 @@ const DashboardMst = () => {
                                 dashboardData={mainDashData}
                                 setPrevKpiTab={setPrevKpiTab}
                                 dt={dt}
+                                setAllDrpDtParams={setAllDrpDtParams}
                             />
                         )}
                     </Suspense>

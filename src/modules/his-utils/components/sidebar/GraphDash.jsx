@@ -1,21 +1,33 @@
-import React, { useState, useEffect, useContext, lazy } from "react";
+import React, { useState, useEffect, useContext, lazy, useRef } from "react";
 import Highcharts from "highcharts";
 import HighchartsReact from "highcharts-react-official";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowCircleLeft, faCog, faFileCsv, faFileExcel, faFilePdf, faRefresh, faSliders, faTableCells } from "@fortawesome/free-solid-svg-icons";
-import { backToParentWidget, fetchProcedureData, fetchQueryData, formatDateFullYear, formatParams, getOrderedParamValues, getWidgetParametersOnly, ToastAlert } from "../../utils/commonFunction";
+import { backToParentWidget, fetchProcedureData, fetchQueryData, formatDateFullYear, formatParams, getDisplayQuery, getOrderedParamValues, getWidgetParametersOnly, ToastAlert } from "../../utils/commonFunction";
 import { HISContext } from "../../contextApi/HISContext";
-import { highchartGraphOptions } from "../../localData/DropDownData";
+import { apacheChartOptions, googleChartOptions, highchartGraphOptions } from "../../localData/DropDownData";
 import { getAuthUserData } from "../../../../utils/CommonFunction";
 import { generateGraphCSV, generateGraphCSVWorkers, generateGraphPDF, generateGraphPDFWorkers } from "../commons/advancedPdf";
 import { useSearchParams } from "react-router-dom";
 import AdvancedOptionsModal from "./AdvancedOptionsModal";
+import { AdvancedbtnSvg, CsvBtnSvg, PdfbtnSvg, RefreshbtnSvg, SettingbtnSvg } from "../../utils/commonSVG";
+import GooglePieChartDash from "./GooglePieChart";
+import ApacheGenChart from "./apacheCharts/ApacheGenChart";
+
+// v12+ auto-registering imports
+import "highcharts/modules/exporting";
+import "highcharts/modules/offline-exporting";
+import "highcharts/modules/export-data";
+import "highcharts/modules/no-data-to-display";
+import "highcharts/highcharts-more";
+import "highcharts/modules/heatmap";
+import "highcharts/modules/solid-gauge";
+import "highcharts/modules/treemap";
 
 const Parameters = lazy(() => import('./Parameters'));
 
 const GraphDash = ({ widgetData, setWidgetData, pkColumn, setPkColumn, isLayoutWithPreview, presentTabs, levelData, setLevelData }) => {
-  const { theme, paramsValues, singleConfigData, isSearchQuery, setIsSearchQuery, setSearchScope, searchScope, dt, presentWidgets, tabParams, jndiServerDrpData } = useContext(HISContext);
-
+  const { theme, paramsValues, singleConfigData, isSearchQuery, setIsSearchQuery, setSearchScope, searchScope, dt, presentWidgets, tabParams, jndiServerDrpData, syncPkValues, setsyncPkValues, selectedPk, setSelectedPk, allDrpDtParams, setAllDrpDtParams } = useContext(HISContext);
 
   const [widParamsValues, setWidParamsValues] = useState();
   const [filteredGraphOptions, setFilteredGraphOptions] = useState([]);
@@ -23,7 +35,7 @@ const GraphDash = ({ widgetData, setWidgetData, pkColumn, setPkColumn, isLayoutW
   const [graphData, setGraphData] = useState([]);
   const [allGraphData, setAllGraphData] = useState([]);
   const [widgetParams, setWidgetParams] = useState([]);
-  const [allDrpDtParams, setAllDrpDtParams] = useState([]);
+  // const [allDrpDtParams, setAllDrpDtParams] = useState([]);
   const [queryParams] = useSearchParams();
   const isPrev = queryParams.get('isPreview');
   const isGlobal = queryParams.get("isGlobal") || 0;
@@ -31,6 +43,9 @@ const GraphDash = ({ widgetData, setWidgetData, pkColumn, setPkColumn, isLayoutW
   const [statusMessage, setStatusMessage] = useState('');
   const [currentLevel, setCurrentLevel] = useState(0);
   const [jndiName, setJndiName] = useState('');
+
+  const isInitialGraphSyncLoad = useRef({});
+  const paramsValuesRef = useRef(paramsValues);
 
   const is3D = widgetData.is3d === "true" || widgetData.is3d === "Yes";
   const xAxisLabel = widgetData.xAxisLabel || "X Axis";
@@ -83,6 +98,9 @@ const GraphDash = ({ widgetData, setWidgetData, pkColumn, setPkColumn, isLayoutW
   const isQueryDataPreview = widgetData?.isQueryDataPreview || 'No';
   const widgetGraphPreviewData = widgetData?.widgetGraphPreviewData || {};
 
+  const isSynchronized = widgetData?.synchronizedWidgetRptId ? true : false;
+
+  const pluginName = widgetData.graphPluginName || "highChart";
 
   const getParametersWithValues = (widgetParams, paramsValues, widgetId, allDrpDtParams) => {
     let allParams = [...widgetParams];
@@ -126,14 +144,14 @@ const GraphDash = ({ widgetData, setWidgetData, pkColumn, setPkColumn, isLayoutW
 
 
     const parentWidgetIds = levelData
-      .filter(level => level.rptId != widgetId)
+      ?.filter(level => level.rptId != widgetId)
       .map(level => level.rptId);
 
 
     return allParams?.map(param => {
       let widgetValue = paramsValues?.widgetParams?.[widgetId]?.[param?.id] || null;
 
-      if (widgetValue === null && parentWidgetIds.length > 0) {
+      if (widgetValue === null && parentWidgetIds?.length > 0) {
         for (const parentWidgetId of parentWidgetIds) {
           widgetValue = paramsValues?.widgetParams?.[parentWidgetId]?.[param?.id] || null;
           if (widgetValue !== null) break;
@@ -156,42 +174,42 @@ const GraphDash = ({ widgetData, setWidgetData, pkColumn, setPkColumn, isLayoutW
     });
   };
 
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      Promise.all([
-        import("highcharts/modules/offline-exporting"),
-        import("highcharts/modules/exporting"),
-        import("highcharts/modules/export-data"),
-        import('highcharts/modules/no-data-to-display')
-      ])
-        .then(([OfflineExporting, exportingModule, exportDataModule, HighchartsNoData]) => {
-          const modules = [OfflineExporting, exportingModule, exportDataModule, HighchartsNoData];
+  // useEffect(() => {
+  //   const timeout = setTimeout(() => {
+  //     Promise.all([
+  //       import("highcharts/modules/offline-exporting"),
+  //       import("highcharts/modules/exporting"),
+  //       import("highcharts/modules/export-data"),
+  //       import('highcharts/modules/no-data-to-display')
+  //     ])
+  //       .then(([OfflineExporting, exportingModule, exportDataModule, HighchartsNoData]) => {
+  //         const modules = [OfflineExporting, exportingModule, exportDataModule, HighchartsNoData];
 
-          const applyModule = (mod) => {
-            if (typeof mod === 'function') {
-              mod(Highcharts);
-            } else if (mod && typeof mod.default === 'function') {
-              mod.default(Highcharts);
-            }
-          };
+  //         const applyModule = (mod) => {
+  //           if (typeof mod === 'function') {
+  //             mod(Highcharts);
+  //           } else if (mod && typeof mod.default === 'function') {
+  //             mod.default(Highcharts);
+  //           }
+  //         };
 
-          try {
-            modules.forEach((mod, index) => {
-              applyModule(mod);
-            });
-          } catch (error) {
-            console.error('Error during module initialization:', error);
-          }
-        })
-        .catch((error) => {
-          console.error('Error loading Highcharts modules:', error);
-        });
-    }, 2000);
+  //         try {
+  //           modules.forEach((mod, index) => {
+  //             applyModule(mod);
+  //           });
+  //         } catch (error) {
+  //           console.error('Error during module initialization:', error);
+  //         }
+  //       })
+  //       .catch((error) => {
+  //         console.error('Error loading Highcharts modules:', error);
+  //       });
+  //   }, 2000);
 
-    return () => {
-      clearTimeout(timeout);
-    };
-  }, []);
+  //   return () => {
+  //     clearTimeout(timeout);
+  //   };
+  // }, []);
 
   const chartTypeMapping = {
     BAR_GRAPH: "column",
@@ -209,15 +227,33 @@ const GraphDash = ({ widgetData, setWidgetData, pkColumn, setPkColumn, isLayoutW
     BAR_RACE: "bar"
   };
 
+  const defGraphTypes = (plugin) => {
+
+    switch (plugin) {
+      case "highchart":
+        return highchartGraphOptions;
+
+      case "googlechart":
+        return googleChartOptions;
+
+      case "apacheChart":
+        return apacheChartOptions;
+
+      default:
+        return googleChartOptions;
+    }
+  }
+
   useEffect(() => {
     if (widgetData.defaultgraphType) {
       const availableGraphs = widgetData.graphChangeOptions || [];
       let opt = [];
-      opt = highchartGraphOptions
-        .filter(option => availableGraphs.includes(option.value))
+
+
+      opt = defGraphTypes(pluginName)?.filter(option => availableGraphs.includes(option.value))
 
       if (widgetData.defaultgraphType && !availableGraphs.includes(widgetData.defaultgraphType)) {
-        const defaultGraphOption = highchartGraphOptions.find(option => option.value === widgetData.defaultgraphType);
+        const defaultGraphOption = defGraphTypes(pluginName)?.find(option => option.value === widgetData.defaultgraphType);
         if (defaultGraphOption) {
           opt.push(defaultGraphOption);
         }
@@ -228,7 +264,7 @@ const GraphDash = ({ widgetData, setWidgetData, pkColumn, setPkColumn, isLayoutW
     }
   }, [widgetData])
 
-  const fetchDataQry = async (widget) => {
+  const fetchDataQry = async (widget, isRef, syncPk) => {
     const queries = widget?.queryVO?.length > 0 ? widget?.queryVO : [];
     if (!queries.length) return;
     setFetching(true);
@@ -238,8 +274,8 @@ const GraphDash = ({ widgetData, setWidgetData, pkColumn, setPkColumn, isLayoutW
       setStatusMessage("Executing Query...");
       const results = await Promise.all(
         queries.map(async (q) => {
-          const params = getOrderedParamValues(q?.mainQuery, paramsValues, widget?.rptId);
-          const data = await fetchQueryData([q], widgetData?.JNDIid, params, pkColumn, isGlobal, setJndiName);
+          const params = getOrderedParamValues(q?.mainQuery, isRef ? paramsValuesRef.current : paramsValues, widget?.rptId);
+          const data = await fetchQueryData([q], widgetData?.JNDIid, params, syncPk ? syncPk : pkColumn, isGlobal, setJndiName);
           let filteredData = data;
 
           if (widget?.isQuerychild && widget?.isQuerychild === "1") {
@@ -272,57 +308,6 @@ const GraphDash = ({ widgetData, setWidgetData, pkColumn, setPkColumn, isLayoutW
               all: { queryName: q?.mainQuery || '', categories: [], seriesData: [], originalData: [] }
             };
           }
-
-          // NEW: Detect data structure and process accordingly
-          // const processChartData = (dataToProcess) => {
-          //   if (!dataToProcess.length) {
-          //     return { categories: [], seriesData: [], originalData: [] };
-          //   }
-
-          //   const columnNames = Object.keys(dataToProcess[0]).filter(key => key !== 'pkcolumn');
-
-          //   // Case 1: Single row with multiple metrics (your example)
-          //   if (dataToProcess.length === 1 && columnNames.length > 1) {
-          //     const singleRow = dataToProcess[0];
-          //     const categories = columnNames;
-          //     const seriesData = [{
-          //       name: 'Values',
-          //       // data: columnNames.map(key => singleRow[key]),
-          //       data: columnNames.map((key, index) => ({
-          //         y: singleRow[key],
-          //         pkcolumn: singleRow.pkcolumn,
-          //         lebel: columnNames[0]
-          //       })),
-          //       colorByPoint: true,
-          //       lebel: columnNames[0]
-          //     }];
-          //     return { categories, seriesData, originalData: dataToProcess };
-          //   }
-          //   // Case 2: Multiple rows with category-series structure
-          //   else if (columnNames.length >= 2) {
-          //     const categoriesKey = columnNames[0];
-          //     const seriesKeys = columnNames.slice(1);
-
-          //     const categories = dataToProcess.map(item => item[categoriesKey]);
-          //     const seriesData = seriesKeys.map(key => ({
-          //       name: key,
-          //       // data: dataToProcess.map(item => item[key]),
-          //       data: dataToProcess.map((item, index) => ({
-          //         y: item[key],
-          //         pkcolumn: item.pkcolumn,
-          //         lebel: columnNames[0]
-          //       })),
-          //       colorByPoint: true,
-          //       lebel: columnNames[0]
-          //     }));
-          //     return { categories, seriesData, originalData: dataToProcess };
-          //   }
-          //   // Case 3: Fallback for unexpected structure
-          //   else {
-          //     console.warn('Unexpected data structure:', dataToProcess);
-          //     return { categories: [], seriesData: [], originalData: dataToProcess };
-          //   }
-          // };
 
           const processChartData = (dataToProcess) => {
             if (!dataToProcess.length) {
@@ -372,20 +357,28 @@ const GraphDash = ({ widgetData, setWidgetData, pkColumn, setPkColumn, isLayoutW
             // Case 1: Single row with multiple metrics
             if (dataToProcess.length === 1 && columnNames.length > 1) {
               const singleRow = dataToProcess[0];
-              const categories = columnNames;
+              // const categories = columnNames;
+              const categories = dataToProcess[0][columnNames[0]];
+              const cat = [categories];
 
               const seriesData = [{
                 name: 'Values',
-                data: columnNames.map(key => ({
-                  y: singleRow[key],
-                  pkcolumn: singleRow.pkcolumn,
-                  label: columnNames[0]
-                })),
+                // data: columnNames.map(key => ({
+                //   y: singleRow[key],
+                //   pkcolumn: singleRow.pkcolumn,
+                //   label: columnNames[0]
+                // })),
+                data:
+                  [{
+                    y: singleRow[columnNames[1]],
+                    pkcolumn: singleRow.pkcolumn || "",
+                    label: columnNames[0]
+                  }],
                 colorByPoint: true,
                 label: columnNames[0]
               }];
 
-              return { categories, seriesData, originalData: dataToProcess };
+              return { categories: cat, seriesData, originalData: dataToProcess };
             }
 
             // Case 2: Multiple rows (default behavior)
@@ -491,16 +484,16 @@ const GraphDash = ({ widgetData, setWidgetData, pkColumn, setPkColumn, isLayoutW
       colorByPoint: valueKeys.length === 1
     }));
 
-    return { categories, seriesData, queryName: query };
+    return { categories, seriesData, queryName: query, originalData: data };
   };
 
-  const fetchProcedure = async (widget) => {
+  const fetchProcedure = async (widget, syncPk) => {
     if (widget?.modeOfQuery === "Procedure") {
       if (!widget?.procedureMode) return;
       try {
         setFetching(true);
         setStatusMessage("Requesting...");
-        const paramVal = formatParams(paramsValues ? paramsValues : null, widgetData?.rptId || '');
+        const paramVal = formatParams(paramsValues ? paramsValues : null, widgetData?.rptId || '', tabParams);
         const widgetLimit = widget?.limitHTMLFromDb || ''
         const defLimit = singleConfigData?.databaseConfigVO?.setDefaultLimit || ''
         const parsedLimit = parseInt(defLimit, 10);
@@ -509,7 +502,7 @@ const GraphDash = ({ widgetData, setWidgetData, pkColumn, setPkColumn, isLayoutW
         const params = [
           getAuthUserData('hospitalCode')?.toString(), //hospital code===
           "10001", //user id===
-          pkColumn ? pkColumn?.toString() : '', //primary key
+          syncPk ? syncPk : pkColumn ? pkColumn?.toString() : '', //primary key
           paramVal.paramsId || "", //parameter ids
           paramVal.paramsValue || "", //parameter values
           isPaginationReq?.toString(), //is pagination required===
@@ -547,6 +540,10 @@ const GraphDash = ({ widgetData, setWidgetData, pkColumn, setPkColumn, isLayoutW
   }
 
   useEffect(() => {
+    paramsValuesRef.current = paramsValues;
+  }, [paramsValues]);
+
+  useEffect(() => {
     let intervalId;
 
     const shouldFetchData = widgetData && widgetData?.widgetLoadOption !== "ONGOBUTTONCLICK";
@@ -555,12 +552,12 @@ const GraphDash = ({ widgetData, setWidgetData, pkColumn, setPkColumn, isLayoutW
       const refreshTime = widgetData?.widgetRefreshTime || '0';
       const shouldSetInterval = refreshTime && parseInt(refreshTime) > 0;
 
-      const handleFetchWithInterval = async () => {
+      const handleFetchWithInterval = async (isRef) => {
         try {
           if (widgetData?.modeOfQuery === "Procedure" && !isSearchQuery) {
             await fetchProcedure(widgetData);
           } else if (!isSearchQuery) {
-            await fetchDataQry(widgetData);
+            await fetchDataQry(widgetData, isRef);
           }
 
         } catch (error) {
@@ -568,10 +565,10 @@ const GraphDash = ({ widgetData, setWidgetData, pkColumn, setPkColumn, isLayoutW
       };
 
       // Initial call
-      handleFetchWithInterval();
+      handleFetchWithInterval(false);
       if (shouldSetInterval && !intervalId) {
         intervalId = setInterval(() => {
-          handleFetchWithInterval();
+          handleFetchWithInterval(true);
         }, parseInt(refreshTime));
       }
     }
@@ -608,6 +605,74 @@ const GraphDash = ({ widgetData, setWidgetData, pkColumn, setPkColumn, isLayoutW
       }
     }
   }, [isSearchQuery]);
+
+  useEffect(() => {
+    if (syncPkValues[widgetData?.rptId] && widgetData) {
+      if (widgetData?.modeOfQuery === "Procedure") {
+        fetchProcedure(widgetData, syncPkValues[widgetData?.rptId]);
+      } else {
+        fetchDataQry(widgetData, false, syncPkValues[widgetData?.rptId]);
+      }
+    }
+  }, [syncPkValues?.[widgetData?.rptId]]);
+
+
+  useEffect(() => {
+
+    // graph has no data
+    if (!graphData?.length) return;
+
+    // first graph object
+    const firstGraph = graphData?.[0];
+
+    // no series
+    if (!firstGraph?.seriesData?.length) return;
+
+    // first point
+    const firstPoint =
+      firstGraph?.seriesData?.[0]?.data?.[0];
+
+    // no point
+    if (!firstPoint) return;
+
+    const firstPk =
+      firstPoint?.pkcolumn;
+
+    if (!firstPk) return;
+
+    // synchronized widgets only
+    const isSyncWidget =
+      widgetData?.synchronizedWidgetRptId &&
+      widgetData?.synchronizedWidgetRptId !== "";
+
+    if (!isSyncWidget) return;
+
+    // RED SELECTION
+    setSelectedPk(prev => ({
+      ...prev,
+      [widgetData?.rptId]: firstPk
+    }));
+
+    // TARGET WIDGETS
+    const widgetList =
+      widgetData?.synchronizedWidgetRptId
+        ?.split(",")
+        ?.map(id => id.trim()) || [];
+
+    // SYNC CHILDREN
+    setsyncPkValues(prev => {
+
+      const updated = { ...prev };
+
+      widgetList.forEach(targetId => {
+        updated[targetId] = firstPk;
+      });
+
+      return updated;
+    });
+
+  }, [graphData]);
+
 
   const refreshData = (widgetData) => {
     if (widgetData && widgetData?.modeOfQuery === "Procedure") {
@@ -724,16 +789,46 @@ const GraphDash = ({ widgetData, setWidgetData, pkColumn, setPkColumn, isLayoutW
     }
   }
 
+  const handleSyncClick = (point) => {
+    const clickedPk =
+      point?.options?.pkcolumn || point?.category;
+
+    if (!clickedPk) return;
+
+    if (selectedPk === clickedPk) return;
+
+    //setSelectedPk(clickedPk);
+    setSelectedPk(prev => ({
+      ...prev,
+      [widgetData?.rptId]: clickedPk
+    }));
+
+    if (widgetData?.synchronizedWidgetRptId) {
+      const widgetList =
+        widgetData?.synchronizedWidgetRptId
+          ?.split(",")
+          ?.map(id => id.trim()) || [];
+
+      setsyncPkValues(prev => {
+        const updated = { ...prev };
+        widgetList.forEach(targetId => {
+          updated[targetId] = clickedPk;
+        });
+        return updated;
+      });
+    }
+  };
+
   return (
     <div className={`widget_id_${widgetData?.rptId} high-chart-main ${theme === 'Dark' ? 'dark-theme' : ""}`}
       style={{
-        border: `7px solid ${theme === 'Dark' ? 'white' : 'black'}`,
+        border: `7px solid ${theme === 'Dark' ? 'white' : '#e8e4e4'}`,
         // height: isLayoutWithPreview ? '100%' : '650px'
         height: isLayoutWithPreview ? '100%' : widheight && widheight != '0' ? `${widheight}px` : '650px',
       }} key={widgetData?.id}>
 
 
-      <div className={`row px-1 py-1 border-bottom ${headingReq !== "Yes" ? "align-content-end" : ""}`}>
+      <div className={`row ps-1 py-1 m-0 border-bottom ${headingReq !== "Yes" ? "align-content-end" : ""}`} style={{ width: "100%" }}>
 
         {/* <div className="col-md-8 col-xs-7 fw-medium fs-6 pe-0">
           {dt(widgetData?.rptDisplayName)}
@@ -744,60 +839,71 @@ const GraphDash = ({ widgetData, setWidgetData, pkColumn, setPkColumn, isLayoutW
         }
 
         {/* {isDirectDownloadRequired === 'Yes' && */}
-        <div className={`${headingReq === "Yes" ? "col-md-3" : "col-md-12"}`}>
+        <div className={`${headingReq === "Yes" ? "col-md-3 pe-0 ps-0" : "col-md-12 pe-0 ps-0"}`}>
           {(isActionButtonReq !== 'No' && isActionButtonReq !== 'None') && (<>
-            <button
+            <span
               type="button"
               className="small-box-btn-dwn"
               aria-expanded="false"
               data-bs-toggle="dropdown"
             >
-              <FontAwesomeIcon icon={faCog} className="dropdown-gear-icon" />
-            </button>
+              {/* <FontAwesomeIcon icon={faCog} className="dropdown-gear-icon" /> */}
+              <SettingbtnSvg />
+            </span>
 
             <ul className="dropdown-menu p-2">
 
               {(isActionButtonReq === 'Yes' || isActionButtonReq === 'advanced') &&
                 <li className="p-1 dropdown-item text-primary" style={{ cursor: "pointer" }} onClick={() => refreshData(widgetData)}>
-                  <FontAwesomeIcon icon={faRefresh} className="dropdown-gear-icon me-2" />{dt('Refresh Data')}
+                  {/* <FontAwesomeIcon icon={faRefresh} className="dropdown-gear-icon me-2" /> */}
+                  <RefreshbtnSvg />
+                  {dt('Refresh Data')}
                 </li>
               }
 
               {(isActionButtonReq === 'Yes' || isActionButtonReq === 'pdf' || isActionButtonReq === 'pdfAndcsv') &&
                 <li className="p-1 dropdown-item text-primary" style={{ cursor: "pointer" }}
                   onClick={() => generateGraphPDFWorkers(widgetData, graphData, singleConfigData?.databaseConfigVO, filterColumns(visibleColumns), sortConfig, getParametersWithValues(widgetParams, paramsValues, widgetData?.rptId, allDrpDtParams))} title="pdf">
-                  <FontAwesomeIcon icon={faFilePdf} className="dropdown-gear-icon me-2" />{dt('Download PDF')}
+                  {/* <FontAwesomeIcon icon={faFilePdf} className="dropdown-gear-icon me-2" /> */}
+                  <PdfbtnSvg className="me-1 dropdown-gear-icon" height="22" width="22" viewBox="0 0 28 28" />
+                  {dt('Download PDF')}
                 </li>
               }
 
               {(isActionButtonReq === 'Yes' || isActionButtonReq === 'csv' || isActionButtonReq === 'pdfAndcsv') &&
                 <li className="p-1 dropdown-item text-primary" style={{ cursor: "pointer" }} onClick={() => generateGraphCSVWorkers(widgetData, graphData, singleConfigData?.databaseConfigVO, filterColumns(visibleColumns), sortConfig, getParametersWithValues(widgetParams, paramsValues, widgetData?.rptId, allDrpDtParams))}>
-                  <FontAwesomeIcon icon={faFileExcel} className="dropdown-gear-icon me-2" />{dt('Download CSV')}
+                  {/* <FontAwesomeIcon icon={faFileExcel} className="dropdown-gear-icon me-2" /> */}
+                  <CsvBtnSvg className="me-1" height="22" width="22" viewBox="0 0 28 28" />
+                  {dt('Download CSV')}
                 </li>
               }
               {(isActionButtonReq === 'Yes' || isActionButtonReq === 'advanced') &&
                 <li className="p-1 dropdown-item text-primary" style={{ cursor: "pointer" }}
                   onClick={() => onClickAdvanced()}>
-                  <FontAwesomeIcon icon={faSliders} className="dropdown-gear-icon me-2" />{dt('Advanced')}</li>
+                  {/* <FontAwesomeIcon icon={faSliders} className="dropdown-gear-icon me-2" /> */}
+                  <AdvancedbtnSvg />
+                  {dt('Advanced')}</li>
               }
             </ul>
 
           </>)}
 
           {isDirectDownloadRequired === "Yes" && (<>
-            <button type="button" className="small-box-btn-dwn"
+            <span type="button" className="small-box-btn-dwn"
               onClick={() => generateGraphPDFWorkers(widgetData, allGraphData, singleConfigData?.databaseConfigVO, filterColumns(visibleColumns), sortConfig, getParametersWithValues(widgetParams, paramsValues, widgetData?.rptId, allDrpDtParams))}
               title="PDF"
             >
-              <FontAwesomeIcon icon={faFilePdf} className="dropdown-gear-icon" />
-            </button>
+              {/* <FontAwesomeIcon icon={faFilePdf} className="dropdown-gear-icon" /> */}
+              <PdfbtnSvg />
+            </span>
 
-            <button type="button" className="small-box-btn-dwn"
+            <span type="button" className="small-box-btn-dwn"
               onClick={() => generateGraphCSVWorkers(widgetData, allGraphData, singleConfigData?.databaseConfigVO, filterColumns(visibleColumns), sortConfig, getParametersWithValues(widgetParams, paramsValues, widgetData?.rptId, allDrpDtParams))}
               title="CSV"
             >
-              <FontAwesomeIcon icon={faFileCsv} className="dropdown-gear-icon" />
-            </button>
+              {/* <FontAwesomeIcon icon={faFileCsv} className="dropdown-gear-icon" /> */}
+              <CsvBtnSvg />
+            </span>
           </>)}
 
           {currentLevel !== 0 && (
@@ -957,12 +1063,16 @@ const GraphDash = ({ widgetData, setWidgetData, pkColumn, setPkColumn, isLayoutW
               colorByPoint:
                 isQueryDataPreview !== "Yes" &&
                 (chartType === "PIE_CHART" || chartType === "BAR_GRAPH"),
-              ...(isChildPresent && {
+              ...((isChildPresent || isSynchronized) && {
                 point: {
                   events: {
                     click: function () {
                       // Call your function here with point data
-                      handleColumnClick(this);
+                      handleSyncClick(this);
+
+                      if (isChildPresent) {
+                        handleColumnClick(this);
+                      }
                     }
                   }
                 },
@@ -984,12 +1094,16 @@ const GraphDash = ({ widgetData, setWidgetData, pkColumn, setPkColumn, isLayoutW
                 style: { color: isDarkTheme ? "#ffffff" : "#000000" }
               },
               innerSize: chartType === "DONUT_CHART" ? "50%" : "0%",
-              ...(isChildPresent && {
+              ...((isChildPresent || isSynchronized) && {
                 cursor: "pointer",
                 point: {
                   events: {
                     click: function () {
-                      handleColumnClick(this);
+                      handleSyncClick(this);
+
+                      if (isChildPresent) {
+                        handleColumnClick(this);
+                      }
                     }
                   }
                 }
@@ -997,12 +1111,16 @@ const GraphDash = ({ widgetData, setWidgetData, pkColumn, setPkColumn, isLayoutW
             },
             bar: {
               colors: colorList || ["red", "blue", "green"],
-              ...(isChildPresent && {
+              ...((isChildPresent || isSynchronized) && {
                 cursor: "pointer",
                 point: {
                   events: {
                     click: function () {
-                      handleColumnClick(this);
+                      handleSyncClick(this);
+
+                      if (isChildPresent) {
+                        handleColumnClick(this);
+                      }
                     }
                   }
                 }
@@ -1011,11 +1129,15 @@ const GraphDash = ({ widgetData, setWidgetData, pkColumn, setPkColumn, isLayoutW
             column: {
               colors: colorList,
               stacking: chartType === "STACKED_BAR_GRAPH" || chartType === "STACKED_GRAPH" ? "normal" : undefined,
-              ...(isChildPresent && {
+              ...((isChildPresent || isSynchronized) && {
                 point: {
                   events: {
                     click: function () {
-                      handleColumnClick(this);
+                      handleSyncClick(this);
+
+                      if (isChildPresent) {
+                        handleColumnClick(this);
+                      }
                     }
                   }
                 }
@@ -1033,6 +1155,7 @@ const GraphDash = ({ widgetData, setWidgetData, pkColumn, setPkColumn, isLayoutW
               point: {
                 events: {
                   click: function () {
+                    handleSyncClick(this);
                     handleColumnClick(this);
                   }
                 }
@@ -1044,6 +1167,7 @@ const GraphDash = ({ widgetData, setWidgetData, pkColumn, setPkColumn, isLayoutW
               point: {
                 events: {
                   click: function () {
+                    handleSyncClick(this);
                     handleColumnClick(this);
                   }
                 }
@@ -1108,7 +1232,12 @@ const GraphDash = ({ widgetData, setWidgetData, pkColumn, setPkColumn, isLayoutW
               {(widgetData?.modeOfQuery === 'Query' && isPrev == 1) &&
                 <>
                   <h4 style={{ fontWeight: "500", fontSize: "20px" }}>{dt('Query')} :</h4>
-                  <span>{`${gdata?.queryName}---- JNDI Name ---${jndiName || 'null'}`}</span>
+                  {/* <span>{`${gdata?.queryName}---- JNDI Name ---${jndiName || 'null'}`}</span> */}
+                  <span>{`${getDisplayQuery(
+                    gdata?.queryName,
+                    pkColumn,
+                    paramsValues
+                  )}---- JNDI Name ---${jndiName || 'null'}`}</span>
                 </>
               }
 
@@ -1129,7 +1258,24 @@ const GraphDash = ({ widgetData, setWidgetData, pkColumn, setPkColumn, isLayoutW
                   </div>
                 </>
               ) : (
-                <HighchartsReact highcharts={Highcharts} options={options} />
+                pluginName === "apacheChart" ? (
+                  <div className="" style={{ background: "#ffffff" }}>
+                    <ApacheGenChart
+                      widgetData={widgetData}
+                      data={gdata}
+                      chartType={chartType}
+                      xAxisLabel={xAxisLabel}
+                      yAxisLabel={yAxisLabel}
+                      colorList={colorList}
+                    />
+                  </div>
+                ) :
+                  pluginName === "googlechart" ?
+                    <GooglePieChartDash
+                      widgetData={widgetData}
+                      pkColumn={pkColumn}
+                    /> :
+                    <HighchartsReact highcharts={Highcharts} options={options} />
               )}
             </div>
           </>

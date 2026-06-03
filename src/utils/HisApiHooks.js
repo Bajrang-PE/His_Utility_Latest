@@ -190,6 +190,7 @@ export const fetchPostData = async (url, data, rtblob, options = {}) => {
             // const config = signal ? { signal } : {};
             const config =  {};
             const response = await apiHis.post(url, data, rtblob, config);
+            console.log('response', response)
             return response;
         } else {
             const requestData = encodeURIComponent(encryptAesData(JSON?.stringify(data)));

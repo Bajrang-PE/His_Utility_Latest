@@ -4,10 +4,10 @@ import InputSelect from '../../commons/InputSelect'
 import Select from 'react-select'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faAdd, faEdit, faTrash } from '@fortawesome/free-solid-svg-icons'
-import { headingDisplayStyleOptions, isActionButtonReqOptions } from '../../../localData/DropDownData'
+import { gridThemeOptions, headingDisplayStyleOptions, isActionButtonReqOptions, tablePluginOptions } from '../../../localData/DropDownData'
 
 const TableDetails = (props) => {
-    const { handleValueChange, handleRadioChange, radioValues, values, setValues, parentWidget, dt, tabDrpData } = props;
+    const { handleValueChange, handleRadioChange, radioValues, values, setValues, parentWidget, dt, tabDrpData, errors, conditions, setConditions } = props;
 
     const [rows, setRows] = useState([]);
     const [newRow, setNewRow] = useState({ modeForOpeningPopup: "", drillWidgetName: "", titleMsg: "Click To View Details", drillDownType: "Widget", popupWidgetId: "", drillTabId: "", drillTabName: "" });
@@ -57,8 +57,220 @@ const TableDetails = (props) => {
         setValues({ ...values, ['popUpDetails']: updatedRows })
     };
 
+    // for grid
+    const handleConChange = (index, field, e) => {
+        const updatedConditions = [...conditions];
+
+        updatedConditions[index] = {
+            ...updatedConditions[index],
+            [field]: e.target.value
+        };
+
+        setConditions(updatedConditions);
+        setValues(prev => ({ ...prev, "conditions": updatedConditions }));
+    };
+
+    const handleAddCondition = () => {
+        const index = conditions?.length + 1;
+        const newCon = {
+            label: `Condition${index}`, name: `Condition${index}`, id: `Condition${index}`, value: "", colorName: `color${index}`, colorValue: "", colorId: `color${index}`
+        }
+        const updatedConditions = [...conditions, newCon];
+        setConditions(updatedConditions);
+    };
+
+    const handleRemoveCondition = (index) => {
+        const updatedCondition = conditions.filter((_, i) => i !== index);
+        setConditions(updatedCondition);
+    };
+
     return (
         <>
+
+            <b><h6 className='header-devider m-0'>{dt('Table Plugins')}</h6></b>
+            <div className='row role-theme user-form' style={{ paddingBottom: "1px" }}>
+                {/* //left columns */}
+                <div className='col-sm-6'>
+                    <div className="form-group row">
+                        <label className="col-sm-5 col-form-label pe-0">{dt('Table Plugin Type')} : </label>
+                        <div className="col-sm-7 ps-0 align-content-center">
+                            <InputSelect
+                                className="backcolorinput "
+                                placeholder="select value..."
+                                name='tablePluginType'
+                                id="tablePluginType"
+                                options={tablePluginOptions}
+                                onChange={handleValueChange}
+                                value={values?.tablePluginType}
+                            />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {values?.tablePluginType === "highchartGrid" && <>
+                <b><h6 className='header-devider m-0'>{dt('Grid Options')}</h6></b>
+                <div className='row role-theme user-form' style={{ paddingBottom: "1px" }}>
+
+                    {/* //left columns */}
+                    <div className='col-sm-6'>
+                        <div className="form-group row">
+                            <label className="col-sm-5 col-form-label pe-0">{dt('Grid Theme')} : </label>
+                            <div className="col-sm-7 ps-0 align-content-center">
+                                <InputSelect
+                                    className="backcolorinput "
+                                    placeholder="select value..."
+                                    name='gridTheme'
+                                    id="gridTheme"
+                                    options={gridThemeOptions}
+                                    onChange={handleValueChange}
+                                    value={values?.gridTheme}
+                                />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+                <div className='row role-theme user-form' style={{ paddingBottom: "1px" }}>
+
+                    {/* //left columns */}
+                    <div className='col-sm-6'>
+                        <div className="form-group row">
+                            <label className="col-sm-5 col-form-label pe-0">{dt('Is filter on columns required')} : </label>
+                            <div className="col-sm-7 ps-0 align-content-center">
+                                <div>
+                                    <label style={{ marginRight: "10px" }}>
+                                        <input
+                                            type="radio"
+                                            name="isGridFilterRequired"
+                                            value="yes"
+                                            checked={radioValues?.isGridFilterRequired === "yes"}
+                                            onChange={handleRadioChange}
+                                        /> Yes
+                                    </label>
+
+                                    <label>
+                                        <input
+                                            type="radio"
+                                            name="isGridFilterRequired"
+                                            value="no"
+                                            checked={radioValues?.isGridFilterRequired === "no"}
+                                            onChange={handleRadioChange}
+
+                                        /> No
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+
+                <div className='row role-theme user-form' style={{ paddingBottom: "1px" }}>
+                    <div className='col-sm-6'>
+                        <div className="form-group row">
+                            <label className="col-sm-5 col-form-label pe-0">
+                                {dt('Is Row Highlight Required')} :
+                            </label>
+
+                            <div className="col-sm-7 ps-0 align-content-center">
+
+                                {/* ✅ RADIO BUTTONS */}
+                                <div>
+                                    <label style={{ marginRight: "10px" }}>
+                                        <input
+                                            type="radio"
+                                            name="isRowHighlight"
+                                            value="yes"
+                                            checked={radioValues?.isRowHighlight === "yes"}
+                                            onChange={handleRadioChange}
+                                        /> Yes
+                                    </label>
+
+                                    <label>
+                                        <input
+                                            type="radio"
+                                            name="isRowHighlight"
+                                            value="no"
+                                            checked={radioValues?.isRowHighlight === "no"}
+                                            onChange={handleRadioChange}
+
+                                        /> No
+                                    </label>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+                {radioValues?.isRowHighlight === "yes" && (
+                    <div className="row">
+
+                        {/* 🔹 CONDITION 1 */}
+                        {conditions?.length > 0 && conditions?.map((con, index) => (
+                            <>
+                                <div className="col-sm-6">
+
+                                    <div className="form-group row" key={index}>
+                                        <label className="col-sm-5 col-form-label pe-0">
+                                            {con?.label}:
+                                        </label>
+
+                                        <div className="col-sm-5 ps-0">
+
+                                            <InputField
+                                                type="text"
+                                                className="backcolorinput "
+                                                placeholder="Enter value..."
+                                                name={con?.name}
+                                                id={con?.id}
+                                                // onChange={handleConChange}
+                                                onChange={(e) => handleConChange(index, "value", e)}
+                                                value={con?.value}
+                                            />
+                                        </div>
+
+                                        {/* 🎨 COLOR PICKER */}
+                                        <div className="col-sm-2">
+
+                                            <InputField
+                                                type="color"
+                                                className="backcolorinput "
+                                                placeholder="Enter value..."
+                                                name={con?.colorName}
+                                                id={con?.colorId}
+                                                // onChange={handleConChange}
+                                                onChange={(e) => handleConChange(index, "colorValue", e)}
+                                                value={con?.colorValue}
+                                            />
+                                        </div>
+                                    </div>
+
+                                </div>
+                                <div className="col-sm-6">
+                                    {index === 0 ?
+
+                                        <button className='btn btn-sm py-0 px-1' style={{ background: "#34495e", color: "white" }} onClick={handleAddCondition}><FontAwesomeIcon icon={faAdd} className="dropdown-gear-icon" size='md' /></button>
+                                        :
+
+                                        <button
+                                            className="btn btn-danger btn-sm py-0 px-1"
+                                            onClick={() => handleRemoveCondition(index)}
+                                        >
+                                            <FontAwesomeIcon icon={faTrash} className="dropdown-gear-icon" size='md' />
+                                        </button>
+                                    }
+                                </div>
+                            </>
+                        ))}
+                    </div>
+                )}
+            </>}
+
             <b><h6 className='header-devider m-0'>{dt('Table Heading Related Details')}</h6></b>
             {/* SECTION DEVIDER table heading*/}
             <d iv className='row role-theme user-form' style={{ paddingBottom: "1px" }}>
@@ -466,7 +678,7 @@ const TableDetails = (props) => {
                             </div>
                         </div>
                     }
-                    
+
                     {/* MOBILE vIEW */}
                     {/* <div className="form-group row">
                         <label className="col-sm-5 col-form-label pe-0">
@@ -606,6 +818,24 @@ const TableDetails = (props) => {
                                 onChange={(e) => setValues({ ...values, ['linkedWidget']: e })}
                             // isSearchable={true}
                             />
+                        </div>
+                    </div>
+
+                    <div className="form-group row">
+                        <label className="col-sm-5 col-form-label pe-0">{dt('Synchronized Widget')} : </label>
+                        <div className="col-sm-7 ps-0 align-content-center">
+                            <Select
+                                id='synchronizedWidget'
+                                name='synchronizedWidget'
+                                options={parentWidget}
+                                isMulti
+                                placeholder="Select value..."
+                                className="backcolorinput react-select-multi"
+                                value={values?.synchronizedWidget}
+                                onChange={(e) => setValues({ ...values, ['synchronizedWidget']: e })}
+                            />
+                        </div>
+                        <div>
                         </div>
                     </div>
                 </div>

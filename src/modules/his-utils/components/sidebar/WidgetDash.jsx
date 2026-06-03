@@ -1,6 +1,7 @@
-import React, { lazy, Suspense, useEffect, useState } from 'react';
+import React, { lazy, Suspense, useContext, useEffect, useState } from 'react';
 import OtherLinkDash from './OtherLinkDash';
 import NewsTickerDash from './NewsTickerDash';
+import { HISContext } from '../../contextApi/HISContext';
 
 const KpiDash = lazy(() => import('./KpiDash'));
 const TabularDash = lazy(() => import('./TabularDash'));
@@ -10,9 +11,11 @@ const IframeDash = lazy(() => import('./IframeDash'));
 
 const WidgetDash = React.memo(({ widgetDetail, presentWidgets, presentTabs, pk, isLayoutWithPreview, isPopup = false }) => {
 
+    const { pkColumn, setPkColumn } = useContext(HISContext);
+
     const [widgetData, setWidgetData] = useState({});
     const [linkedWidget, setLinkedWidget] = useState();
-    const [pkColumn, setPkColumn] = useState('');
+    // const [pkColumn, setPkColumn] = useState('');
     const [levelData, setLevelData] = useState([]);
 
     const handleSetPkColumn = (val) => {
@@ -49,7 +52,7 @@ const WidgetDash = React.memo(({ widgetDetail, presentWidgets, presentTabs, pk, 
 
     const renderWidget = (data) => {
         switch (data?.reportViewed) {
-            case 'KPI': return <KpiDash widgetData={data} presentTabs={presentTabs} isLayoutWithPreview={isLayoutWithPreview} />;
+            case 'KPI': return <KpiDash widgetData={data} presentTabs={presentTabs} isLayoutWithPreview={isLayoutWithPreview} pkColumn={pkColumn} setPkColumn={handleSetPkColumn}/>;
 
             case 'Tabular': return <TabularDash widgetData={data} setWidgetData={setWidgetData} levelData={levelData} setLevelData={setLevelData} pkColumn={pkColumn} setPkColumn={handleSetPkColumn} isLayoutWithPreview={isLayoutWithPreview} presentTabs={presentTabs} isPopup={isPopup} pkConfig={pk} />;
 

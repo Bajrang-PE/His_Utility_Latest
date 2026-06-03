@@ -4,6 +4,11 @@ import 'jspdf-autotable';
 // Import your Toast if you want to handle errors (optional)
 // import { ToastAlert } from "../utils/ToastAlert"; 
 
+const stripHtml = (str) => {
+    if (!str) return '';
+    return str?.replace(/<[^>]*>/g, '')?.trim();
+};
+
 self.onmessage = async (e) => {
     const { widgetData, tableData, config, visibleColumns, sortConfig, filters = [] } = e?.data;
     
@@ -129,7 +134,7 @@ self.onmessage = async (e) => {
             // pdf.text('Filters Applied:', 14, yPosition);
             yPosition += 5;
             filters.forEach((filter) => {
-                pdf.text(`${filter.disName}: ${filter.val}`, 14, yPosition);
+                pdf.text(`${filter.disName}: ${stripHtml(filter.val?.toString() || "")}`, 14, yPosition);
                 yPosition += 5;
             });
             yPosition += 5;
@@ -138,7 +143,7 @@ self.onmessage = async (e) => {
         const tabData = [];
 
         //  Pick only visible columns, in same order
-        const firstClmName = tableData[0]?.seriesData[0]?.lebel || xAxisLabel;
+        const firstClmName = tableData[0]?.seriesData[0]?.label || xAxisLabel;
         const selectedHeaders = (visibleColumns?.length > 0
             ? visibleColumns.map(c => c.name)
             : [firstClmName, ...tableData[0].seriesData.map(s => s.name)]

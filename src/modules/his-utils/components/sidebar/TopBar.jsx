@@ -19,7 +19,7 @@ const DynamicImage = React.memo(({ iconName }) => {
     );
 });
 
-const TopBar = ({ data, setActiveTab, dashboardData, setPrevKpiTab, dt }) => {
+const TopBar = ({ data, setActiveTab, dashboardData, setPrevKpiTab, dt,setAllDrpDtParams }) => {
     const [openSubMenu, setOpenSubMenu] = useState(null);
     const [canScrollLeft, setCanScrollLeft] = useState(false);
     const [canScrollRight, setCanScrollRight] = useState(true);
@@ -134,6 +134,7 @@ const TopBar = ({ data, setActiveTab, dashboardData, setPrevKpiTab, dt }) => {
                                                 setActiveTab(tab);
                                                 setPrevKpiTab([]);
                                                 setOpenSubMenu(openSubMenu === tab.id ? null : tab.id);
+                                                setAllDrpDtParams([]);
                                             }}
                                         >
                                             {tab?.jsonData?.isCSSTabIconRequired === "No" ?
@@ -158,6 +159,7 @@ const TopBar = ({ data, setActiveTab, dashboardData, setPrevKpiTab, dt }) => {
                                                                     setActiveTab(child);
                                                                     setOpenSubMenu(null);
                                                                     setPrevKpiTab([]);
+                                                                    setAllDrpDtParams([]);
                                                                 }}
                                                             >
                                                                 {child?.jsonData?.isCSSTabIconRequired === "No" ?

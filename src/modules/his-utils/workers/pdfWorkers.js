@@ -28,6 +28,11 @@ self.onmessage = async (e) => {
 
         let isTotal = false;
 
+        const stripHtml = (str) => {
+            if (!str) return '';
+            return str?.replace(/<[^>]*>/g, '')?.trim();
+        };
+
         const drawHeader = (doc) => {
             const logoWidth = 15, logoHeight = 18, margin = 10, textMargin = 10;
             const alignment = headingAlignment?.toLowerCase() || 'center';
@@ -85,7 +90,7 @@ self.onmessage = async (e) => {
             // pdf.text('Filters Applied:', 14, yPosition);
             yPosition += 5;
             filters.forEach((filter) => {
-                pdf.text(`${filter.disName}: ${filter.val}`, 14, yPosition);
+                pdf.text(`${filter.disName}: ${stripHtml(filter.val?.toString() || "")}`, 14, yPosition);
                 yPosition += 5;
             });
             // yPosition += 5;
@@ -221,10 +226,7 @@ self.onmessage = async (e) => {
             });
 
 
-            const stripHtml = (str) => {
-                if (!str) return '';
-                return str.replace(/<[^>]*>/g, '').trim();
-            };
+
 
 
             // const chunkData = tableData.map(row =>

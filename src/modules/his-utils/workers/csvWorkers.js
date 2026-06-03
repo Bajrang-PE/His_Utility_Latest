@@ -2,7 +2,7 @@ import Papa from 'papaparse';
 
 const stripHtml = (str) => {
     if (!str) return '';
-    return str.replace(/<[^>]*>/g, '').trim();
+    return str?.replace(/<[^>]*>/g, '')?.trim();
 };
 
 // ============ CHANGE START: Helper function to calculate totals ============
@@ -86,7 +86,7 @@ self.onmessage = (e) => {
 
         if (filters?.length) {
             filters.forEach(filter => {
-                finalData.push([`${filter.disName}: ${filter.val}`]);
+                finalData.push([`${filter.disName}: ${stripHtml(filter.val?.toString()||"")}`]);
             });
             finalData.push([]); // extra empty line after filters
         }

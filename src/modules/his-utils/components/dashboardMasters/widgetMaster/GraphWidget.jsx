@@ -1,11 +1,112 @@
-import React from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import InputSelect from '../../commons/InputSelect'
 import InputField from '../../commons/InputField'
 import Select from 'react-select'
-import { googleChartOptions, graphOptions, highchartGraphOptions, isActionButtonReqOptions } from '../../../localData/DropDownData'
+import { apacheChartOptions, googleChartOptions, graphOptions, highchartGraphOptions, isActionButtonReqOptions } from '../../../localData/DropDownData'
+import { Modal } from 'react-bootstrap'
 
 const GraphWidget = (props) => {
     const { handleValueChange, handleRadioChange, radioValues, values, setValues, parentWidget, errors, setErrors, dt } = props;
+
+    const [showQueryHelp, setShowQueryHelp] = useState(false);
+    const [isNotChangePlugin, setIsNotChangePlugin] = useState(true);
+    const [queryHelpData, setQueryHelpData] = useState({});
+    const [alertDone, setAlertDone] = useState({ "3D_BAR": "No", "GAUGE": "No" });
+
+    const defGraphTypes = (plugin) => {
+
+        switch (plugin) {
+            case "highchart":
+                return highchartGraphOptions;
+
+            case "googlechart":
+                return googleChartOptions;
+
+            case "apacheChart":
+                return apacheChartOptions;
+
+            default:
+                return googleChartOptions;
+        }
+    }
+
+    useEffect(() => {
+
+        // SKIP FIRST RENDER
+        if (isNotChangePlugin) {
+            return;
+        }
+
+        // APACHE GAUGE
+        if (
+            values?.defaultPluginName === "apacheChart" &&
+            values?.defaultGraphType === "GAUGE" && alertDone?.["GAUGE"] === "No"
+        ) {
+
+            setQueryHelpData({
+                title: "Apache Gauge Chart Query Format",
+                type: "GAUGE",
+                responseType: "Two Columns Required",
+                columns: [
+                    "name (string)",
+                    "value (number 0-100)"
+                ],
+                note: "Value should preferably be between 0 to 100 for proper gauge rendering.",
+                query: `SELECT *
+   FROM (
+    VALUES
+        ('Stores', 95),
+        ('Hospitals', 65),
+        ('Drugs', 77),
+        ('Warehouse', 33)
+  ) AS gauge_data(name, value);`
+            });
+            setShowQueryHelp(true);
+            setAlertDone({ ...alertDone, "GAUGE": "Yes" });
+        }
+
+        // APACHE 3D BAR
+        else if (
+            values?.defaultPluginName === "apacheChart" &&
+            values?.defaultGraphType === "3D_BAR" && alertDone?.["3D_BAR"] === "No"
+        ) {
+
+            setQueryHelpData({
+                title: "Apache 3D Bar Chart Query Format",
+                type: "3D_BAR",
+                responseType: "Three Columns Required",
+                columns: [
+                    "product/category (string)",
+                    "location/group (string)",
+                    "value (number)"
+                ],
+                note: "3D charts require 2 category dimensions and 1 numeric value.",
+                query: `SELECT *
+FROM (
+    VALUES
+        ('Paracetamol', 'Warehouse A', 320),
+        ('Paracetamol', 'Store 1', 210),
+        ('Paracetamol', 'ICU', 90),
+
+        ('Insulin', 'Warehouse A', 150),
+        ('Insulin', 'Store 1', 120),
+        ('Insulin', 'ICU', 60),
+
+        ('Ventilator', 'Warehouse A', 40),
+        ('Ventilator', 'Ward', 30),
+        ('Ventilator', 'ICU', 25),
+
+        ('Syringe', 'Warehouse A', 500),
+        ('Syringe', 'Store 2', 300),
+        ('Syringe', 'Emergency', 150)
+
+) AS chart_data(product, location, value);`
+            });
+            setShowQueryHelp(true);
+            setAlertDone({ ...alertDone, "3D_BAR": "Yes" });
+        }
+
+    }, [values?.defaultPluginName, values?.defaultGraphType]);
 
     return (
         <div>
@@ -54,44 +155,53 @@ const GraphWidget = (props) => {
                             }
                         </div>
                     </div>
-                    {radioValues?.isQueryDataPreview !== 'Yes' &&
-                        <div className="form-group row">
-                            <label className="col-sm-5 col-form-label pe-0 required-label">{dt("Default Graph Type")} : </label>
-                            <div className="col-sm-7 ps-0 align-content-center">
-                                <InputSelect
-                                    className="backcolorinput "
-                                    // placeholder="Enter value..."
-                                    name='defaultGraphType'
-                                    id="defaultGraphType"
-                                    options={values?.defaultPluginName === "googlechart" ? googleChartOptions : highchartGraphOptions}
-                                    onChange={handleValueChange}
-                                    value={values?.defaultGraphType}
-                                    errorMessage={errors?.defaultGraphTypeErr}
-                                />
-                            </div>
+                    <div className="form-group row">
+                        <label className="col-sm-5 col-form-label pe-0 required-label">{dt("Default Graph Type")} : </label>
+                        <div className="col-sm-7 ps-0 align-content-center">
+                            <InputSelect
+                                className="backcolorinput"
+                                placeholder="Select value..."
+                                name='defaultGraphType'
+                                id="defaultGraphType"
+                                options={defGraphTypes(values?.defaultPluginName)}
+                                onChange={(e) => {
+                                    handleValueChange(e);
+                                    setIsNotChangePlugin(false);
+                                    if (values?.defaultPluginName === "apacheChart" && (e?.target?.value === '3D_BAR' || e?.target?.value === 'GAUGE')) {
+                                        setValues(prev => ({ ...prev, "graphTypes": [] }));
+                                    }
+                                }}
+                                value={values?.defaultGraphType}
+                                errorMessage={errors?.defaultGraphTypeErr}
+                            />
                         </div>
-                    }
+                    </div>
                 </div>
                 {/* right columns */}
                 <div className='col-sm-6'>
-                    {radioValues?.isQueryDataPreview !== 'Yes' &&
-                        <div className="form-group row">
-                            <label className="col-sm-5 col-form-label pe-0 required-label">{dt("Default Plugin Name")} : </label>
-                            <div className="col-sm-7 ps-0 align-content-center">
-                                <InputSelect
-                                    className="backcolorinput "
-                                    // placeholder="Enter value..."
-                                    name='defaultPluginName'
-                                    id="defaultPluginName"
-                                    options={[{ value: "highchart", label: dt("High Charts") }, { value: "googlechart", label: dt("Google Charts") }]}
-                                    onChange={handleValueChange}
-                                    value={values?.defaultPluginName}
-                                    errorMessage={errors?.defaultPluginNameErr}
-                                />
-                            </div>
+                    <div className="form-group row">
+                        <label className="col-sm-5 col-form-label pe-0 required-label">{dt("Default Plugin Name")} : </label>
+                        <div className="col-sm-7 ps-0 align-content-center">
+                            <InputSelect
+                                className="backcolorinput "
+                                // placeholder="Enter value..."
+                                name='defaultPluginName'
+                                id="defaultPluginName"
+                                options={[{ value: "highchart", label: dt("High Charts") }, { value: "googlechart", label: dt("Google Charts") }, { value: "apacheChart", label: dt("Apache E-Charts") }]}
+                                onChange={(e) => {
+                                    handleValueChange(e);
+                                    if (e?.target?.value === "apacheChart") {
+                                        setIsNotChangePlugin(false);
+                                        setValues(prev => ({ ...prev, ['defaultGraphType']: "GAUGE" }));
+                                    } else {
+                                        setValues(prev => ({ ...prev, ['defaultGraphType']: "BAR_GRAPH" }));
+                                    }
+                                }}
+                                value={values?.defaultPluginName}
+                                errorMessage={errors?.defaultPluginNameErr}
+                            />
                         </div>
-                    }
-
+                    </div>
                     {values?.defaultGraphType === 'BAR_GRAPH' &&
                         <div className="form-group row">
                             <label className="col-sm-5 col-form-label pe-0">
@@ -136,27 +246,25 @@ const GraphWidget = (props) => {
             <div className='row role-theme user-form' style={{ paddingBottom: "1px" }}>
                 {/* //left columns */}
                 <div className='col-sm-6'>
-                    {radioValues?.isQueryDataPreview !== 'Yes' &&
-                        <div className="form-group row">
-                            <label className="col-sm-5 col-form-label pe-0">{dt("Graph Type")} : </label>
-                            <div className="col-sm-7 ps-0 align-content-center">
-                                <Select
-                                    id='graphTypes'
-                                    name='graphTypes'
-                                    options={values?.defaultPluginName === "googlechart" ? googleChartOptions : highchartGraphOptions}
-                                    isMulti
-                                    placeholder={dt("Select value...")}
-                                    className="backcolorinput react-select-multi"
-                                    value={values?.graphTypes}
-                                    onChange={(e) => {
-                                        setValues({ ...values, ['graphTypes']: e });
-                                        setErrors(prev => ({ ...prev, 'graphTypesErr': "" }));
-                                    }}
-                                />
-                            </div>
+                    <div className="form-group row">
+                        <label className="col-sm-5 col-form-label pe-0">{dt("Graph Type")} : </label>
+                        <div className="col-sm-7 ps-0 align-content-center">
+                            <Select
+                                id='graphTypes'
+                                name='graphTypes'
+                                options={defGraphTypes(values?.defaultPluginName)}
+                                isMulti
+                                placeholder={dt("Select value...")}
+                                className="backcolorinput react-select-multi"
+                                value={values?.graphTypes}
+                                onChange={(e) => {
+                                    setValues({ ...values, ['graphTypes']: e });
+                                    setErrors(prev => ({ ...prev, 'graphTypesErr': "" }));
+                                }}
+                                isDisabled={values?.defaultPluginName === "apacheChart" && (values?.defaultGraphType === '3D_BAR' || values?.defaultGraphType === 'GAUGE')}
+                            />
                         </div>
-                    }
-
+                    </div>
                     <div className="form-group row">
                         <label className="col-sm-5 col-form-label pe-0">{dt("Color For Bars")} : </label>
                         <div className="col-sm-7 ps-0 align-content-center">
@@ -267,26 +375,45 @@ const GraphWidget = (props) => {
                             }
                         </div>
                     </div>
+
+                    <div className="form-group row">
+                        <label className="col-sm-5 col-form-label pe-0">{dt('Synchronized Widget')} : </label>
+                        <div className="col-sm-7 ps-0 align-content-center">
+                            <Select
+                                id='synchronizedWidget'
+                                name='synchronizedWidget'
+                                options={parentWidget}
+                                isMulti
+                                placeholder="Select value..."
+                                className="backcolorinput react-select-multi"
+                                value={values?.synchronizedWidget}
+                                onChange={(e) => setValues({ ...values, ['synchronizedWidget']: e })}
+                            // isSearchable={true}
+                            />
+                        </div>
+
+                    </div>
+
+
+
                 </div>
                 {/* right columns */}
                 <div className='col-sm-6'>
-                    {radioValues?.isQueryDataPreview !== 'Yes' &&
-                        <div className="form-group row">
-                            <label className="col-sm-5 col-form-label pe-0">{dt("Column Name for Line graph")} : </label>
-                            <div className="col-sm-7 ps-0 align-content-center">
-                                <InputField
-                                    type='text'
-                                    className="backcolorinput "
-                                    placeholder={dt("Enter value...")}
-                                    name='clmNameForLineGraph'
-                                    id="clmNameForLineGraph"
-                                    onChange={handleValueChange}
-                                    value={values?.clmNameForLineGraph}
-                                    errorMessage={errors?.clmNameForLineGraphErr}
-                                />
-                            </div>
+                    <div className="form-group row">
+                        <label className="col-sm-5 col-form-label pe-0 required-label">{dt("Column Name for Line graph")} : </label>
+                        <div className="col-sm-7 ps-0 align-content-center">
+                            <InputField
+                                type='text'
+                                className="backcolorinput "
+                                placeholder={dt("Enter value...")}
+                                name='clmNameForLineGraph'
+                                id="clmNameForLineGraph"
+                                onChange={handleValueChange}
+                                value={values?.clmNameForLineGraph}
+                                errorMessage={errors?.clmNameForLineGraphErr}
+                            />
                         </div>
-                    }
+                    </div>
                     <div className="form-group row">
                         <label className="col-sm-5 col-form-label pe-0">{dt("Graph Height")} : </label>
                         <div className="col-sm-7 ps-0 align-content-center">
@@ -639,11 +766,11 @@ const GraphWidget = (props) => {
                                 <input
                                     className="form-check-input"
                                     type="radio"
-                                    name="isDirectDownloadBtn"
-                                    id="isDirectDownloadBtnYes"
+                                    name="isDirectDownloadBtnGraph"
+                                    id="isDirectDownloadBtnGraphYes"
                                     value={'Yes'}
                                     onChange={handleRadioChange}
-                                    checked={radioValues?.isDirectDownloadBtn === 'Yes'}
+                                    checked={radioValues?.isDirectDownloadBtnGraph === 'Yes'}
                                 />
                                 <label className="form-check-label" htmlFor="dbYes">
                                     {dt("Yes")}
@@ -653,11 +780,11 @@ const GraphWidget = (props) => {
                                 <input
                                     className="form-check-input"
                                     type="radio"
-                                    name="isDirectDownloadBtn"
-                                    id="isDirectDownloadBtnNo"
+                                    name="isDirectDownloadBtnGraph"
+                                    id="isDirectDownloadBtnGraphNo"
                                     value={'No'}
                                     onChange={handleRadioChange}
-                                    checked={radioValues?.isDirectDownloadBtn === 'No'}
+                                    checked={radioValues?.isDirectDownloadBtnGraph === 'No'}
                                 />
                                 <label className="form-check-label" htmlFor="dbNo">
                                     {dt("No")}
@@ -794,11 +921,11 @@ const GraphWidget = (props) => {
                             <InputSelect
                                 className="backcolorinput "
                                 // placeholder="Select value..."
-                                name='actionBtnReq'
-                                id="actionBtnReq"
+                                name='isActionBtnReqGraph'
+                                id="isActionBtnReqGraph"
                                 options={isActionButtonReqOptions}
                                 onChange={handleValueChange}
-                                value={values?.actionBtnReq}
+                                value={values?.isActionBtnReqGraph}
                             />
                         </div>
                     </div>
@@ -840,6 +967,76 @@ const GraphWidget = (props) => {
                     </div>
                 </div>
             </div>
+
+            {showQueryHelp &&
+                <Modal
+                    show={showQueryHelp}
+                    onHide={() => setShowQueryHelp(false)}
+                    centered
+                    size="lg"
+                    className="input-box"
+                >
+                    <Modal.Header closeButton>
+                        <Modal.Title className="fw-bold text-primary">
+                            <i className="fa fa-info-circle me-2"></i>
+                            {queryHelpData?.title}
+                        </Modal.Title>
+                    </Modal.Header>
+                    <Modal.Body>
+                        {/* Response Type */}
+                        <div className="alert alert-primary py-2">
+                            <div>
+                                <strong>Response Type :</strong>
+                                <span className="ms-2">
+                                    {queryHelpData?.responseType}
+                                </span>
+                            </div>
+                        </div>
+                        {/* Columns */}
+                        <div className="mb-3">
+                            <h6 className="fw-bold text-dark">
+                                Expected Columns Sample :
+                            </h6>
+                            <ul className="mb-0">
+                                {
+                                    queryHelpData?.columns?.map((col, index) => (
+                                        <li key={index}>{col}</li>
+                                    ))
+                                }
+                            </ul>
+                        </div>
+                        {/* Note */}
+                        <div className="alert alert-warning py-2">
+                            <strong>Note :</strong> {queryHelpData?.note}
+                        </div>
+                        {/* Query */}
+                        <div>
+                            <h6 className="fw-bold text-dark mb-2">
+                                Sample Query :
+                            </h6>
+                            <pre
+                                className="p-3 rounded border"
+                                style={{
+                                    background: "#f8f9fa",
+                                    maxHeight: "350px",
+                                    overflow: "auto",
+                                    fontSize: "13px"
+                                }}
+                            >
+                                {queryHelpData?.query}
+                            </pre>
+                        </div>
+                    </Modal.Body>
+                    <Modal.Footer>
+                        <button
+                            className="btn btn-secondary"
+                            onClick={() => setShowQueryHelp(false)}
+                        >
+                            Close
+                        </button>
+                    </Modal.Footer>
+                </Modal>
+            }
         </div>
     )
 }

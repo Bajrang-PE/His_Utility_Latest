@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Menu, MenuItem, SubMenu, Sidebar } from "react-pro-sidebar";
-import {  FaBars } from "react-icons/fa";
+import { FaBars } from "react-icons/fa";
 import * as SolidIcons from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import * as FaIcons from "react-icons/fa";
@@ -20,7 +20,7 @@ const DynamicImage = React.memo(({ iconName }) => {
     );
 });
 
-const DashSidebar = ({ data, setActiveTab, activeTab, dashboardData, setPrevKpiTab, dt }) => {
+const DashSidebar = ({ data, setActiveTab, activeTab, dashboardData, setPrevKpiTab, dt, setAllDrpDtParams }) => {
 
     const [collapsed, setCollapsed] = useState(false);
     const [openSubMenu, setOpenSubMenu] = useState(null);
@@ -114,7 +114,12 @@ const DashSidebar = ({ data, setActiveTab, activeTab, dashboardData, setPrevKpiT
                                 icon={tab?.jsonData?.isCSSTabIconRequired === "No" ? <DynamicImage iconName={tab?.jsonData?.iconImageName} /> : getDynamicIcon(tab?.jsonData?.iconName)}
                                 className={`submenu-tab-side ${isActive ? 'activeSideTab' : ''}`}
                                 open={activeTab?.jsonData?.parentTabId == tab.id || openSubMenu == tab.id}
-                                onClick={() => { handleSubMenuClick(tab.id); setActiveTab(tab); setPrevKpiTab([]); }}
+                                onClick={() => {
+                                    handleSubMenuClick(tab.id);
+                                    setActiveTab(tab);
+                                    setPrevKpiTab([]);
+                                    setAllDrpDtParams([]);
+                                }}
                                 id={`menu-tab-item${tab.id}`}
                                 onMouseOver={() => handleHover(`menu-tab-item${tab.id}`, true)}
                                 onMouseOut={() => handleHover(`menu-tab-item${tab.id}`, false)}
@@ -123,7 +128,7 @@ const DashSidebar = ({ data, setActiveTab, activeTab, dashboardData, setPrevKpiT
                                 {childTabs.map(child => (
                                     <MenuItem
                                         key={child.id}
-                                        onClick={() => { setActiveTab(child); setPrevKpiTab([]) }}
+                                        onClick={() => { setActiveTab(child); setPrevKpiTab([]); setAllDrpDtParams([]); }}
                                         className={`menu-tab-item ${activeTab?.jsonData?.dashboardId === child?.jsonData?.dashboardId ? 'activeSideTab' : ''}`}
                                         icon={getDynamicIcon(child?.jsonData?.iconName)}
                                         id={`menu-tab-item${child.id}`}
@@ -145,7 +150,7 @@ const DashSidebar = ({ data, setActiveTab, activeTab, dashboardData, setPrevKpiT
                             icon={tab?.jsonData?.isCSSTabIconRequired === "No" ?
                                 <DynamicImage iconName={tab?.jsonData?.iconImageName} />
                                 : getDynamicIcon(tab?.jsonData?.iconName)}
-                            onClick={() => { setActiveTab(tab); handleSubMenuClick(''); setPrevKpiTab([]) }}
+                            onClick={() => { setActiveTab(tab); handleSubMenuClick(''); setPrevKpiTab([]); setAllDrpDtParams([]); }}
                             className={`menu-tab-item ${isActive ? 'activeSideTab' : ''}`}
                             id={`menu-tab-item${tab.id}`}
                             onMouseOver={() => handleHover(`menu-tab-item${tab.id}`, true)}

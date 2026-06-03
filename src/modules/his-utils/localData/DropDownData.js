@@ -256,7 +256,32 @@ export const googleChartOptions = [
     { value: "LINE_GRAPH", label: "Line Graph" },
     { value: "AREA_GRAPH", label: "Area Graph" },
     { value: "CANDLE_STICK", label: "Candle Stick Chart" },
-    { value: "DUAL_AXES_COLUMN", label: "Dual Axes Column Graph" }
+    { value: "DUAL_AXES_COLUMN", label: "Dual Axes Column Graph" },
+
+    // --- New Google Charts ---
+    { value: "BAR_RACE", label: "Bar Race Graph" },
+    { value: "COMBO_CHART", label: "Combo Chart" },
+    { value: "BUBBLE_CHART", label: "Bubble Chart" },
+    { value: "HISTOGRAM", label: "Histogram" },
+    { value: "STEPPED_AREA_GRAPH", label: "Stepped Area Graph" },
+    { value: "CANDLESTICK_CHART", label: "Candlestick Chart" },
+    { value: "SCATTER_CHART", label: "Scatter Chart" },
+    { value: "TREEMAP_CHART", label: "TreeMap Chart" },
+    { value: "GEO_CHART", label: "Geo Chart" },
+    { value: "CALENDAR_CHART", label: "Calendar Chart" },
+    { value: "GANTT_CHART", label: "Gantt Chart" },
+    { value: "SANKEY_CHART", label: "Sankey Chart" },
+]
+
+export const apacheChartOptions = [
+    { value: "GAUGE", label: "Gauge Chart" },
+    { value: "3D_BAR", label: "3D Bar Chart" },
+    { value: "COLUMN", label: "Column Chart" },
+    { value: "BAR", label: "Bar Chart" },
+    { value: "LINE", label: "Line Chart" },
+    { value: "AREA", label: "Area Chart" },
+    { value: "PIE", label: "Pie Chart" },
+    { value: "DONUT", label: "Donut Chart" },
 ]
 
 
@@ -357,3 +382,16 @@ export const iconImageOptions = [
     { value: "world bank.png", label: "world bank.png" },
 ];
 
+//for grid
+
+export const tablePluginOptions = [
+    { value: "datatable", label: "DataTable" },
+    { value: "highchartGrid", label: "HighChart Grid" },
+];
+export const gridThemeOptions = [
+    { label: "Default", value: "hcg-theme-default" },
+    { label: "Compact", value: "theme-compact" },
+    { label: "Dark", value: "theme-dark" },
+    { label: "Elegant", value: "theme-elegant" },
+    { label: "Colorful", value: "theme-colorful" },
+];

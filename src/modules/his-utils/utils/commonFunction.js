@@ -79,7 +79,6 @@ export const fetchQueryData = async (queryVO = [], jndiServer, params, pkColumn,
     // const uniqueIds = 
     const popupIdStr = popupIds?.join(",");
 
-
     const requestBody = {
       query,
       params: {},
@@ -88,11 +87,12 @@ export const fetchQueryData = async (queryVO = [], jndiServer, params, pkColumn,
       strGroupParaValue: params?.strGroupParaValue,
       popupId: popupIdStr ? popupIdStr : "",
       popupValue: pkColumn ? pkColumn?.toString() : "",
+      download: true
       // isSoftDbConnReq: isSoftDbConnReq || false,
       // softDbType: softDbType || ''
       // popupValue: "99929068@99929068"
     };
-
+    console.log('requestBody', requestBody)
     const response = await fetchPostData(`/hisutils/GenericApiQry?isGlobal=${isGlobal || 0}`, requestBody);
     console.log(query, response);
 
@@ -122,9 +122,11 @@ export const fetchProcedureData = async (procedure, params, jndiServer, signal =
       "parameters": params,
       "jndi": jndiServer
     };
+
+    // console.log('requestBody', requestBody)
     const response = await fetchPostData(`/hisutils/procedures/execute?isGlobal=${isGlobal || 0}`, requestBody, null, signal);
 
-    console.log(requestBody, response);
+    console.log("proresponse", response);
 
     if (setJndiName) {
       setJndiName(response?.serverSource);
@@ -173,7 +175,31 @@ export const fetchLocalLogoAsBase64 = (filePath) => {
 };
 
 
-export const formatParams = (allParams, widgetId) => {
+
+// export const formatParams = (allParams, widgetId, tabPrms) => {
+//   console.log('paramsValues', allParams)
+//   const tabParams = allParams?.tabParams || {};
+//   const widgetSpecificParams = allParams?.widgetParams?.[widgetId] || {};
+
+//   const combinedParams = {
+//     ...tabParams,
+//     ...widgetSpecificParams
+//   };
+
+//   if (typeof combinedParams !== 'object' || combinedParams === null || Array.isArray(combinedParams)) {
+//     return {
+//       paramsId: "",
+//       paramsValue: ""
+//     };
+//   }
+//   return {
+//     paramsId: Object.keys(combinedParams).join(','),
+//     paramsValue: Object.values(combinedParams).join(',')
+//   };
+// };
+
+export const formatParams = (allParams, widgetId, tabPrms) => {
+
   const tabParams = allParams?.tabParams || {};
   const widgetSpecificParams = allParams?.widgetParams?.[widgetId] || {};
 
@@ -182,18 +208,41 @@ export const formatParams = (allParams, widgetId) => {
     ...widgetSpecificParams
   };
 
-  if (typeof combinedParams !== 'object' || combinedParams === null || Array.isArray(combinedParams)) {
-    return {
-      paramsId: "",
-      paramsValue: ""
-    };
+  if (!combinedParams || typeof combinedParams !== 'object') {
+    return { paramsId: "", paramsValue: "" };
   }
+
+  const ids = [];
+  const values = [];
+
+  // Track keys we have already processed to prevent duplicates and find leftovers
+  const seenKeys = new Set();
+
+  // 1. First, add params in the strict order of tabPrms
+  if (Array.isArray(tabPrms)) {
+    tabPrms.forEach(prm => {
+      const idStr = String(prm.id);
+      if (idStr in combinedParams) {
+        ids.push(idStr);
+        values.push(combinedParams[idStr]);
+        seenKeys.add(idStr);
+      }
+    });
+  }
+
+  // 2. Next, append any extra IDs found in combinedParams (like unique widgetParams)
+  Object.keys(combinedParams).forEach(key => {
+    if (!seenKeys.has(key)) {
+      ids.push(key);
+      values.push(combinedParams[key]);
+    }
+  });
+
   return {
-    paramsId: Object.keys(combinedParams).join(','),
-    paramsValue: Object.values(combinedParams).join(',')
+    paramsId: ids.join(','),
+    paramsValue: values.join(',')
   };
 };
-
 
 export const getOrderedParamValues = (query, paramsValues, widgetId) => {
   const paramVal = formatParams(paramsValues ? paramsValues : null, widgetId || '');
@@ -482,11 +531,45 @@ export const fetchQueryDataPreview = async (queryVO, params) => {
     };
 
     const response = await fetchPostData(`/hisutils/GenericApiQry`, requestBody);
-      return response
+    return response
 
   } catch (error) {
     console.error("Error fetching query data:", error);
     return [];
   }
+};
+
+export const getDisplayQuery = (
+  query = "",
+  pkColumn = "",
+  paramsValues = {}
+) => {
+
+  let updatedQuery = query;
+
+  // Replace PK values
+  const pkValues = String(pkColumn || "").split("@");
+
+  updatedQuery = updatedQuery.replace(
+    /#PK(\d+)#/g,
+    (_, index) => {
+      return pkValues[Number(index)] ?? `#PK${index}#`;
+    }
+  );
+
+  // Merge all params
+  const allParams = {
+    ...(paramsValues?.tabParams || {}),
+    ...(paramsValues?.widgetParams || {})
+  };
+
+  updatedQuery = updatedQuery.replace(
+    /#PARA#(\d+)#PARA#/g,
+    (_, paramId) => {
+      return allParams[paramId] ?? `#PARA#${paramId}#PARA#`;
+    }
+  );
+
+  return updatedQuery;
 };
 

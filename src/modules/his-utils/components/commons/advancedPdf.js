@@ -1355,14 +1355,31 @@ export const generatePDFWorkers = (widgetData, multipleTables, config, visibleCo
       { type: "module" }
     );
 
-    const safeData = {
-      widgetData: JSON.parse(JSON.stringify(widgetData)),
-      multipleTables: JSON.parse(JSON.stringify(multipleTables)),
-      config: JSON.parse(JSON.stringify(config)),
-      visibleColumns: JSON.parse(JSON.stringify(visibleColumns)),
-      isH2,
-      filters: JSON.parse(JSON.stringify(filters))
+    const safeClone = (data, fallback) => {
+      try {
+        return JSON.parse(JSON.stringify(data ?? fallback));
+      } catch {
+        return fallback;
+      }
     };
+
+    const safeData = {
+      widgetData: safeClone(widgetData, {}),
+      multipleTables: safeClone(multipleTables, []),
+      config: safeClone(config, {}),
+      visibleColumns: safeClone(visibleColumns, []),
+      isH2,
+      filters: safeClone(filters, [])
+    };
+
+    // const safeData = {
+    //   widgetData: JSON.parse(JSON.stringify(widgetData)),
+    //   multipleTables: JSON.parse(JSON.stringify(multipleTables)),
+    //   config: JSON.parse(JSON.stringify(config)),
+    //   visibleColumns: JSON.parse(JSON.stringify(visibleColumns)),
+    //   isH2,
+    //   filters: JSON.parse(JSON.stringify(filters))
+    // };
 
     alert('Data is being downloaded. You can proceed further');
 
@@ -1406,14 +1423,31 @@ export const generateGraphPDFWorkers = (widgetData, tableData, config, visibleCo
       { type: "module" }
     );
 
-    const safeData = {
-      widgetData: JSON.parse(JSON.stringify(widgetData)),
-      tableData: JSON.parse(JSON.stringify(tableData)),
-      config: JSON.parse(JSON.stringify(config)),
-      visibleColumns: JSON.parse(JSON.stringify(visibleColumns)),
-      sortConfig: JSON.parse(JSON.stringify(sortConfig)),
-      filters: JSON.parse(JSON.stringify(filters))
+    const safeClone = (data, fallback) => {
+      try {
+        return JSON.parse(JSON.stringify(data ?? fallback));
+      } catch {
+        return fallback;
+      }
     };
+
+    const safeData = {
+      widgetData: safeClone(widgetData, {}),
+      tableData: safeClone(tableData, []),
+      config: safeClone(config, {}),
+      visibleColumns: safeClone(visibleColumns, []),
+      sortConfig: safeClone(sortConfig, []),
+      filters: safeClone(filters, [])
+    };
+
+    // const safeData = {
+    //   widgetData: JSON.parse(JSON.stringify(widgetData)),
+    //   tableData: JSON.parse(JSON.stringify(tableData)),
+    //   config: JSON.parse(JSON.stringify(config)),
+    //   visibleColumns: JSON.parse(JSON.stringify(visibleColumns)),
+    //   sortConfig: JSON.parse(JSON.stringify(sortConfig)),
+    //   filters: JSON.parse(JSON.stringify(filters))
+    // };
 
     alert('Data is being downloaded. You can proceed further');
 
@@ -1456,14 +1490,31 @@ export const generateCSVWorkers = (widgetData, multipleTables, config, visibleCo
       { type: "module" }
     );
 
-    const safeData = {
-      widgetData: JSON.parse(JSON.stringify(widgetData)),
-      multipleTables: JSON.parse(JSON.stringify(multipleTables)),
-      config: JSON.parse(JSON.stringify(config)),
-      visibleColumns: JSON.parse(JSON.stringify(visibleColumns)),
-      isH2,
-      filters: JSON.parse(JSON.stringify(filters)),
+    const safeClone = (data, fallback) => {
+      try {
+        return JSON.parse(JSON.stringify(data ?? fallback));
+      } catch {
+        return fallback;
+      }
     };
+
+    const safeData = {
+      widgetData: safeClone(widgetData, {}),
+      multipleTables: safeClone(multipleTables, []),
+      config: safeClone(config, {}),
+      visibleColumns: safeClone(visibleColumns, []),
+      isH2,
+      filters: safeClone(filters, []),
+    };
+
+    // const safeData = {
+    //   widgetData: JSON.parse(JSON.stringify(widgetData)),
+    //   multipleTables: JSON.parse(JSON.stringify(multipleTables)),
+    //   config: JSON.parse(JSON.stringify(config)),
+    //   visibleColumns: JSON.parse(JSON.stringify(visibleColumns)),
+    //   isH2,
+    //   filters: JSON.parse(JSON.stringify(filters)),
+    // };
 
     alert('Data is being downloaded. You can proceed further');
 
@@ -1519,14 +1570,31 @@ export const generateGraphCSVWorkers = (widgetData, data, config, visibleColumns
       { type: "module" }
     );
 
-    const safeData = {
-      widgetData: JSON.parse(JSON.stringify(widgetData)),
-      data: JSON.parse(JSON.stringify(data)),
-      config: JSON.parse(JSON.stringify(config)),
-      visibleColumns: JSON.parse(JSON.stringify(visibleColumns)),
-      sortConfig: JSON.parse(JSON.stringify(sortConfig)),
-      filters: JSON.parse(JSON.stringify(filters)),
+    const safeClone = (data, fallback) => {
+      try {
+        return JSON.parse(JSON.stringify(data ?? fallback));
+      } catch {
+        return fallback;
+      }
     };
+
+    const safeData = {
+      widgetData: safeClone(widgetData, {}),
+      data: safeClone(data, []),
+      config: safeClone(config, {}),
+      visibleColumns: safeClone(visibleColumns, []),
+      sortConfig: safeClone(sortConfig, []),
+      filters: safeClone(filters, [])
+    };
+
+    // const safeData = {
+    //   widgetData: JSON.parse(JSON.stringify(widgetData)),
+    //   data: JSON.parse(JSON.stringify(data)),
+    //   config: JSON.parse(JSON.stringify(config)),
+    //   visibleColumns: JSON.parse(JSON.stringify(visibleColumns)),
+    //   sortConfig: JSON.parse(JSON.stringify(sortConfig)),
+    //   filters: JSON.parse(JSON.stringify(filters)),
+    // };
 
     alert('Data is being downloaded. You can proceed further');
 

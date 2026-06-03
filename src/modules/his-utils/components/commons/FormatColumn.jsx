@@ -19,7 +19,7 @@ const FormatColumn = (props) => {
 
     useEffect(() => {
         const existingData = values?.mpFormatColumn?.[tableIndex]?.lstFormatColumn || [];
-        if (existingData.length > 0) {
+        if (existingData?.length > 0) {
             const updated = existingData.map((item, index) => ({
                 columnNo: item?.columnNo || index + 1,
                 columnForReport: item?.columnForReport || "",

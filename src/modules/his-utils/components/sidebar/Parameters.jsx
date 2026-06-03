@@ -7,6 +7,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEyeSlash, faReply, faSearch } from "@fortawesome/free-solid-svg-icons";
 import { useSearchParams } from "react-router-dom";
 import { fetchPostData } from "../../../../utils/HisApiHooks";
+import { HidebtnSvg, ReplybtnSvg, ResetbtnSvg, SearchbtnSvg, ShowbtnSvg } from "../../utils/commonSVG";
 
 const usePrevious = (value) => {
     const ref = useRef();
@@ -16,8 +17,8 @@ const usePrevious = (value) => {
     return ref.current;
 };
 
-const Parameters = ({ params, scope, widgetId = null, isLayoutWithPreview, setWidgetParams, setAllDrpDtParams, setTabParams, tabParams }) => {
-    const { theme, setParamsValues, paramsValuesPro, setParamsValuesPro, setIsSearchQuery, activeTab, isSearchQuery, searchScope, setSearchScope, dt } = useContext(HISContext);
+const Parameters = ({ params, scope, widgetId = null, isLayoutWithPreview, setWidgetParams, setTabParams, tabParams }) => {
+    const { theme, setParamsValues, paramsValuesPro, setParamsValuesPro, setIsSearchQuery, activeTab, isSearchQuery, searchScope, setSearchScope, dt, setAllDrpDtParams } = useContext(HISContext);
     const [presentParams, setPresentParams] = useState([]);
     const [selectedValues, setSelectedValues] = useState({});
     const [dropdownData, setDropdownData] = useState({});
@@ -174,8 +175,6 @@ const Parameters = ({ params, scope, widgetId = null, isLayoutWithPreview, setWi
         setErrors(prev => ({ ...prev, [id]: "" }))
     };
 
-
-
     const getDateConstraint = (fieldId) => {
         if (!fieldId) return "";
         const field = document.getElementById(fieldId);
@@ -188,9 +187,14 @@ const Parameters = ({ params, scope, widgetId = null, isLayoutWithPreview, setWi
     const fetchDropdownData = async (query, parameterName, jndiS, paraValue) => {
         if (!query) return;
         try {
+            // const regex = /#PARA#(\d+)#PARA#/g;
+            // const match = regex.exec(query);
+            // const paraId = match ? match[1] : null;
+
             const regex = /#PARA#(\d+)#PARA#/g;
-            const match = regex.exec(query);
-            const paraId = match ? match[1] : null;
+            const matches = [...query.matchAll(regex)];
+            const paraIds = matches.map(m => m[1]);
+            const paraId = paraIds.join(",");
 
             if (paraId) {
                 setParentId((prev) => {
@@ -207,10 +211,18 @@ const Parameters = ({ params, scope, widgetId = null, isLayoutWithPreview, setWi
                 query,
                 params: {},
                 jndi: jndiS,
-                strGroupParaId: paraId,
-                strGroupParaValue: paraValue ?? null
+                // strGroupParaId: paraId,
+                // strGroupParaValue: paraValue ?? null
+
+                strGroupParaId: paraId || null,
+                strGroupParaValue: Array.isArray(paraValue)
+                    ? paraValue.join(",")
+                    : paraValue ?? null
             };
+            // console.log('reqBody', val)
             const response = await fetchPostData(`/hisutils/GenericApiQry?isGlobal=${isGlobal || 0}`, val);
+
+            // console.log('response', response)
 
 
             const rawData = response?.data || [];
@@ -230,7 +242,7 @@ const Parameters = ({ params, scope, widgetId = null, isLayoutWithPreview, setWi
                 ...prev,
                 [parameterName]: formattedData,
             }));
-            if(setAllDrpDtParams){
+            if (setAllDrpDtParams) {
                 setAllDrpDtParams(prev => ({
                     ...prev,
                     [parameterName]: formattedData,
@@ -287,20 +299,37 @@ const Parameters = ({ params, scope, widgetId = null, isLayoutWithPreview, setWi
             const query = param?.jsonData?.parameterQuery;
             if (!query) return;
 
-            const regex = /#PARA#(\d+)#PARA#/g;
-            const match = regex.exec(query);
-            const paraId = match ? match[1] : null;
+            // const regex = /#PARA#(\d+)#PARA#/g;
+            // const match = regex.exec(query);
+            // const paraId = match ? match[1] : null;
 
-            if (paraId) {
-                const changed = changedKeys.find((c) => c.key === paraId);
-                if (changed) {
-                    fetchDropdownData(
-                        query,
-                        param.jsonData.parameterName,
-                        param?.jndiIdForGettingData,
-                        changed.value
+            const regex = /#PARA#(\d+)#PARA#/g;
+            const matches = [...query.matchAll(regex)];
+            const paraIds = matches.map(m => m[1]);
+
+            // if (paraIds) {
+            // const changed = changedKeys.find((c) => c.key === paraId);
+            // const changedValues = paraIds
+            //     .map(id => changedKeys.find(c => c.key === id)?.value)
+            //     .filter(v => v !== undefined);
+
+            const allValues = paraIds
+                .map(id => {
+                    return (
+                        paramsValuesPro?.tabParams?.[id] ??
+                        paramsValuesPro?.widgetParams?.[param?.widgetId]?.[id]
                     );
-                }
+                })
+                .filter(v => v !== undefined && v !== null && v !== "");
+            if (allValues.length) {
+                fetchDropdownData(
+                    query,
+                    param.jsonData.parameterName,
+                    param?.jndiIdForGettingData,
+                    // changed.value
+                    allValues
+                );
+                // }
             }
         });
     }, [paramsValuesPro, presentParams]);
@@ -352,6 +381,7 @@ const Parameters = ({ params, scope, widgetId = null, isLayoutWithPreview, setWi
             })
         }
     };
+
 
     useEffect(() => {
         const initializeParams = async () => {
@@ -522,7 +552,7 @@ const Parameters = ({ params, scope, widgetId = null, isLayoutWithPreview, setWi
                                     styles={{
                                         menuPortal: base => ({ ...base, zIndex: 9999 }),
                                     }}
-                                    // menuPlacement="auto"
+                                // menuPlacement="auto"
                                 />
                                 :
                                 <span className="fw-medium">
@@ -553,6 +583,7 @@ const Parameters = ({ params, scope, widgetId = null, isLayoutWithPreview, setWi
                                     value={selectedValues[parameterName] || defaultValueIfEmpty}
                                     onChange={(e) => handleInputChange(parameterName, e, parameterId)}
                                     acceptType={textBoxValidation === '2' ? 'number' : textBoxValidation === '4' ? 'letters' : ''}
+                                    isSpecialChrs
                                 />
                                 :
 
@@ -650,15 +681,18 @@ const Parameters = ({ params, scope, widgetId = null, isLayoutWithPreview, setWi
         <>
             <div className={`help-docs ${isLayoutWithPreview ? 'layout-help-docs' : ''}`}>
 
-                <button type="button" className="small-box-btn-dwn m-1" onClick={() => resetParams()}>
-                    <FontAwesomeIcon icon={faReply} size="xs" className="dropdown-gear-icon" />
-                </button>
-                <button type="button" className="small-box-btn-dwn m-1" onClick={() => setHideParams(!hideParams)}>
-                    <FontAwesomeIcon icon={faEyeSlash} size="xs" className="dropdown-gear-icon" />
-                </button>
-                <button type="button" className="small-box-btn-dwn m-1" onClick={() => searchParams()}>
-                    <FontAwesomeIcon icon={faSearch} size="xs" className="dropdown-gear-icon" />
-                </button>
+                <span type="button" className="small-box-btn-dwn m-1" onClick={() => resetParams()}>
+                    {/* <FontAwesomeIcon icon={faReply} size="xs" className="dropdown-gear-icon" /> */}
+                    <ReplybtnSvg />
+                </span>
+                <span type="button" className="small-box-btn-dwn m-1" onClick={() => setHideParams(!hideParams)}>
+                    {/* <FontAwesomeIcon icon={faEyeSlash} size="xs" className="dropdown-gear-icon" /> */}
+                    {hideParams ? <ShowbtnSvg /> : <HidebtnSvg />}
+                </span>
+                <span type="button" className="small-box-btn-dwn m-1" onClick={() => searchParams()}>
+                    {/* <FontAwesomeIcon icon={faSearch} size="xs" className="dropdown-gear-icon" /> */}
+                    <SearchbtnSvg />
+                </span>
             </div>
             {/* {!hideParams && */}
             <div className={`${isLayoutWithPreview ? 'layouthw' : 'row'}`}>

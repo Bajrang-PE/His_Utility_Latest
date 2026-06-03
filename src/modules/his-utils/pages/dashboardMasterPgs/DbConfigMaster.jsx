@@ -316,12 +316,13 @@ const DbConfigMaster = () => {
         dbType: values?.dbType || ''
       };
 
-      const response = await axios.post(
-        '/hisutils/test-server-connection', //http://10.226.29.202:8024
-        val
-      );
+      const response = await fetchPostData("/hisutils/test-server-connection", val);
 
-      const success = response?.data?.status === 1;
+      // const response = await axios.post(
+      //   'http://10.226.28.223:8024/hisutils/test-server-connection',
+      //   val
+      // );
+      const success = response?.status === 1;
 
       setConnectionCards(prev =>
         prev.map(card =>
@@ -525,7 +526,6 @@ const DbConfigMaster = () => {
       }, 500);
     }, 100);
   };
-
 
   return (
     <>
@@ -1622,7 +1622,7 @@ const DbConfigMaster = () => {
               {dt("Clear All Cached Data")}
             </button>
             <button className='btn btn-sm ms-1' onClick={handlePrint}>
-             Print
+              Print
             </button>
           </div>
           {/* <SessionClock /> */}

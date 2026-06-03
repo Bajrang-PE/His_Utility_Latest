@@ -9,12 +9,13 @@ import PopUpWidget from './PopUpWidget';
 import { useSearchParams } from 'react-router-dom';
 import * as FaIcons from "react-icons/fa";
 
-const KpiDash = ({ widgetData, presentTabs, isLayoutWithPreview }) => {
+const KpiDash = ({ widgetData, presentTabs, isLayoutWithPreview, pkColumn, setPkColumn }) => {
     const { setActiveTab, paramsValues, searchScope, isSearchQuery, setIsSearchQuery, setSearchScope, setPrevKpiTab, activeTab, dt, presentTabsDash } = useContext(HISContext);
     const [kpiData, setKpiData] = useState([]);
     const [kpiLoading, setKpiLoading] = useState(false);
     const [popupConfig, setPopupConfig] = useState(null);
     const [showPopUpWidget, setShowPopUpWidget] = useState(false);
+
     const [searchParams] = useSearchParams();
     const isGlobal = searchParams.get("isGlobal") || 0;
 
@@ -30,6 +31,7 @@ const KpiDash = ({ widgetData, presentTabs, isLayoutWithPreview }) => {
             return formattedItem;
         });
     };
+
     const fetchData = async (widget) => {
         if (widget?.modeOfQuery === "Procedure") {
             if (!widget?.procedureMode) return;
@@ -40,7 +42,7 @@ const KpiDash = ({ widgetData, presentTabs, isLayoutWithPreview }) => {
                 const params = [
                     getAuthUserData('hospitalCode')?.toString(), //hospital code===
                     "10001", //user id===
-                    "", //primary key
+                    pkColumn ? pkColumn?.toString() : '', , //primary key
                     paramVal.paramsId || "", //parameter ids
                     paramVal.paramsValue || "", //parameter values
                     isPaginationReq?.toString(), //is pagination required===
@@ -68,13 +70,44 @@ const KpiDash = ({ widgetData, presentTabs, isLayoutWithPreview }) => {
             const params = getOrderedParamValues(widget?.queryVO[0]?.mainQuery, paramsValues, widget?.rptId);
             try {
 
-                const data = await fetchQueryData(widget?.queryVO, widgetData?.JNDIid, params, null, isGlobal);
+                const data = await fetchQueryData(widget?.queryVO, widgetData?.JNDIid, params, pkColumn, isGlobal);
                 if (data?.length > 0) {
                     const firstItem = data[0];
-                    const dynamicKey = Object.keys(firstItem)[0];
-                    const dynamicValue = firstItem[dynamicKey];
+                    // if (firstItem?.pkcolumn !== undefined) {
+                    //     setPkColumn(firstItem.pkcolumn);
+                    // }
+                    // const filteredKeys = Object.keys(firstItem).filter(
+                    //     key => key !== "pkcolumn"
+                    // );
+                    // const dynamicKey = filteredKeys[0];
+                    // const dynamicKey = Object.keys(firstItem)[0];
+                    // const dynamicValue = firstItem[dynamicKey];
+                    const updatedData = data.map(item => {
+                        const keys = Object.keys(item);
 
-                    setKpiData(dynamicValue);
+                        //  pkcolumn already first
+                        if (keys[0] === "pkcolumn") {
+                            return item;
+                        }
+
+                        //  pkcolumn exists but not first
+                        if ("pkcolumn" in item) {
+                            const { pkcolumn, ...rest } = item;
+                            return {
+                                pkcolumn,
+                                ...rest
+                            };
+                        }
+
+                        //  pkcolumn does NOT exist → add empty
+                        return {
+                            pkcolumn: "",
+                            ...item
+                        };
+                    });
+
+
+                    setKpiData(updatedData);
                     setIsSearchQuery(false);
                     setKpiLoading(false);
                     setSearchScope({ scope: "", id: "" })
@@ -147,8 +180,6 @@ const KpiDash = ({ widgetData, presentTabs, isLayoutWithPreview }) => {
         return <Cmp />;
     };
 
-
-
     const onHover = (e) => {
         e.currentTarget.style.backgroundColor = widgetData?.widgetHoverBackground || widgetData?.widgetBackgroundColour
     }
@@ -156,9 +187,11 @@ const KpiDash = ({ widgetData, presentTabs, isLayoutWithPreview }) => {
         e.currentTarget.style.backgroundColor = widgetData?.widgetBackgroundColour
     }
 
-    const onKpiClickDetails = (id) => {
-        const tabdt = presentTabsDash?.filter(tab => tab?.jsonData?.dashboardId == id)
+    const onKpiClickDetails = (id, pkData) => {
+        const pk = pkData?.pkcolumn || "";
+        const tabdt = presentTabsDash?.filter(tab => tab?.jsonData?.dashboardId == id);
         if (tabdt?.length > 0) {
+            setPkColumn(pk);
             setActiveTab(tabdt[0]);
             // setPrevKpiTab([activeTab]);
             setPrevKpiTab(prev => [...prev, activeTab]);
@@ -169,8 +202,10 @@ const KpiDash = ({ widgetData, presentTabs, isLayoutWithPreview }) => {
     }
 
 
-    const onWidgetClickDetails = (id) => {
+    const onWidgetClickDetails = (id, pkData) => {
+        const pk = pkData?.pkcolumn || "";
         if (id) {
+            setPkColumn(pk)
             setPopupConfig({
                 widgetId: id,
             })
@@ -192,7 +227,6 @@ const KpiDash = ({ widgetData, presentTabs, isLayoutWithPreview }) => {
     //         return new URL(`../../../../assets/default-icon.png`, import.meta.url).href;
     //     }
     // };
-
 
     return (
         <>
@@ -262,18 +296,24 @@ const KpiDash = ({ widgetData, presentTabs, isLayoutWithPreview }) => {
                         <>
                             <div
                                 className='inner'
-                                dangerouslySetInnerHTML={{ __html: kpiData || "" }}
+                                // dangerouslySetInnerHTML={{ __html: kpiData || "" }}
+                                dangerouslySetInnerHTML={{
+                                    __html: kpiData?.[0]
+                                        ? Object.entries(kpiData[0])
+                                            .filter(([key]) => key !== "pkcolumn")[0]?.[1] || ""
+                                        : ""
+                                }}
                             />
                             {/* widgetData?.onClickOfKPITabId !== '0' && widgetData?.onClickOfKPITabId !== '' && */}
 
                             {(widgetData?.onClickOfKPITabId && widgetData?.onClickOfKPITabId !== '0') &&
-                                <div className='small-box-kpi-link-dtl' style={{ color: widgetData?.kpiLinkFontColor }} onClick={() => onKpiClickDetails(widgetData?.onClickOfKPITabId)}>
+                                <div className='small-box-kpi-link-dtl' style={{ color: widgetData?.kpiLinkFontColor }} onClick={() => onKpiClickDetails(widgetData?.onClickOfKPITabId, kpiData[0])}>
                                     <span>{dt(widgetData?.linkTab || 'Click For Details')}</span>
                                     <b><FontAwesomeIcon icon={faSearch} /></b>
                                 </div>
                             }
                             {(widgetData?.onClickOfKPIWidgetId && widgetData?.onClickOfKPIWidgetId !== '0') &&
-                                <div className='small-box-kpi-link-dtl' style={{ color: widgetData?.kpiLinkFontColor }} onClick={() => onWidgetClickDetails(widgetData?.onClickOfKPIWidgetId)}>
+                                <div className='small-box-kpi-link-dtl' style={{ color: widgetData?.kpiLinkFontColor }} onClick={() => onWidgetClickDetails(widgetData?.onClickOfKPIWidgetId, kpiData[0])}>
                                     <span>{dt(widgetData?.linkWidget || 'Click For Details')}</span>
                                     <b><FontAwesomeIcon icon={faSearch} /></b>
                                 </div>

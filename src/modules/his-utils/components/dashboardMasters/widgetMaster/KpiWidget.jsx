@@ -296,7 +296,7 @@ const KpiWidget = (props) => {
                         <div className="form-group row">
                             <label className="col-sm-5 col-form-label pe-0">{(values?.kpiTabOpenOnClick !== '0' && values?.kpiTabOpenOnClick) ? dt("Tab open on click") : (values?.kpiWidgetOpenOnClick !== '0' && values?.kpiWidgetOpenOnClick) ? dt('Widget open on click') : dt('Dashboard open on click')}  : </label>
                             <div className="col-sm-7 ps-0 align-content-center">
-                                {(values?.kpiBoxClickOptions === 'showTab' || values?.kpiTabOpenOnClick !== '0' && values?.kpiTabOpenOnClick) &&
+                                {(values?.kpiBoxClickOptions === 'showTab') &&
                                     <InputSelect
                                         className="backcolorinput "
                                         placeholder="No Tabs"
@@ -306,7 +306,7 @@ const KpiWidget = (props) => {
                                         onChange={handleValueChange}
                                         value={values?.kpiTabOpenOnClick}
                                     />}
-                                {(values?.kpiBoxClickOptions === 'showWidget' || values?.kpiWidgetOpenOnClick !== '0' && values?.kpiWidgetOpenOnClick) &&
+                                {(values?.kpiBoxClickOptions === 'showWidget') &&
                                     <InputSelect
                                         className="backcolorinput "
                                         placeholder="No Widget"
@@ -316,7 +316,7 @@ const KpiWidget = (props) => {
                                         onChange={handleValueChange}
                                         value={values?.kpiWidgetOpenOnClick}
                                     />}
-                                {(values?.kpiBoxClickOptions === 'showDashboard' || values?.kpiDashboardOpenOnClick !== '0' && values?.kpiDashboardOpenOnClick) &&
+                                {(values?.kpiBoxClickOptions === 'showDashboard' ) &&
                                     <InputSelect
                                         className="backcolorinput "
                                         placeholder="No Dashboard"

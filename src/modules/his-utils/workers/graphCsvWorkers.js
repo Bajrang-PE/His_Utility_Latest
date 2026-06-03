@@ -1,5 +1,11 @@
 import Papa from 'papaparse';
 
+const stripHtml = (str) => {
+    if (!str) return '';
+    return str?.replace(/<[^>]*>/g, '')?.trim();
+};
+
+
 self.onmessage = (e) => {
     try {
         const { widgetData, data, config, visibleColumns, sortConfig, filters } = e.data;
@@ -22,14 +28,14 @@ self.onmessage = (e) => {
 
         if (filters?.length) {
             filters.forEach(filter => {
-                heading.push([`${filter.disName}: ${filter.val}`]);
+                heading.push([`${filter.disName}: ${stripHtml(filter.val?.toString()||"")}`]);
             });
             heading.push([]);
         }
 
         let csvContent;
 
-        const firstClmName = data[0]?.seriesData[0]?.lebel || xAxisLabel;
+        const firstClmName = data[0]?.seriesData[0]?.label || xAxisLabel;
         const selectedHeaders =
             visibleColumns?.length > 0
                 ? visibleColumns.map((c) => c.name)
