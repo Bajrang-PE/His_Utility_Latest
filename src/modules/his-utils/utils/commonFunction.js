@@ -98,7 +98,7 @@ export const fetchQueryData = async (queryVO = [], jndiServer, params, pkColumn,
 
     if (response?.status === 1) {
       if (setJndiName) {
-        setJndiName(response?.serverSource);
+        setJndiName(response?.jndi);
       }
       return response?.data || [];
     } else {
@@ -129,7 +129,7 @@ export const fetchProcedureData = async (procedure, params, jndiServer, signal =
     console.log("proresponse", response);
 
     if (setJndiName) {
-      setJndiName(response?.serverSource);
+      setJndiName(response?.jndi);
     }
 
     return response?.data || [];
@@ -542,7 +542,8 @@ export const fetchQueryDataPreview = async (queryVO, params) => {
 export const getDisplayQuery = (
   query = "",
   pkColumn = "",
-  paramsValues = {}
+  paramsValues = {},
+  widgetId
 ) => {
 
   let updatedQuery = query;
@@ -553,20 +554,20 @@ export const getDisplayQuery = (
   updatedQuery = updatedQuery.replace(
     /#PK(\d+)#/g,
     (_, index) => {
-      return pkValues[Number(index)] ?? `#PK${index}#`;
+      return pkValues[Number(index)] ?? `${pkValues[Number(index)]}`;
     }
   );
 
   // Merge all params
   const allParams = {
     ...(paramsValues?.tabParams || {}),
-    ...(paramsValues?.widgetParams || {})
+    ...(paramsValues?.widgetParams?.[widgetId] || {})
   };
 
   updatedQuery = updatedQuery.replace(
     /#PARA#(\d+)#PARA#/g,
     (_, paramId) => {
-      return allParams[paramId] ?? `#PARA#${paramId}#PARA#`;
+      return allParams[paramId] ?? `${allParams[paramId]}`;
     }
   );
 

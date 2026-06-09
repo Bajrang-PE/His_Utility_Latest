@@ -13,7 +13,7 @@ import { fetchPostData } from "../../../../utils/HisApiHooks";
 import AdvancedOptionsModal from "./AdvancedOptionsModal";
 import PrintComponent from "./PrintComponent";
 import { createRoot } from "react-dom/client";
-import { AdvancedbtnSvg, CsvBtnSvg, ExcelBtnSvg, PdfbtnSvg, PrintbtnSvg, RefreshbtnSvg, SettingbtnSvg } from "../../utils/commonSVG";
+import { AdvancedbtnSvg, ArrowCircleLeftbtnSvg, CsvBtnSvg, ExcelBtnSvg, PdfbtnSvg, PrintbtnSvg, RefreshbtnSvg, SettingbtnSvg, TableCellsbtnSvg } from "../../utils/commonSVG";
 import HighchartsGrid from "./HighchartsGrid";
 
 
@@ -1023,7 +1023,7 @@ const TabularDash = (props) => {
         const params = [
           getAuthUserData('hospitalCode')?.toString(), //hospital code===
           "10001", //user id===
-          syncPk ? syncPk : pkColumn ? pkColumn?.toString() : '', //primary key
+          syncPk ? syncPk?.toString() : pkColumn ? pkColumn?.toString() : '', //primary key
           paramVal.paramsId || "", //parameter ids
           paramVal.paramsValue || "", //parameter values
           isPaginationReq?.toString(), //is pagination required===
@@ -1130,7 +1130,7 @@ const TabularDash = (props) => {
             const widgetList = targetIds.split(",");
             widgetList.forEach((targetId) => {
               setSelectedPk(prev => ({ ...prev, [widget?.rptId]: firstPk }));
-              setsyncPkValues(prev => ({ ...prev, [targetId]: firstPk }))
+              setsyncPkValues(prev => ({ ...prev, [targetId]: firstPk }));
             })
           }
         }
@@ -1192,6 +1192,13 @@ const TabularDash = (props) => {
       fetchData(widgetData);
     }
   }, [paramsValues?.widgetParams[widgetData?.rptId]]);
+
+
+  useEffect(() => {
+    if (searchScope?.scope === "all" && !isSearchQuery && widgetData && searchScope?.scope !== "widgetParams") {
+      fetchData(widgetData);
+    }
+  }, [paramsValues])
 
   useEffect(() => {
     if (isSearchQuery && searchScope?.scope === "widgetParams" && searchScope?.id == widgetData?.rptId) {
@@ -1423,6 +1430,7 @@ const TabularDash = (props) => {
     }]);
   }
 
+
   return (
     <>
       {/* {currentLevel == 0 && */}
@@ -1552,13 +1560,18 @@ const TabularDash = (props) => {
 
             {currentLevel !== 0 && (
               <>
-                <button className="small-box-btn-dwn" onClick={() => backToParentWidget()}>
+                {/* <button className="small-box-btn-dwn" onClick={() => backToParentWidget()}>
                   <FontAwesomeIcon icon={faArrowCircleLeft} />
-                </button>
+                </button> */}
+
+                <span className="small-box-btn-dwn" onClick={() => backToParentWidget()} title="Back">
+                  <ArrowCircleLeftbtnSvg />
+                </span>
 
                 <div className="nav-item dropdown" >
-                  <button className="small-box-btn-dwn nav-link" data-bs-toggle="dropdown">
-                    <FontAwesomeIcon icon={faTableCells} />
+                  <button className="small-box-btn-dwn nav-link" data-bs-toggle="dropdown" title="Prev Widgets">
+                    {/* <FontAwesomeIcon icon={faTableCells} /> */}
+                    <TableCellsbtnSvg />
                   </button>
 
                   <ul className="dropdown-menu dropdown-menu-start" >
@@ -1670,8 +1683,8 @@ const TabularDash = (props) => {
                       {/* <span>{`${table?.queryObj?.mainQuery}---- JNDI Name ---${jndiName || "null"}`}</span> */}
                       <span>{`${getDisplayQuery(
                         table?.queryObj?.mainQuery,
-                        pkColumn,
-                        paramsValues
+                        syncPkValues[widgetData?.rptId] ? syncPkValues[widgetData?.rptId] : pkColumn,
+                        paramsValues,widgetData?.rptId
                       )}---- JNDI Name ---${jndiName || "null"}`}</span>
                     </>
                     }

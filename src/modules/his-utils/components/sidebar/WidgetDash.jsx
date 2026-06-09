@@ -52,7 +52,7 @@ const WidgetDash = React.memo(({ widgetDetail, presentWidgets, presentTabs, pk, 
 
     const renderWidget = (data) => {
         switch (data?.reportViewed) {
-            case 'KPI': return <KpiDash widgetData={data} presentTabs={presentTabs} isLayoutWithPreview={isLayoutWithPreview} pkColumn={pkColumn} setPkColumn={handleSetPkColumn}/>;
+            case 'KPI': return <KpiDash widgetData={data} presentTabs={presentTabs} isLayoutWithPreview={isLayoutWithPreview} pkColumn={pkColumn} setPkColumn={handleSetPkColumn} />;
 
             case 'Tabular': return <TabularDash widgetData={data} setWidgetData={setWidgetData} levelData={levelData} setLevelData={setLevelData} pkColumn={pkColumn} setPkColumn={handleSetPkColumn} isLayoutWithPreview={isLayoutWithPreview} presentTabs={presentTabs} isPopup={isPopup} pkConfig={pk} />;
 
@@ -133,6 +133,7 @@ const WidgetDash = React.memo(({ widgetDetail, presentWidgets, presentTabs, pk, 
 
                                 }}
                             >
+                               
                                 {renderWidget(widgetData)}
                             </div>
                         )}

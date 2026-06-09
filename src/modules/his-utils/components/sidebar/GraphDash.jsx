@@ -10,7 +10,7 @@ import { getAuthUserData } from "../../../../utils/CommonFunction";
 import { generateGraphCSV, generateGraphCSVWorkers, generateGraphPDF, generateGraphPDFWorkers } from "../commons/advancedPdf";
 import { useSearchParams } from "react-router-dom";
 import AdvancedOptionsModal from "./AdvancedOptionsModal";
-import { AdvancedbtnSvg, CsvBtnSvg, PdfbtnSvg, RefreshbtnSvg, SettingbtnSvg } from "../../utils/commonSVG";
+import { AdvancedbtnSvg, ArrowCircleLeftbtnSvg, CsvBtnSvg, PdfbtnSvg, RefreshbtnSvg, SettingbtnSvg, TableCellsbtnSvg } from "../../utils/commonSVG";
 import GooglePieChartDash from "./GooglePieChart";
 import ApacheGenChart from "./apacheCharts/ApacheGenChart";
 
@@ -502,7 +502,7 @@ const GraphDash = ({ widgetData, setWidgetData, pkColumn, setPkColumn, isLayoutW
         const params = [
           getAuthUserData('hospitalCode')?.toString(), //hospital code===
           "10001", //user id===
-          syncPk ? syncPk : pkColumn ? pkColumn?.toString() : '', //primary key
+          syncPk ? syncPk?.toString() : pkColumn ? pkColumn?.toString() : '', //primary key
           paramVal.paramsId || "", //parameter ids
           paramVal.paramsValue || "", //parameter values
           isPaginationReq?.toString(), //is pagination required===
@@ -586,9 +586,21 @@ const GraphDash = ({ widgetData, setWidgetData, pkColumn, setPkColumn, isLayoutW
         fetchProcedure(widgetData);
       } else {
         fetchDataQry(widgetData);
+
       }
     }
   }, [paramsValues?.widgetParams[widgetData?.rptId]]);
+
+  useEffect(() => {
+    if (searchScope?.scope === "all" && !isSearchQuery && widgetData && searchScope?.scope !== "widgetParams") {
+      if (widgetData?.modeOfQuery === "Procedure") {
+        fetchProcedure(widgetData);
+      } else {
+        fetchDataQry(widgetData);
+      }
+    }
+  }, [paramsValues])
+
 
   useEffect(() => {
     if (isSearchQuery && searchScope?.scope === "widgetParams" && searchScope?.id == widgetData?.rptId) {
@@ -884,6 +896,7 @@ const GraphDash = ({ widgetData, setWidgetData, pkColumn, setPkColumn, isLayoutW
                   <AdvancedbtnSvg />
                   {dt('Advanced')}</li>
               }
+
             </ul>
 
           </>)}
@@ -908,15 +921,20 @@ const GraphDash = ({ widgetData, setWidgetData, pkColumn, setPkColumn, isLayoutW
 
           {currentLevel !== 0 && (
             <>
-              <button className="small-box-btn-dwn"
+              {/* <button className="small-box-btn-dwn"
                 onClick={() =>
                   backToParentWidget('', levelData, currentLevel, presentWidgets, setCurrentLevel, setPkColumn, setLevelData, setWidgetData, widgetData?.rptId)}>
                 <FontAwesomeIcon icon={faArrowCircleLeft} />
-              </button>
+              </button> */}
+
+              <span className="small-box-btn-dwn" onClick={() => backToParentWidget('', levelData, currentLevel, presentWidgets, setCurrentLevel, setPkColumn, setLevelData, setWidgetData, widgetData?.rptId)} title="Back">
+                <ArrowCircleLeftbtnSvg />
+              </span>
 
               <div className="nav-item dropdown" >
-                <button className="small-box-btn-dwn nav-link" data-bs-toggle="dropdown">
-                  <FontAwesomeIcon icon={faTableCells} />
+                <button className="small-box-btn-dwn nav-link" data-bs-toggle="dropdown" title="Prev Widgets">
+                  {/* <FontAwesomeIcon icon={faTableCells} /> */}
+                  <TableCellsbtnSvg />
                 </button>
 
                 <ul className="dropdown-menu dropdown-menu-start" >
@@ -1235,8 +1253,8 @@ const GraphDash = ({ widgetData, setWidgetData, pkColumn, setPkColumn, isLayoutW
                   {/* <span>{`${gdata?.queryName}---- JNDI Name ---${jndiName || 'null'}`}</span> */}
                   <span>{`${getDisplayQuery(
                     gdata?.queryName,
-                    pkColumn,
-                    paramsValues
+                    syncPkValues[widgetData?.rptId] ? syncPkValues[widgetData?.rptId] : pkColumn,
+                    paramsValues, widgetData?.rptId
                   )}---- JNDI Name ---${jndiName || 'null'}`}</span>
                 </>
               }

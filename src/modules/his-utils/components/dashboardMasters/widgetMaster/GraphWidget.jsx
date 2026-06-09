@@ -1,9 +1,11 @@
-import React, { useEffect, useRef, useState } from 'react'
-import InputSelect from '../../commons/InputSelect'
-import InputField from '../../commons/InputField'
-import Select from 'react-select'
-import { apacheChartOptions, googleChartOptions, graphOptions, highchartGraphOptions, isActionButtonReqOptions } from '../../../localData/DropDownData'
-import { Modal } from 'react-bootstrap'
+import React, { useEffect, useRef, useState } from 'react';
+import InputSelect from '../../commons/InputSelect';
+import InputField from '../../commons/InputField';
+import Select from 'react-select';
+import { apacheChartOptions, googleChartOptions, graphOptions, highchartGraphOptions, isActionButtonReqOptions } from '../../../localData/DropDownData';
+import { Modal } from 'react-bootstrap';
+import GraphGalleryModal from './GraphGalleryModal';
+import "./GraphGalleryModal.css";
 
 const GraphWidget = (props) => {
     const { handleValueChange, handleRadioChange, radioValues, values, setValues, parentWidget, errors, setErrors, dt } = props;
@@ -12,6 +14,8 @@ const GraphWidget = (props) => {
     const [isNotChangePlugin, setIsNotChangePlugin] = useState(true);
     const [queryHelpData, setQueryHelpData] = useState({});
     const [alertDone, setAlertDone] = useState({ "3D_BAR": "No", "GAUGE": "No" });
+    const [showDefaultModal, setShowDefaultModal] = useState(false);
+    const [showGraphModal, setShowGraphModal] = useState(false);
 
     const defGraphTypes = (plugin) => {
 
@@ -28,6 +32,19 @@ const GraphWidget = (props) => {
             default:
                 return googleChartOptions;
         }
+    }
+
+    const selectedDefaultGraph =
+        defGraphTypes(values?.defaultPluginName)?.find(
+            g => g.value === values?.defaultGraphType
+        );
+
+    const getGraphLabel = (gName) => {
+        const obj = defGraphTypes(values?.defaultPluginName)?.find(
+            g => g.value === gName
+        );
+
+        return obj ? obj?.label : gName;
     }
 
     useEffect(() => {
@@ -158,7 +175,7 @@ FROM (
                     <div className="form-group row">
                         <label className="col-sm-5 col-form-label pe-0 required-label">{dt("Default Graph Type")} : </label>
                         <div className="col-sm-7 ps-0 align-content-center">
-                            <InputSelect
+                            {/* <InputSelect
                                 className="backcolorinput"
                                 placeholder="Select value..."
                                 name='defaultGraphType'
@@ -173,7 +190,37 @@ FROM (
                                 }}
                                 value={values?.defaultGraphType}
                                 errorMessage={errors?.defaultGraphTypeErr}
-                            />
+                            /> */}
+                            <div className="graph-selection-row">
+                                <div className="graph-selection-content">
+                                    <div className="graph-tags">
+                                        {selectedDefaultGraph ? (
+                                            <span
+                                                className="graph-tag"
+                                            >
+                                                {selectedDefaultGraph.label}
+                                            </span>
+                                        ) : (
+                                            <span className="graph-empty">
+                                                No Graph Selected
+                                            </span>
+                                        )}
+                                    </div>
+
+                                    <button
+                                        type="button"
+                                        className="graph-manage-btn"
+                                        onClick={() => setShowDefaultModal(true)}
+                                    >
+                                        ⚡ Select
+                                    </button>
+                                </div>
+                            </div>
+                            {errors?.defaultGraphTypeErr &&
+                                <div className="required-input">
+                                    {errors?.defaultGraphTypeErr}
+                                </div>
+                            }
                         </div>
                     </div>
                 </div>
@@ -249,7 +296,7 @@ FROM (
                     <div className="form-group row">
                         <label className="col-sm-5 col-form-label pe-0">{dt("Graph Type")} : </label>
                         <div className="col-sm-7 ps-0 align-content-center">
-                            <Select
+                            {/* <Select
                                 id='graphTypes'
                                 name='graphTypes'
                                 options={defGraphTypes(values?.defaultPluginName)}
@@ -262,7 +309,36 @@ FROM (
                                     setErrors(prev => ({ ...prev, 'graphTypesErr': "" }));
                                 }}
                                 isDisabled={values?.defaultPluginName === "apacheChart" && (values?.defaultGraphType === '3D_BAR' || values?.defaultGraphType === 'GAUGE')}
-                            />
+                            /> */}
+                            <div className="graph-selection-row">
+                                <div className="graph-selection-content">
+                                    <div className="graph-tags">
+                                        {(values?.graphTypes || []).length > 0 ? (
+                                            values.graphTypes.map((graph) => (
+                                                <span
+                                                    key={graph}
+                                                    className="graph-tag"
+                                                >
+                                                    {getGraphLabel(graph)}
+                                                </span>
+                                            ))
+                                        ) : (
+                                            <span className="graph-empty">
+                                                No Graph Selected
+                                            </span>
+                                        )}
+                                    </div>
+
+                                    <button
+                                        type="button"
+                                        className={values?.defaultPluginName === "apacheChart" && (values?.defaultGraphType === '3D_BAR' || values?.defaultGraphType === 'GAUGE') ? "" : "graph-manage-btn"}
+                                        onClick={() => setShowGraphModal(true)}
+                                        disabled={values?.defaultPluginName === "apacheChart" && (values?.defaultGraphType === '3D_BAR' || values?.defaultGraphType === 'GAUGE')}
+                                    >
+                                        ⚡ Select
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     <div className="form-group row">
@@ -1037,6 +1113,39 @@ FROM (
                     </Modal.Footer>
                 </Modal>
             }
+            <GraphGalleryModal
+                show={showDefaultModal}
+                onHide={() => setShowDefaultModal(false)}
+                title="Select Default Graph Type"
+                graphs={defGraphTypes(values.defaultPluginName) || []}
+                selected={values.defaultGraphType}
+                multiple={false}
+                onApply={(selectedGraph) => {
+                    setValues(prev => ({
+                        ...prev,
+                        defaultGraphType: selectedGraph
+                    }));
+                    setIsNotChangePlugin(false);
+                    if (values?.defaultPluginName === "apacheChart" && (selectedGraph === '3D_BAR' || selectedGraph === 'GAUGE')) {
+                        setValues(prev => ({ ...prev, "graphTypes": [] }));
+                    }
+                }}
+            />
+
+            <GraphGalleryModal
+                show={showGraphModal}
+                onHide={() => setShowGraphModal(false)}
+                title="Select Graph Types"
+                graphs={defGraphTypes(values.defaultPluginName) || []}
+                selected={values.graphTypes || []}
+                multiple={true}
+                onApply={(selectedGraphs) => {
+                    setValues(prev => ({
+                        ...prev,
+                        graphTypes: selectedGraphs
+                    }));
+                }}
+            />
         </div>
     )
 }

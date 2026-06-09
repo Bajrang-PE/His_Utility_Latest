@@ -1,0 +1,130 @@
+.graph-gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 18px;
+}
+
+.graph-card {
+    position: relative;
+    border: 2px solid #e5e7eb;
+    border-radius: 16px;
+    overflow: hidden;
+    cursor: pointer;
+    background: #fff;
+    transition: all .25s ease;
+}
+
+.graph-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 14px 30px rgba(0, 0, 0, .12);
+}
+
+.graph-card.selected {
+    border: 2px solid #0d6efd;
+    box-shadow: 0 0 0 4px rgba(13, 110, 253, .15);
+}
+
+.graph-image {
+    width: 100%;
+    height: 130px;
+    object-fit: fill;
+    background: #f8f9fa;
+}
+
+.graph-card-footer {
+    padding: 6px;
+    text-align: center;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.graph-check {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    z-index: 5;
+    background: white;
+    border-radius: 50%;
+    /* padding: 3px; */
+    padding: 0px 5px;
+}
+
+.graph-check input {
+    pointer-events: none;
+}
+
+@media (max-width: 768px) {
+    .graph-gallery-grid {
+        grid-template-columns: repeat(auto-fill,
+                minmax(160px, 1fr));
+    }
+
+    .graph-image {
+        height: 100px;
+    }
+}
+
+.graph-modal-body {
+    max-height: 65vh;
+    overflow-y: scroll;
+}
+
+/* //////////////////////////////////////////////////////////////////// */
+
+.graph-selection-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 12px;
+    gap: 12px;
+}
+
+.graph-selection-label {
+    min-width: 130px;
+    font-weight: 600;
+    margin: 0;
+}
+
+.graph-selection-content {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    flex-wrap: wrap;
+}
+
+.graph-tags {
+    flex: 1;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.graph-tag {
+    background: #e8f2ff;
+    color: #0d6efd;
+    border: 1px solid #cfe2ff;
+    border-radius: 10px;
+    padding: 1px 5px;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.graph-empty {
+    color: #6c757d;
+    font-style: italic;
+}
+
+.graph-manage-btn {
+    border: none;
+    background: #0d6efd;
+    color: white;
+    border-radius: 8px;
+    padding: 2px 7px;
+    font-weight: 500;
+    transition: .25s;
+}
+
+.graph-manage-btn:hover {
+    /* transform: translateY(-2px); */
+    box-shadow: 0 8px 20px rgba(13, 110, 253, .25);
+}

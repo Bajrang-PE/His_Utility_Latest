@@ -1,3 +1,34 @@
+//apache
+import bar3dImg from "../../../assets/graph_images/3dbar.png";
+import gaugeImg from "../../../assets/graph_images/gauge-simple.png";
+import lineImg from "../../../assets/graph_images/line-simple.png";
+import barImg from "../../../assets/graph_images/bar-simple.png";
+import areaImg from "../../../assets/graph_images/area-basic.png";
+import pieImg from "../../../assets/graph_images/pie-simple.png";
+import donutImg from "../../../assets/graph_images/pie-doughnut.png";
+import columnImg from "../../../assets/graph_images/bar-brush.png";
+//google
+import bubbleImg from "../../../assets/graph_images/bubbleChart.png";
+import calenderChartImg from "../../../assets/graph_images/calenderChart.png";
+import candleStickImg from "../../../assets/graph_images/candlestick.png";
+import comboChartImg from "../../../assets/graph_images/comboChart.png";
+import ganttChartImg from "../../../assets/graph_images/ganttChart.png";
+import histogramImg from "../../../assets/graph_images/histogram.png";
+import sankeyImg from "../../../assets/graph_images/sankeyChart.png";
+import steppedAreaImg from "../../../assets/graph_images/steppedArea.png";
+import treeMapImg from "../../../assets/graph_images/treeMap.png";
+import scatterImg from "../../../assets/graph_images/scatterChart.png";
+//highchart
+import clmLinePeiImg from "../../../assets/graph_images/clmLinePie.png";
+import dualAxisLineClmImg from "../../../assets/graph_images/dualAxisLineClm.png";
+import stackedAreaImg from "../../../assets/graph_images/stackedArea.png";
+import stackedBarImg from "../../../assets/graph_images/stackedBar.png";
+import stackedChartImg from "../../../assets/graph_images/stackedChart.png";
+import verticalBarImg from "../../../assets/graph_images/verticalBarChart.png";
+import vertStackedBarImg from "../../../assets/graph_images/vertStackedBar.png";
+
+
+
 export const itemForDashboard = [
     { value: "CENTRAL DASHBOARD", label: "CENTRAL DASHBOARD" },
     { value: "V2 CENTRAL DASHBOARD", label: "V2 CENTRAL DASHBOARD" },
@@ -234,54 +265,54 @@ export const mapNameOptions = [
 ];
 
 export const highchartGraphOptions = [
-    { value: "BAR_GRAPH", label: "Column Bar Graph" },
-    { value: "STACKED_GRAPH", label: "Stacked Graph" },
-    { value: "STACKED_BAR_GRAPH", label: "Stacked Bar Graph" },
-    { value: "VERTICAL_BAR_GRAPH", label: "Horizontal Bar Graph" },
-    { value: "VERTICAL_STACKED_BAR_GRAPH", label: "Horizontal Stacked Bar Graph" },
-    { value: "PIE_CHART", label: "Pie Chart" },
-    { value: "DONUT_CHART", label: "Donut Chart" },
-    { value: "LINE_GRAPH", label: "Line Graph" },
-    { value: "AREA_GRAPH", label: "Area Graph" },
-    { value: "AREA_STACKED_GRAPH", label: "Stacked Area Graph" },
-    { value: "COLUMN_LINE_PIE_GRAPH", label: "Column Line Pie Graph" },
-    { value: "DUAL_AXES_LINE_COLUMN", label: "Dual Axes Graph" },
-    { value: "BAR_RACE", label: "Bar Race Graph" }
+    { value: "BAR_GRAPH", label: "Column Bar Graph", image: barImg },
+    { value: "STACKED_GRAPH", label: "Stacked Graph", image: stackedChartImg },
+    { value: "STACKED_BAR_GRAPH", label: "Stacked Bar Graph", image: stackedBarImg },
+    { value: "VERTICAL_BAR_GRAPH", label: "Vertical Bar Graph", image: verticalBarImg },
+    { value: "VERTICAL_STACKED_BAR_GRAPH", label: "Vertical Stacked Bar Graph", image: vertStackedBarImg },
+    { value: "PIE_CHART", label: "Pie Chart", image: pieImg },
+    { value: "DONUT_CHART", label: "Donut Chart", image: donutImg },
+    { value: "LINE_GRAPH", label: "Line Graph", image: lineImg },
+    { value: "AREA_GRAPH", label: "Area Graph", image: areaImg },
+    { value: "AREA_STACKED_GRAPH", label: "Stacked Area Graph", image: stackedAreaImg },
+    { value: "COLUMN_LINE_PIE_GRAPH", label: "Column Line Pie Graph", image: clmLinePeiImg },
+    { value: "DUAL_AXES_LINE_COLUMN", label: "Dual Axes Graph", image: dualAxisLineClmImg },
+    // { value: "BAR_RACE", label: "Bar Race Graph" }
 ];
 
 export const googleChartOptions = [
-    { value: "BAR_GRAPH", label: "Column Bar Graph" },
-    { value: "PIE_CHART", label: "Pie Chart" },
-    { value: "DONUT_CHART", label: "Donut Chart" },
-    { value: "LINE_GRAPH", label: "Line Graph" },
-    { value: "AREA_GRAPH", label: "Area Graph" },
-    { value: "CANDLE_STICK", label: "Candle Stick Chart" },
-    { value: "DUAL_AXES_COLUMN", label: "Dual Axes Column Graph" },
+    { value: "BAR_GRAPH", label: "Column Bar Graph", image: barImg },
+    { value: "PIE_CHART", label: "Pie Chart", image: pieImg },
+    { value: "AREA_GRAPH", label: "Area Chart", image: areaImg },
+    { value: "DONUT_CHART", label: "Donut Chart", image: donutImg },
+    { value: "LINE_GRAPH", label: "Line Graph", image: lineImg },
+    { value: "AREA_GRAPH", label: "Area Graph", image: areaImg },
+    // { value: "DUAL_AXES_COLUMN", label: "Dual Axes Column Graph", image: barImg },
+    // { value: "BAR_RACE", label: "Bar Race Graph", image: barImg },
 
     // --- New Google Charts ---
-    { value: "BAR_RACE", label: "Bar Race Graph" },
-    { value: "COMBO_CHART", label: "Combo Chart" },
-    { value: "BUBBLE_CHART", label: "Bubble Chart" },
-    { value: "HISTOGRAM", label: "Histogram" },
-    { value: "STEPPED_AREA_GRAPH", label: "Stepped Area Graph" },
-    { value: "CANDLESTICK_CHART", label: "Candlestick Chart" },
-    { value: "SCATTER_CHART", label: "Scatter Chart" },
-    { value: "TREEMAP_CHART", label: "TreeMap Chart" },
-    { value: "GEO_CHART", label: "Geo Chart" },
-    { value: "CALENDAR_CHART", label: "Calendar Chart" },
-    { value: "GANTT_CHART", label: "Gantt Chart" },
-    { value: "SANKEY_CHART", label: "Sankey Chart" },
+    { value: "COMBO_CHART", label: "Combo Chart", image: comboChartImg },
+    { value: "BUBBLE_CHART", label: "Bubble Chart", image: bubbleImg },
+    { value: "HISTOGRAM", label: "Histogram", image: histogramImg },
+    { value: "STEPPED_AREA_GRAPH", label: "Stepped Area Graph", image: steppedAreaImg },
+    { value: "CANDLESTICK_CHART", label: "Candlestick Chart", image: candleStickImg },
+    { value: "SCATTER_CHART", label: "Scatter Chart", image: scatterImg },
+    { value: "TREEMAP_CHART", label: "TreeMap Chart", image: treeMapImg },
+    // { value: "GEO_CHART", label: "Geo Chart" },
+    { value: "CALENDAR_CHART", label: "Calendar Chart", image: calenderChartImg },
+    { value: "GANTT_CHART", label: "Gantt Chart", image: ganttChartImg },
+    { value: "SANKEY_CHART", label: "Sankey Chart", image: sankeyImg },
 ]
 
 export const apacheChartOptions = [
-    { value: "GAUGE", label: "Gauge Chart" },
-    { value: "3D_BAR", label: "3D Bar Chart" },
-    { value: "COLUMN", label: "Column Chart" },
-    { value: "BAR", label: "Bar Chart" },
-    { value: "LINE", label: "Line Chart" },
-    { value: "AREA", label: "Area Chart" },
-    { value: "PIE", label: "Pie Chart" },
-    { value: "DONUT", label: "Donut Chart" },
+    { value: "GAUGE", label: "Gauge Chart", image: gaugeImg },
+    { value: "3D_BAR", label: "3D Bar Chart", image: bar3dImg },
+    { value: "COLUMN", label: "Column Chart", image: columnImg },
+    { value: "BAR", label: "Bar Chart", image: barImg },
+    { value: "LINE", label: "Line Chart", image: lineImg },
+    { value: "AREA", label: "Area Chart", image: areaImg },
+    { value: "PIE", label: "Pie Chart", image: pieImg },
+    { value: "DONUT", label: "Donut Chart", image: donutImg },
 ]
 
 

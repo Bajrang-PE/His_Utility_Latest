@@ -527,6 +527,8 @@ const DbConfigMaster = () => {
     }, 100);
   };
 
+  console.log("singleConfigData",singleConfigData)
+
   return (
     <>
       <NavbarHeader />

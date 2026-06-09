@@ -138,6 +138,10 @@ const Parameters = ({ params, scope, widgetId = null, isLayoutWithPreview, setWi
             .join('~');
 
         handleSetProParamsValues({ [id]: sortedString || '' }, scope, widgetId);
+        handleSetParamsValues({ [id]: sortedString || '' }, scope, widgetId);
+        setSearchScope({
+            scope: scope === "widgetParams" ? `all_w_${widgetId}` : "all", id: ""
+        })
         setErrors(prev => ({ ...prev, [id]: "" }));
     };
     const handleSingleSelectChange = (parameterName, selectedOption, parameterId) => {
@@ -149,6 +153,10 @@ const Parameters = ({ params, scope, widgetId = null, isLayoutWithPreview, setWi
         }));
 
         handleSetProParamsValues({ [parameterId]: value || '' }, scope, widgetId);
+        handleSetParamsValues({ [parameterId]: value || '' }, scope, widgetId);
+        setSearchScope({
+            scope: scope === "widgetParams" ? `all_w_${widgetId}` : "all", id: ""
+        })
 
         if (errors[parameterId]) {
             setErrors(prev => ({
@@ -172,6 +180,10 @@ const Parameters = ({ params, scope, widgetId = null, isLayoutWithPreview, setWi
             }));
         }
         handleSetProParamsValues({ [id]: type == 'date' ? formatDate1(value) : type == 'checkbox' ? e.target.checked : value || defaultValueIfEmpty }, scope, widgetId);
+        handleSetParamsValues({ [id]: type == 'date' ? formatDate1(value) : type == 'checkbox' ? e.target.checked : value || defaultValueIfEmpty }, scope, widgetId);
+        setSearchScope({
+            scope: scope === "widgetParams" ? `all_w_${widgetId}` : "all", id: ""
+        })
         setErrors(prev => ({ ...prev, [id]: "" }))
     };
 

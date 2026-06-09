@@ -187,3 +187,43 @@ export const ReplybtnSvg = (props) => (
         />
     </svg>
 );
+
+export const ArrowCircleLeftbtnSvg = (props) => (
+    <svg className={props?.className} xmlns="http://www.w3.org/2000/svg" viewBox={props?.viewBox || "0 0 24 20"} width={props?.width || "25"} height={props?.height || "25"}>
+        <defs>
+            <linearGradient id="circleArrowGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#00E676" />
+                <stop offset="100%" stopColor="#004D40" />
+            </linearGradient>
+        </defs>
+
+        {/* Outer Glowing Circle Badge */}
+        <circle cx="12" cy="12" r="10" fill="url(#circleArrowGrad)" />
+
+        {/* Inner White Action Arrow */}
+        <path
+            d="M14.71 7.71a1 1 0 0 0-1.42 0L9.59 11H16a1 1 0 0 0 0-2H9.59l3.7-3.29a1 1 0 0 0 0-1.42 1 1 0 0 0-1.42 0l-5.5 5.5a1 1 0 0 0 0 1.42l5.5 5.5a1 1 0 0 0 1.42-1.42L9.59 13H16a1 1 0 0 0 0-2H9.59l3.7-3.29z"
+            fill="#FFFFFF"
+            transform="rotate(0 12 12)"
+        />
+    </svg>
+);
+
+export const TableCellsbtnSvg = (props) => (
+    <svg className={props?.className} xmlns="http://www.w3.org/2000/svg" viewBox={props?.viewBox || "0 0 24 20"} width={props?.width || "25"} height={props?.height || "25"}>
+        <defs>
+            <linearGradient id="gridGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#7B1FA2" />
+                <stop offset="100%" stopColor="#E91E63" />
+            </linearGradient>
+        </defs>
+        {/* Top Left Cell */}
+        <rect x="3" y="3" width="7" height="7" rx="1.5" fill="url(#gridGrad)" />
+        {/* Top Right Cell */}
+        <rect x="14" y="3" width="7" height="7" rx="1.5" fill="url(#gridGrad)" opacity="0.9" />
+        {/* Bottom Left Cell */}
+        <rect x="3" y="14" width="7" height="7" rx="1.5" fill="url(#gridGrad)" opacity="0.8" />
+        {/* Bottom Right Cell */}
+        <rect x="14" y="14" width="7" height="7" rx="1.5" fill="url(#gridGrad)" opacity="0.7" />
+    </svg>
+);
